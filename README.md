@@ -102,3 +102,14 @@ SpeakingBot should always communicate:
 ### 1) Install dependencies
 ```bash
 pip install -r requirements.txt
+
+## Deployment (Render)
+
+SpeakingBot V2 runs as a single process for a single guild.
+
+### Environment variables
+See `.env.example` for the full list. Never commit `.env`.
+
+### Start command
+```bash
+python app.py
