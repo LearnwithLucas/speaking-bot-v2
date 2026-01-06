@@ -1,0 +1,27 @@
+# Environment variables
+.env
+.env.*
+
+# Databases
+*.sqlite
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
