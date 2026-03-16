@@ -61,4 +61,25 @@ CREATE TABLE IF NOT EXISTS achievements (
 
 CREATE INDEX IF NOT EXISTS idx_achievements_user
   ON achievements (guild_id, user_id);
+
+-- Voice met (pair history for achievements)
+CREATE TABLE IF NOT EXISTS voice_met (
+  guild_id INTEGER NOT NULL,
+  user_a_id INTEGER NOT NULL,
+  user_b_id INTEGER NOT NULL,
+  first_met_at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id, user_a_id, user_b_id)
+);
+
+-- Partner finder: stores which slots each user has selected
+CREATE TABLE IF NOT EXISTS partner_slots (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  slot_key TEXT NOT NULL,           -- e.g. "mon_after_stream", "daily_morning"
+  updated_at INTEGER NOT NULL,      -- epoch seconds
+  PRIMARY KEY (guild_id, user_id, slot_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_partner_slots_slot
+  ON partner_slots (guild_id, slot_key);
 """

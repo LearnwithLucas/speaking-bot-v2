@@ -319,3 +319,55 @@ class Repo:
             return True
         except sqlite3.IntegrityError:
             return False
+
+    # -------------------------
+    # Partner slots
+    # -------------------------
+    async def partner_slots_set(self, guild_id: int, user_id: int, slot_keys: list[str]) -> None:
+        """Replace all slot selections for a user atomically."""
+        now = int(time.time())
+        await self.conn.execute(
+            "DELETE FROM partner_slots WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        for key in slot_keys:
+            await self.conn.execute(
+                """
+                INSERT INTO partner_slots (guild_id, user_id, slot_key, updated_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(guild_id, user_id, slot_key)
+                DO UPDATE SET updated_at=excluded.updated_at
+                """,
+                (guild_id, user_id, key, now),
+            )
+        await self.conn.commit()
+
+    async def partner_slots_get(self, guild_id: int, user_id: int) -> list[str]:
+        """Get all slot keys selected by a user."""
+        cur = await self.conn.execute(
+            "SELECT slot_key FROM partner_slots WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        rows = await cur.fetchall()
+        return [r[0] for r in rows]
+
+    async def partner_slots_find_matches(self, guild_id: int, slot_key: str, exclude_user_id: int) -> list[int]:
+        """Find all users who have selected a given slot, excluding the caller."""
+        cur = await self.conn.execute(
+            """
+            SELECT user_id FROM partner_slots
+            WHERE guild_id=? AND slot_key=? AND user_id != ?
+            """,
+            (guild_id, slot_key, exclude_user_id),
+        )
+        rows = await cur.fetchall()
+        return [r[0] for r in rows]
+
+    async def partner_slots_get_all_for_slot(self, guild_id: int, slot_key: str) -> list[int]:
+        """Get all user IDs who selected a given slot."""
+        cur = await self.conn.execute(
+            "SELECT user_id FROM partner_slots WHERE guild_id=? AND slot_key=?",
+            (guild_id, slot_key),
+        )
+        rows = await cur.fetchall()
+        return [r[0] for r in rows]

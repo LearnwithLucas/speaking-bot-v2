@@ -14,6 +14,7 @@ from utils.logging import setup_logging
 from db.repo import Repo
 from voice.tracker import VoiceTracker
 from jobs.nudges import NudgeJobs
+from jobs.partner_finder import PartnerFinder, SlotSelectView
 
 log = logging.getLogger("app")
 
@@ -49,6 +50,7 @@ class SpeakingBot(commands.Bot):
 
         self.debug_commands = debug_commands
         self._jobs_started = False
+        self._partner_finder: PartnerFinder | None = None
 
     async def setup_hook(self) -> None:
         # Load debug tools (dev-only) BEFORE sync so commands appear when enabled.
@@ -59,6 +61,9 @@ class SpeakingBot(commands.Bot):
             log.info("Debug commands enabled (DEBUG_COMMANDS=1).")
         else:
             log.info("Debug commands disabled (DEBUG_COMMANDS=0).")
+
+        # Register persistent views
+        self.add_view(SlotSelectView(finder=None))
 
         # Sync commands only to the configured guild (safe deploy)
         guild = discord.Object(id=self.guild_id)
@@ -91,6 +96,19 @@ class SpeakingBot(commands.Bot):
                 self.nudge_days,
                 self.nudge_time,
             )
+
+        # Partner Finder
+        if not self._partner_finder:
+            self._partner_finder = PartnerFinder(
+                bot=self,
+                repo=self.repo,
+                guild_id=self.guild_id,
+            )
+            # Re-register persistent view with finder now available
+            self.add_view(SlotSelectView(finder=self._partner_finder))
+            await self._partner_finder.publish_hub()
+            self._partner_finder.start_reminder_loop()
+            log.info("PartnerFinder started.")
 
         log.info("Ready.")
 
