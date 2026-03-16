@@ -15,7 +15,7 @@ from db.repo import Repo
 from voice.tracker import VoiceTracker
 from jobs.nudges import NudgeJobs
 from jobs.partner_finder import PartnerFinder, SlotSelectView
-from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView
+from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
 
@@ -67,6 +67,8 @@ class SpeakingBot(commands.Bot):
         self.add_view(SlotSelectView(finder=None))
         self.add_view(EnLessonsView())
         self.add_view(NlLessonsView())
+        self.add_view(EnSupportedView())
+        self.add_view(NlSupportedView())
 
         # Sync commands only to the configured guild (safe deploy)
         guild = discord.Object(id=self.guild_id)
@@ -123,6 +125,14 @@ class SpeakingBot(commands.Bot):
             await pl.publish_dutch()
         except Exception:
             log.exception("PrivateLessons: failed to publish Dutch")
+        try:
+            await pl.publish_en_supported()
+        except Exception:
+            log.exception("PrivateLessons: failed to publish EN supported")
+        try:
+            await pl.publish_nl_supported()
+        except Exception:
+            log.exception("PrivateLessons: failed to publish NL supported")
 
         log.info("Ready.")
 
