@@ -151,11 +151,11 @@ class SlotPickerView(discord.ui.View):
         self._select = SlotSelect(current_slots=current_slots)
         self.add_item(self._select)
 
-    @discord.ui.button(label="Save", style=discord.ButtonStyle.success, emoji="✅", row=1)
+    @discord.ui.button(label="Save", style=discord.ButtonStyle.success, emoji="\u2705", row=1)
     async def save(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         selected = list(self._select.values)
-        old = set(self._current_slots)
-        newly_added = set(selected) - old
+        old_set = set(self._current_slots)
+        newly_added = set(selected) - old_set
 
         await self._finder.repo.partner_slots_set(
             self._finder.guild_id,
@@ -164,12 +164,31 @@ class SlotPickerView(discord.ui.View):
         )
 
         if not selected:
-            msg = "✅ Your availability has been cleared."
+            msg = "\u2705 Your availability has been cleared."
         else:
             labels = [_slot_label(k) for k in selected]
-            msg = "✅ Saved! You're available for:\n" + "\n".join(f"• {l}" for l in labels)
+            msg = "\u2705 Saved! You're available for:\n" + "\n".join("\u2022 " + l for l in labels)
 
         await interaction.response.edit_message(content=msg, view=None)
+
+        # Confirmation DM
+        if selected:
+            labels = [_slot_label(k) for k in selected]
+            slot_lines = "\n".join("\u2022 " + l for l in labels)
+            dm_text = (
+                "\U0001f5d3\ufe0f **Availability saved!**\n\n"
+                "You're signed up for:\n"
+                + slot_lines
+                + "\n\nYou'll get a DM when someone else picks the same slot, "
+                "and a reminder 5 minutes before each slot. \u2615\n\n"
+                "To update, go back to <#" + str(LOOKING_FOR_PARTNER_CHANNEL_ID) + "> anytime."
+            )
+            try:
+                await interaction.user.send(dm_text)
+            except discord.Forbidden:
+                pass
+            except Exception:
+                log.exception("PartnerFinder: failed to send confirmation DM user=%s", interaction.user.id)
 
         for slot_key in newly_added:
             await self._finder.notify_match(
