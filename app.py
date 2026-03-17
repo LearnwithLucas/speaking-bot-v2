@@ -94,6 +94,8 @@ class SpeakingBot(commands.Bot):
             log.error("Guild %s not found. Is the bot in the server?", self.guild_id)
             return
 
+        # Give tracker a reference to the bot (needed for voice encouragement)
+        self.tracker._bot = self
         await self.tracker.bootstrap_from_guild(guild)
 
         if not self._jobs_started:
@@ -208,6 +210,8 @@ async def _run_bot() -> None:
         enable_inactivity_nudge=settings.enable_inactivity_nudge,
         inactivity_variant=settings.inactivity_nudge_variant,
         afk_channel_id=settings.afk_channel_id,
+        dutch_guild_id=settings.dutch_guild_id,
+        bot=None,
     )
 
     bot = SpeakingBot(

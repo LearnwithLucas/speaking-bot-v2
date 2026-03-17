@@ -1,6 +1,7 @@
 import asyncio
 import time
 import logging
+import random
 from typing import Dict, Optional, Tuple
 
 import discord
@@ -40,6 +41,38 @@ BREAK_MIN_SECONDS = BREAK_MIN_DAYS * 86400
 # Spoke-with-new guardrail: avoid crowded-room mass awarding (applies to ANY qualifying channel)
 MAX_NEW_MEET_ROOM_SIZE = 4
 
+# ---- Voice encouragement ----
+EN_VOICE_CATEGORY_ID = 1181652390835916818
+NL_VOICE_CATEGORY_ID = 1336419808811679756
+
+EN_ENCOURAGEMENT_5MIN = [
+    "5 minutes in. Good job for showing up.",
+    "You're here. That's the hardest part done.",
+    "5 minutes. Keep going — you're doing well.",
+    "Nice. 5 minutes in the channel. That counts.",
+]
+
+EN_ENCOURAGEMENT_20MIN = [
+    "20 minutes. That's a solid practice session.",
+    "Still here after 20 minutes. Well done.",
+    "20 minutes of speaking practice. That's real progress.",
+    "You've been at it for 20 minutes. That takes effort — good work.",
+]
+
+NL_ENCOURAGEMENT_5MIN = [
+    "5 minuten bezig. Goed dat je er bent.",
+    "Je bent er. Dat is het moeilijkste deel gedaan.",
+    "5 minuten. Ga zo door — je doet het goed.",
+    "Mooi. 5 minuten in het kanaal. Dat telt.",
+]
+
+NL_ENCOURAGEMENT_20MIN = [
+    "20 minuten. Dat is een goede oefensessie.",
+    "Nog steeds hier na 20 minuten. Goed gedaan.",
+    "20 minuten spreekoefening. Dat is echte vooruitgang.",
+    "Je bent al 20 minuten bezig. Dat vraagt moeite — goed werk.",
+]
+
 WEEKLY_DM_MESSAGE = (
     "👋 Hey! Noticed you hopped into voice this week — nice.\n"
     "If you feel like speaking, start tiny: one sentence is enough. No pressure."
@@ -66,14 +99,19 @@ class VoiceTracker:
         enable_inactivity_nudge: bool,
         inactivity_variant: str,
         afk_channel_id: int | None = None,
+        dutch_guild_id: int | None = None,
+        bot: discord.Client | None = None,
     ):
         self.repo = repo
         self.guild_id = guild_id
         self.speak_now_category_id = speak_now_category_id
         self.afk_channel_id = afk_channel_id
+        self.dutch_guild_id = dutch_guild_id
+        self._bot = bot
 
         self.active: Dict[int, Tuple[int, int]] = {}
         self._pending_first_attempt: Dict[int, asyncio.Task] = {}
+        self._pending_encouragement: Dict[int, asyncio.Task] = {}
         self._weekly_dm_inflight: set[int] = set()
 
         self.enable_inactivity_nudge = enable_inactivity_nudge
@@ -336,12 +374,73 @@ class VoiceTracker:
 
         if not before_counts and after_counts and after_channel is not None:
             await self._start(uid, after_channel.id, now)
+            self._schedule_encouragement(member, after_channel.id)
             return
 
         if before_counts and after_counts and before_channel and after_channel and before_channel.id != after_channel.id:
             await self._end(uid, now)
             await self._start(uid, after_channel.id, now)
+            self._schedule_encouragement(member, after_channel.id)
             return
+
+    def _is_nl_guild(self) -> bool:
+        return self.dutch_guild_id is not None and self.guild_id == self.dutch_guild_id
+
+    def _cancel_encouragement_task(self, user_id: int) -> None:
+        task = self._pending_encouragement.pop(user_id, None)
+        if task and not task.done():
+            task.cancel()
+
+    def _schedule_encouragement(self, member: discord.Member, channel_id: int) -> None:
+        if self._bot is None:
+            return
+        uid = member.id
+        self._cancel_encouragement_task(uid)
+        is_nl = self._is_nl_guild()
+        msgs_5 = NL_ENCOURAGEMENT_5MIN if is_nl else EN_ENCOURAGEMENT_5MIN
+        msgs_20 = NL_ENCOURAGEMENT_20MIN if is_nl else EN_ENCOURAGEMENT_20MIN
+
+        async def _job() -> None:
+            try:
+                # 5-minute message
+                await asyncio.sleep(5 * 60)
+
+                # Check member is still in same channel
+                voice = member.voice
+                if voice is None or voice.channel is None or voice.channel.id != channel_id:
+                    return
+
+                vc = self._bot.get_channel(channel_id)
+                if isinstance(vc, discord.VoiceChannel):
+                    try:
+                        await vc.send(
+                            f"{random.choice(msgs_5)} <@{uid}>"
+                        )
+                    except (discord.Forbidden, discord.HTTPException):
+                        pass
+
+                # Wait for 20-minute mark (15 more minutes)
+                await asyncio.sleep(15 * 60)
+
+                voice = member.voice
+                if voice is None or voice.channel is None or voice.channel.id != channel_id:
+                    return
+
+                vc = self._bot.get_channel(channel_id)
+                if isinstance(vc, discord.VoiceChannel):
+                    try:
+                        await vc.send(
+                            f"{random.choice(msgs_20)} <@{uid}>"
+                        )
+                    except (discord.Forbidden, discord.HTTPException):
+                        pass
+
+            except asyncio.CancelledError:
+                return
+            except Exception:
+                log.exception("Encouragement task failed user=%s", uid)
+
+        self._pending_encouragement[uid] = asyncio.create_task(_job())
 
     async def _start(self, user_id: int, channel_id: int, started_at: int) -> None:
         self.active[user_id] = (channel_id, started_at)
@@ -350,9 +449,12 @@ class VoiceTracker:
 
     async def _end(self, user_id: int, ended_at: int) -> None:
         self.active.pop(user_id, None)
+        self._cancel_encouragement_task(user_id)
         await self.repo.end_open_session(self.guild_id, user_id, ended_at)
         log.debug("End session user=%s", user_id)
 
     async def shutdown(self) -> None:
         for uid in list(self._pending_first_attempt.keys()):
             self._cancel_first_attempt_task(uid)
+        for uid in list(self._pending_encouragement.keys()):
+            self._cancel_encouragement_task(uid)
