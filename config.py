@@ -24,6 +24,9 @@ class Settings:
     speak_now_category_id: int
     announcements_channel_id: int
 
+    # Dutch server
+    dutch_guild_id: int | None
+
     # Role assignment on join
     english_learner_role_id: int
 
@@ -62,6 +65,7 @@ def get_settings() -> Settings:
     return Settings(
         discord_token=token,
         guild_id=req_int("GUILD_ID"),
+        dutch_guild_id=opt_int("DUTCH_GUILD_ID"),
         speak_now_category_id=req_int("SPEAK_NOW_CATEGORY_ID"),
         announcements_channel_id=req_int("ANNOUNCEMENTS_CHANNEL_ID"),
         english_learner_role_id=req_int("ENGLISH_LEARNER_ROLE_ID"),

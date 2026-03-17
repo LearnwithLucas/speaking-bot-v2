@@ -15,6 +15,7 @@ from db.repo import Repo
 from voice.tracker import VoiceTracker
 from jobs.nudges import NudgeJobs
 from jobs.partner_finder import PartnerFinder, SlotSelectView
+from jobs.welcome import send_welcome_dm
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
@@ -32,6 +33,7 @@ class SpeakingBot(commands.Bot):
         nudge_days: str = "MON,FRI",
         nudge_time: str = "15:00",
         debug_commands: bool = False,
+        dutch_guild_id: int | None = None,
     ):
         intents = discord.Intents.default()
         intents.guilds = True
@@ -50,6 +52,7 @@ class SpeakingBot(commands.Bot):
         self.nudge_time = nudge_time
 
         self.debug_commands = debug_commands
+        self.dutch_guild_id = dutch_guild_id
         self._jobs_started = False
         self._partner_finder: PartnerFinder | None = None
 
@@ -70,11 +73,18 @@ class SpeakingBot(commands.Bot):
         self.add_view(EnSupportedView())
         self.add_view(NlSupportedView())
 
-        # Sync commands only to the configured guild (safe deploy)
+        # Sync commands to English guild
         guild = discord.Object(id=self.guild_id)
         self.tree.copy_global_to(guild=guild)
         await self.tree.sync(guild=guild)
         log.info("Slash commands synced to guild %s", self.guild_id)
+
+        # Sync commands to Dutch guild
+        if self.dutch_guild_id:
+            dutch_guild = discord.Object(id=self.dutch_guild_id)
+            self.tree.copy_global_to(guild=dutch_guild)
+            await self.tree.sync(guild=dutch_guild)
+            log.info("Slash commands synced to Dutch guild %s", self.dutch_guild_id)
 
     async def on_ready(self) -> None:
         log.info("Logged in as %s (%s)", self.user, self.user.id)
@@ -137,10 +147,19 @@ class SpeakingBot(commands.Bot):
         log.info("Ready.")
 
     async def on_member_join(self, member: discord.Member) -> None:
-        # Auto-assign "English Learner" role to new members (silent, no DM, no retries).
-        if member.guild.id != self.guild_id:
-            return
         if member.bot:
+            return
+
+        # Welcome DM — both servers
+        await send_welcome_dm(
+            member=member,
+            guild_id=member.guild.id,
+            en_guild_id=self.guild_id,
+            nl_guild_id=self.dutch_guild_id or 0,
+        )
+
+        # Auto-assign "English Learner" role — English server only
+        if member.guild.id != self.guild_id:
             return
 
         role = member.guild.get_role(self.english_learner_role_id)
@@ -199,6 +218,7 @@ async def _run_bot() -> None:
         nudge_days=settings.nudge_days,
         nudge_time=settings.nudge_time,
         debug_commands=settings.debug_commands,
+        dutch_guild_id=settings.dutch_guild_id,
     )
 
     shutdown_event = asyncio.Event()
