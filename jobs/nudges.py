@@ -1,6 +1,7 @@
 # jobs/nudges.py
 import logging
 import time
+import random
 import datetime as dt
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -13,18 +14,43 @@ log = logging.getLogger("jobs.nudges")
 
 TZ_NAME = "Europe/Amsterdam"
 
-# KV keys (stored in bot_kv table via repo.kv_get/kv_set)
-NUDGE_LAST_POST_DATE_KEY = "nudge_last_post_date"  # YYYY-MM-DD (Amsterdam date if TZ available)
+# KV keys — English
+NUDGE_LAST_POST_DATE_KEY = "nudge_last_post_date"
 NUDGE_PINNED_MSG_ID_KEY = "nudge_pinned_message_id"
 NUDGE_PINNED_AT_KEY = "nudge_pinned_at_epoch"
 
-UNPIN_AFTER_SECONDS = 24 * 60 * 60  # 24h
+# KV keys — Dutch
+NL_NUDGE_LAST_POST_DATE_KEY = "nudge_nl_last_post_date"
+NL_NUDGE_PINNED_MSG_ID_KEY = "nudge_nl_pinned_message_id"
+NL_NUDGE_PINNED_AT_KEY = "nudge_nl_pinned_at_epoch"
 
-DEFAULT_NUDGE_MESSAGE = (
-    "👋 **Speak Now reminder**\n"
-    "If you’ve been meaning to join voice, this is your gentle nudge.\n"
-    "Start small: hop in, say hi, or just listen for a minute — no pressure."
-)
+UNPIN_AFTER_SECONDS = 24 * 60 * 60
+
+NL_ANNOUNCEMENTS_CHANNEL_ID = 1433384734196633600
+
+# ---- English nudge messages ----
+EN_NUDGE_MESSAGES = [
+    "The voice channels are open. No agenda, no pressure. Just drop in if you feel like it.",
+    "If you've been meaning to speak this week, today is a good day. The channels are open.",
+    "Speaking practice doesn't have to be a big thing. One sentence is enough to start.",
+    "The hardest part is usually just joining. After that it gets easier. Channels are open.",
+    "No preparation needed. No performance required. Just a conversation, whenever you're ready.",
+    "If you've been lurking, that's fine. But the voice channels are open if you want to try.",
+    "You don't have to be fluent to join. You just have to show up.",
+    "Short reminder: the speaking channels are open. Come as you are.",
+]
+
+# ---- Dutch nudge messages ----
+NL_NUDGE_MESSAGES = [
+    "De spraakkanalen zijn open. Geen agenda, geen druk. Kom gewoon langs als je zin hebt.",
+    "Als je deze week wilde oefenen, is vandaag een goede dag. De kanalen zijn open.",
+    "Spreekoefening hoeft geen groot ding te zijn. Een zin is genoeg om te beginnen.",
+    "Het moeilijkste is meestal gewoon instappen. Daarna wordt het makkelijker. Kanalen zijn open.",
+    "Geen voorbereiding nodig. Geen prestatie vereist. Gewoon een gesprek, wanneer je er klaar voor bent.",
+    "Als je al een tijdje meekijkt, dat is prima. Maar de spraakkanalen zijn open als je het wilt proberen.",
+    "Je hoeft niet vloeiend te zijn om mee te doen. Je hoeft alleen maar te komen.",
+    "Korte herinnering: de spraakkanalen zijn open. Kom zoals je bent.",
+]
 
 DAY_MAP = {
     "MON": 0,
@@ -38,10 +64,6 @@ DAY_MAP = {
 
 
 def _get_tz() -> ZoneInfo | None:
-    """
-    Windows dev environments often lack IANA tzdata.
-    If tzdata isn't available, return None and we'll fall back to local time.
-    """
     try:
         return ZoneInfo(TZ_NAME)
     except ZoneInfoNotFoundError:
@@ -52,18 +74,17 @@ def _get_tz() -> ZoneInfo | None:
         return None
 
 
+def _pick_message(messages: list[str]) -> str:
+    return random.choice(messages)
+
+
 class NudgeJobs:
     """
-    Mon/Fri 15:00 (Europe/Amsterdam) nudge post (configurable via env through app.py).
-
-    - Clock-based (restart-safe)
-    - Pins message (best effort)
-    - Unpins after 24h (best effort)
-
-    Expectations:
-      - app.py passes nudge_days and nudge_time (strings) or you keep defaults.
-      - nudge_time format: "HH:MM" (24h)
-      - nudge_days format: "MON,FRI"
+    Scheduled nudge posts for English and Dutch servers.
+    English: posts to announcements channel on configured days/time.
+    Dutch: posts to NL announcements channel on same schedule.
+    Both pin for 24h then auto-unpin.
+    Messages rotate randomly so it never feels like the same bot message.
     """
 
     def __init__(
@@ -76,31 +97,32 @@ class NudgeJobs:
         nudge_days: str = "MON,FRI",
         nudge_time: str = "15:00",
         message: str | None = None,
+        dutch_guild_id: int | None = None,
     ):
         self.bot = bot
         self.repo = repo
         self.guild_id = guild_id
         self.channel_id = channel_id
-        self.message = (message or DEFAULT_NUDGE_MESSAGE).strip()
+        self.dutch_guild_id = dutch_guild_id
+
+        # If a custom message is passed use it as the only EN message
+        self._en_messages = [message.strip()] if message else EN_NUDGE_MESSAGES
 
         self._tz = _get_tz()
 
-        # Parse days
         parsed_days: set[int] = set()
         for part in (nudge_days or "").split(","):
             key = part.strip().upper()
             if key in DAY_MAP:
                 parsed_days.add(DAY_MAP[key])
-        # Safe default if misconfigured
         self._nudge_days = parsed_days or {DAY_MAP["MON"], DAY_MAP["FRI"]}
 
-        # Parse time
         try:
             hh, mm = (nudge_time or "15:00").strip().split(":", 1)
             self._nudge_hour = int(hh)
             self._nudge_minute = int(mm)
             if not (0 <= self._nudge_hour <= 23 and 0 <= self._nudge_minute <= 59):
-                raise ValueError("hour/minute out of range")
+                raise ValueError("out of range")
         except Exception:
             log.warning("Invalid NUDGE_TIME=%r; falling back to 15:00", nudge_time)
             self._nudge_hour = 15
@@ -109,86 +131,73 @@ class NudgeJobs:
         self._tick.start()
         self._unpin_check.start()
 
-    async def _get_text_channel(self) -> discord.TextChannel | None:
-        ch = self.bot.get_channel(self.channel_id)
+    async def _get_text_channel(self, channel_id: int) -> discord.TextChannel | None:
+        ch = self.bot.get_channel(channel_id)
         if isinstance(ch, discord.TextChannel):
             return ch
-
-        # Fallback to fetch (in case not cached)
         try:
-            fetched = await self.bot.fetch_channel(self.channel_id)
+            fetched = await self.bot.fetch_channel(channel_id)
             if isinstance(fetched, discord.TextChannel):
                 return fetched
         except Exception:
             pass
-
-        log.warning("Announcements channel not found or not a text channel: %s", self.channel_id)
+        log.warning("Channel not found or not a text channel: %s", channel_id)
         return None
 
     def _now_local(self) -> dt.datetime:
-        # If tz is available, use Amsterdam-aware time.
         if self._tz is not None:
             return dt.datetime.now(tz=self._tz)
-        # Fallback: naive local time (still lets bot run; schedule may be off if OS TZ differs)
         return dt.datetime.now()
 
-    @tasks.loop(minutes=1)
-    async def _tick(self) -> None:
-        now = self._now_local()
-
-        # Monday=0 ... Sunday=6
-        if now.weekday() not in self._nudge_days:
-            return
-
-        if not (now.hour == self._nudge_hour and now.minute == self._nudge_minute):
-            return
-
-        date_key = now.date().isoformat()
-        last_posted = await self.repo.kv_get(self.guild_id, NUDGE_LAST_POST_DATE_KEY)
+    async def _post_nudge(
+        self,
+        *,
+        channel_id: int,
+        guild_id: int,
+        message: str,
+        last_post_key: str,
+        pinned_msg_key: str,
+        pinned_at_key: str,
+        date_key: str,
+    ) -> None:
+        last_posted = await self.repo.kv_get(guild_id, last_post_key)
         if last_posted == date_key:
-            return  # already posted today
+            return
 
-        ch = await self._get_text_channel()
+        ch = await self._get_text_channel(channel_id)
         if not ch:
             return
 
-        # Send the nudge
         try:
-            sent = await ch.send(self.message)
+            sent = await ch.send(message)
         except Exception:
-            log.exception("Failed to send nudge message to channel=%s", self.channel_id)
+            log.exception("Failed to send nudge to channel=%s", channel_id)
             return
 
-        # Mark posted (restart-safe)
-        await self.repo.kv_set(self.guild_id, NUDGE_LAST_POST_DATE_KEY, date_key)
-        log.info(
-            "Nudge posted for %s at %02d:%02d (%s)",
-            date_key,
-            self._nudge_hour,
-            self._nudge_minute,
-            TZ_NAME if self._tz else "local-time-fallback",
-        )
+        await self.repo.kv_set(guild_id, last_post_key, date_key)
+        log.info("Nudge posted channel=%s date=%s", channel_id, date_key)
 
-        # Try to pin (best effort)
         pinned_at = int(time.time())
         try:
             await sent.pin(reason="SpeakingBot: nudge (auto-unpin after 24h)")
-            await self.repo.kv_set(self.guild_id, NUDGE_PINNED_MSG_ID_KEY, str(sent.id))
-            await self.repo.kv_set(self.guild_id, NUDGE_PINNED_AT_KEY, str(pinned_at))
+            await self.repo.kv_set(guild_id, pinned_msg_key, str(sent.id))
+            await self.repo.kv_set(guild_id, pinned_at_key, str(pinned_at))
             log.info("Nudge pinned message_id=%s", sent.id)
         except discord.Forbidden:
-            log.warning("Missing permission to pin messages in channel=%s", self.channel_id)
+            log.warning("Missing pin permission in channel=%s", channel_id)
         except Exception:
             log.exception("Failed to pin nudge message_id=%s", sent.id)
 
-    @_tick.before_loop
-    async def _before_tick(self) -> None:
-        await self.bot.wait_until_ready()
-
-    @tasks.loop(minutes=5)
-    async def _unpin_check(self) -> None:
-        msg_id_raw = await self.repo.kv_get(self.guild_id, NUDGE_PINNED_MSG_ID_KEY)
-        pinned_at_raw = await self.repo.kv_get(self.guild_id, NUDGE_PINNED_AT_KEY)
+    async def _unpin_nudge(
+        self,
+        *,
+        guild_id: int,
+        channel_id: int,
+        pinned_msg_key: str,
+        pinned_at_key: str,
+    ) -> None:
+        msg_id_raw = await self.repo.kv_get(guild_id, pinned_msg_key)
+        pinned_at_raw = await self.repo.kv_get(guild_id, pinned_at_key)
         if not msg_id_raw or not pinned_at_raw:
             return
 
@@ -196,38 +205,89 @@ class NudgeJobs:
             msg_id = int(msg_id_raw)
             pinned_at = int(pinned_at_raw)
         except ValueError:
-            # Corrupt KV; clear to stop looping
-            await self.repo.kv_set(self.guild_id, NUDGE_PINNED_MSG_ID_KEY, "")
-            await self.repo.kv_set(self.guild_id, NUDGE_PINNED_AT_KEY, "")
+            await self.repo.kv_set(guild_id, pinned_msg_key, "")
+            await self.repo.kv_set(guild_id, pinned_at_key, "")
             return
 
         if int(time.time()) - pinned_at < UNPIN_AFTER_SECONDS:
             return
 
-        ch = await self._get_text_channel()
+        ch = await self._get_text_channel(channel_id)
         if not ch:
             return
 
         try:
             msg = await ch.fetch_message(msg_id)
         except Exception:
-            # Message gone or inaccessible; clear KV
-            await self.repo.kv_set(self.guild_id, NUDGE_PINNED_MSG_ID_KEY, "")
-            await self.repo.kv_set(self.guild_id, NUDGE_PINNED_AT_KEY, "")
-            log.info("Pinned nudge message not found; cleared KV message_id=%s", msg_id)
+            await self.repo.kv_set(guild_id, pinned_msg_key, "")
+            await self.repo.kv_set(guild_id, pinned_at_key, "")
+            log.info("Pinned nudge not found; cleared KV message_id=%s", msg_id)
             return
 
         try:
             await msg.unpin(reason="SpeakingBot: auto-unpin after 24h")
             log.info("Nudge unpinned message_id=%s", msg_id)
         except discord.Forbidden:
-            log.warning("Missing permission to unpin messages in channel=%s", self.channel_id)
+            log.warning("Missing unpin permission in channel=%s", channel_id)
         except Exception:
             log.exception("Failed to unpin nudge message_id=%s", msg_id)
         finally:
-            # Clear KV regardless to avoid repeated attempts forever
-            await self.repo.kv_set(self.guild_id, NUDGE_PINNED_MSG_ID_KEY, "")
-            await self.repo.kv_set(self.guild_id, NUDGE_PINNED_AT_KEY, "")
+            await self.repo.kv_set(guild_id, pinned_msg_key, "")
+            await self.repo.kv_set(guild_id, pinned_at_key, "")
+
+    @tasks.loop(minutes=1)
+    async def _tick(self) -> None:
+        now = self._now_local()
+
+        if now.weekday() not in self._nudge_days:
+            return
+        if not (now.hour == self._nudge_hour and now.minute == self._nudge_minute):
+            return
+
+        date_key = now.date().isoformat()
+
+        # English nudge
+        await self._post_nudge(
+            channel_id=self.channel_id,
+            guild_id=self.guild_id,
+            message=_pick_message(self._en_messages),
+            last_post_key=NUDGE_LAST_POST_DATE_KEY,
+            pinned_msg_key=NUDGE_PINNED_MSG_ID_KEY,
+            pinned_at_key=NUDGE_PINNED_AT_KEY,
+            date_key=date_key,
+        )
+
+        # Dutch nudge
+        if self.dutch_guild_id:
+            await self._post_nudge(
+                channel_id=NL_ANNOUNCEMENTS_CHANNEL_ID,
+                guild_id=self.dutch_guild_id,
+                message=_pick_message(NL_NUDGE_MESSAGES),
+                last_post_key=NL_NUDGE_LAST_POST_DATE_KEY,
+                pinned_msg_key=NL_NUDGE_PINNED_MSG_ID_KEY,
+                pinned_at_key=NL_NUDGE_PINNED_AT_KEY,
+                date_key=date_key,
+            )
+
+    @_tick.before_loop
+    async def _before_tick(self) -> None:
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(minutes=5)
+    async def _unpin_check(self) -> None:
+        await self._unpin_nudge(
+            guild_id=self.guild_id,
+            channel_id=self.channel_id,
+            pinned_msg_key=NUDGE_PINNED_MSG_ID_KEY,
+            pinned_at_key=NUDGE_PINNED_AT_KEY,
+        )
+        if self.dutch_guild_id:
+            await self._unpin_nudge(
+                guild_id=self.dutch_guild_id,
+                channel_id=NL_ANNOUNCEMENTS_CHANNEL_ID,
+                pinned_msg_key=NL_NUDGE_PINNED_MSG_ID_KEY,
+                pinned_at_key=NL_NUDGE_PINNED_AT_KEY,
+            )
 
     @_unpin_check.before_loop
     async def _before_unpin(self) -> None:

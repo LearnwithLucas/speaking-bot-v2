@@ -104,6 +104,7 @@ class SpeakingBot(commands.Bot):
                 channel_id=self.announcements_channel_id,
                 nudge_days=self.nudge_days,
                 nudge_time=self.nudge_time,
+                dutch_guild_id=self.dutch_guild_id,
             )
             self._jobs_started = True
             log.info(
