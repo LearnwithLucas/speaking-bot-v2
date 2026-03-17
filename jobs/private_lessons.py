@@ -15,7 +15,7 @@ NL_SUPPORTED_CHANNEL_ID = 1483065869465682083     # 🌟┃ondersteund-spreken
 
 # ---- Links ----
 EN_PRIVATE_URL = "https://learnwithlucas.com/private-lessons"
-NL_PRIVATE_URL = "https://learnwithlucas.com/private-lessons"
+NL_PRIVATE_URL = "https://learnwithlucas.com/priveles-nederlands/"
 EN_SUPPORTED_URL = "https://learnwithlucas.com/supported-speaking/"
 NL_SUPPORTED_URL = "https://learnwithlucas.com/ondersteund-spreken/"
 
