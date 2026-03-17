@@ -16,6 +16,7 @@ from voice.tracker import VoiceTracker
 from jobs.nudges import NudgeJobs
 from jobs.partner_finder import PartnerFinder, SlotSelectView
 from jobs.welcome import send_welcome_dm
+from commands.topics import setup as setup_topics
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
@@ -65,6 +66,13 @@ class SpeakingBot(commands.Bot):
             log.info("Debug commands enabled (DEBUG_COMMANDS=1).")
         else:
             log.info("Debug commands disabled (DEBUG_COMMANDS=0).")
+
+        # Load topics cog
+        await setup_topics(
+            self,
+            guild_id=self.guild_id,
+            dutch_guild_id=self.dutch_guild_id,
+        )
 
         # Register persistent views
         self.add_view(SlotSelectView(finder=None))
