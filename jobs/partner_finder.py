@@ -31,38 +31,20 @@ KV_PARTNER_HUB_MSG_ID = "partner_hub_message_id"
 # key -> label, days (None=every day, or set of weekday ints Mon=0), hour, minute
 
 SLOTS: dict[str, dict] = {
-    "daily_morning": {
-        "label": "🌅 Morning (09:00 CET)",
+    "morning": {
+        "label": "🌅 Morning — 09:00 CET",
         "days": None,
         "hour": 9,
         "minute": 0,
     },
-    "mon_after_stream": {
-        "label": "🎙️ After stream — Monday (15:15 CET)",
-        "days": {0},
+    "afternoon": {
+        "label": "☕ Afternoon — 15:15 CET",
+        "days": None,
         "hour": 15,
         "minute": 15,
     },
-    "wed_after_stream": {
-        "label": "🎙️ After stream — Wednesday (15:15 CET)",
-        "days": {2},
-        "hour": 15,
-        "minute": 15,
-    },
-    "fri_after_stream": {
-        "label": "🎙️ After stream — Friday (15:15 CET)",
-        "days": {4},
-        "hour": 15,
-        "minute": 15,
-    },
-    "sat_after_stream": {
-        "label": "🎙️ After stream — Saturday (15:15 CET)",
-        "days": {5},
-        "hour": 15,
-        "minute": 15,
-    },
-    "daily_evening": {
-        "label": "🌙 Evening (20:00 CET)",
+    "evening": {
+        "label": "🌙 Evening — 20:00 CET",
         "days": None,
         "hour": 20,
         "minute": 0,
@@ -100,19 +82,21 @@ def _voice_links() -> str:
 
 
 def build_hub_embed() -> discord.Embed:
-    slot_lines = "\n".join(f"• {info['label']}" for info in SLOTS.values())
     embed = discord.Embed(
-        title="🤝 Looking for a Speaking Partner?",
+        title="🤝 Find a speaking partner",
         description=(
-            "Select the time slots when you're available to practice English.\n"
-            "When someone else picks the same slot, you'll **both get a DM**.\n"
-            "You'll also get a **5-minute reminder** before each slot.\n\n"
-            f"**Available slots:**\n{slot_lines}\n\n"
-            "Press **Update availability** below to choose your slots.\n"
-            "Your selection is saved and you can update it anytime."
+            "Pick the times you're usually free to practice.\n"
+            "When someone else picks the same time, you both get a DM.\n"
+            "You'll also get a short reminder 5 minutes before.\n\n"
+            "**Three times, every day:**\n"
+            "🌅 Morning — 09:00 CET\n"
+            "☕ Afternoon — 15:15 CET\n"
+            "🌙 Evening — 20:00 CET\n\n"
+            "Press **Update availability** to choose your times.\n"
+            "You can change it anytime."
         ),
     )
-    embed.set_footer(text="Online English Café | Speaking Partner Finder | hub:en:partner:v1")
+    embed.set_footer(text="hub:en:partner:v1")
     return embed
 
 
@@ -131,7 +115,7 @@ class SlotSelect(discord.ui.Select):
             for key, info in SLOTS.items()
         ]
         super().__init__(
-            placeholder="Choose your available slots…",
+            placeholder="Pick your times…",
             min_values=0,
             max_values=len(SLOTS),
             options=options,
@@ -151,11 +135,11 @@ class SlotPickerView(discord.ui.View):
         self._select = SlotSelect(current_slots=current_slots)
         self.add_item(self._select)
 
-    @discord.ui.button(label="Save", style=discord.ButtonStyle.success, emoji="\u2705", row=1)
+    @discord.ui.button(label="Save", style=discord.ButtonStyle.success, emoji="✅", row=1)
     async def save(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         selected = list(self._select.values)
-        old_set = set(self._current_slots)
-        newly_added = set(selected) - old_set
+        old = set(self._current_slots)
+        newly_added = set(selected) - old
 
         await self._finder.repo.partner_slots_set(
             self._finder.guild_id,
@@ -164,10 +148,10 @@ class SlotPickerView(discord.ui.View):
         )
 
         if not selected:
-            msg = "\u2705 Your availability has been cleared."
+            msg = "Done. Your availability has been cleared."
         else:
             labels = [_slot_label(k) for k in selected]
-            msg = "\u2705 Saved! You're available for:\n" + "\n".join("\u2022 " + l for l in labels)
+            msg = "Done. You're free at:\n" + "\n".join(f"• {l}" for l in labels)
 
         await interaction.response.edit_message(content=msg, view=None)
 
@@ -176,19 +160,20 @@ class SlotPickerView(discord.ui.View):
             labels = [_slot_label(k) for k in selected]
             slot_lines = "\n".join("\u2022 " + l for l in labels)
             dm_text = (
-                "\U0001f5d3\ufe0f **Availability saved!**\n\n"
-                "You're signed up for:\n"
+                "Done! You're free at:\n"
                 + slot_lines
-                + "\n\nYou'll get a DM when someone else picks the same slot, "
-                "and a reminder 5 minutes before each slot. \u2615\n\n"
-                "To update, go back to <#" + str(LOOKING_FOR_PARTNER_CHANNEL_ID) + "> anytime."
+                + "\n\nIf someone picks the same time, you both get a DM. "
+                "You'll also get a short reminder 5 minutes before. \u2615\n\n"
+                "Want to change it? Go to <#"
+                + str(LOOKING_FOR_PARTNER_CHANNEL_ID)
+                + "> anytime."
             )
             try:
                 await interaction.user.send(dm_text)
             except discord.Forbidden:
                 pass
             except Exception:
-                log.exception("PartnerFinder: failed to send confirmation DM user=%s", interaction.user.id)
+                log.exception("PartnerFinder: confirmation DM failed user=%s", interaction.user.id)
 
         for slot_key in newly_added:
             await self._finder.notify_match(
@@ -203,7 +188,7 @@ class SlotPickerView(discord.ui.View):
             self._finder.guild_id, interaction.user.id, []
         )
         await interaction.response.edit_message(
-            content="✅ Your availability has been cleared.", view=None
+            content="Done. Your availability has been cleared.", view=None
         )
 
 
@@ -236,8 +221,8 @@ class SlotSelectView(discord.ui.View):
         )
         view = SlotPickerView(finder=self._finder, current_slots=current)
         await interaction.response.send_message(
-            "**Select the time slots when you're available:**\n"
-            "You can select multiple slots. Press **Save** when done.",
+            "Pick the times you're usually free:\n"
+            "Select one or more, then press **Save**.",
             view=view,
             ephemeral=True,
         )
@@ -336,9 +321,9 @@ class PartnerFinder:
             names_str = ", ".join(names) if names else "someone"
             verb = "is" if len(names) == 1 else "are"
             await member.send(
-                f"🤝 **Speaking partner match!**\n\n"
-                f"**{names_str}** {verb} also available for **{slot_label}**.\n\n"
-                f"You can practice in {links}.\n"
+                f"🤝 **Partner match!**\n\n"
+                f"**{names_str}** {verb} also free at **{slot_label}**.\n\n"
+                f"You can both practice in {links}.\n"
                 f"See you there! ☕"
             )
         except discord.Forbidden:
@@ -356,9 +341,9 @@ class PartnerFinder:
                 except Exception:
                     joiner_name = "Someone"
                 await match_member.send(
-                    f"🤝 **Speaking partner match!**\n\n"
+                    f"🤝 **Partner match!**\n\n"
                     f"**{joiner_name}** just signed up for **{slot_label}** — same as you!\n\n"
-                    f"You can practice in {links}.\n"
+                    f"You can both practice in {links}.\n"
                     f"See you there! ☕"
                 )
             except discord.Forbidden:
@@ -418,7 +403,6 @@ class PartnerFinder:
                 member = guild.get_member(user_id) or await guild.fetch_member(user_id)
                 await member.send(
                     f"⏰ **5-minute reminder!**\n\n"
-                    f"**{slot_label}** starts in 5 minutes.\n\n"
                     f"Join in {links} ☕\n"
                     f"No pressure — just drop in whenever you're ready."
                 )
