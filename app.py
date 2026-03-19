@@ -17,6 +17,7 @@ from jobs.nudges import NudgeJobs
 from jobs.partner_finder import PartnerFinder, SlotSelectView
 from jobs.welcome import send_welcome_dm
 from commands.topics import setup as setup_topics
+from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
@@ -66,6 +67,14 @@ class SpeakingBot(commands.Bot):
             log.info("Debug commands enabled (DEBUG_COMMANDS=1).")
         else:
             log.info("Debug commands disabled (DEBUG_COMMANDS=0).")
+
+        # Load dictionary cog
+        await setup_dictionary(
+            self,
+            self.repo,
+            guild_id=self.guild_id,
+            dutch_guild_id=self.dutch_guild_id,
+        )
 
         # Load topics cog
         await setup_topics(
@@ -154,6 +163,17 @@ class SpeakingBot(commands.Bot):
             await pl.publish_nl_supported()
         except Exception:
             log.exception("PrivateLessons: failed to publish NL supported")
+
+        # Vocabulary channel embeds
+        vocab = VocabPublisher(bot=self, repo=self.repo)
+        try:
+            await vocab.publish_english()
+        except Exception:
+            log.exception("VocabPublisher: failed to publish English")
+        try:
+            await vocab.publish_dutch()
+        except Exception:
+            log.exception("VocabPublisher: failed to publish Dutch")
 
         log.info("Ready.")
 
