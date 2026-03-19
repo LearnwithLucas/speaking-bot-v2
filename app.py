@@ -18,6 +18,7 @@ from jobs.partner_finder import PartnerFinder, SlotSelectView
 from jobs.welcome import send_welcome_dm
 from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
+from jobs.word_of_the_day import WordOfTheDayJob
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
@@ -174,6 +175,15 @@ class SpeakingBot(commands.Bot):
             await vocab.publish_dutch()
         except Exception:
             log.exception("VocabPublisher: failed to publish Dutch")
+
+        # Word of the day
+        WordOfTheDayJob(
+            bot=self,
+            repo=self.repo,
+            guild_id=self.guild_id,
+            dutch_guild_id=self.dutch_guild_id,
+        )
+        log.info("WordOfTheDayJob started.")
 
         log.info("Ready.")
 
