@@ -235,14 +235,6 @@ class DictionaryCog(commands.Cog):
     async def d(self, interaction: discord.Interaction, word: str) -> None:
         await interaction.response.defer()
 
-        data = await fetch_definition(word)
-
-        if data:
-            embed = build_result_embed(word, data)
-        else:
-            embed = build_not_found_embed(word)
-
-        # Post to vocab channel if used outside it, with a pointer
         guild = interaction.guild
         is_nl = (
             guild is not None
@@ -250,8 +242,15 @@ class DictionaryCog(commands.Cog):
             and getattr(self.bot, "dutch_guild_id", None) == guild.id
         )
 
-        if is_nl:
+        data = await fetch_definition(word)
+
+        if data:
+            embed = build_result_embed(word, data)
+        elif is_nl:
+            # API had no result — fall back to Dutch dictionary links
             embed = build_nl_embed(word)
+        else:
+            embed = build_not_found_embed(word)
 
         vocab_channel_id = NL_VOCAB_CHANNEL_ID if is_nl else EN_VOCAB_CHANNEL_ID
 
