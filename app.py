@@ -14,7 +14,7 @@ from utils.logging import setup_logging
 from db.repo import Repo
 from voice.tracker import VoiceTracker
 from jobs.nudges import NudgeJobs
-from jobs.partner_finder import PartnerFinder, SlotSelectView
+from jobs.partner_finder import PartnerFinder, PartnerHubView
 from jobs.welcome import send_welcome_dm
 from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
@@ -85,7 +85,7 @@ class SpeakingBot(commands.Bot):
         )
 
         # Register persistent views
-        self.add_view(SlotSelectView(finder=None))
+        self.add_view(PartnerHubView(finder=None))
         self.add_view(EnLessonsView())
         self.add_view(NlLessonsView())
         self.add_view(EnSupportedView())
@@ -140,10 +140,8 @@ class SpeakingBot(commands.Bot):
                 repo=self.repo,
                 guild_id=self.guild_id,
             )
-            # Re-register persistent view with finder now available
-            self.add_view(SlotSelectView(finder=self._partner_finder))
+            self.add_view(PartnerHubView(finder=self._partner_finder))
             await self._partner_finder.publish_hub()
-            self._partner_finder.start_reminder_loop()
             log.info("PartnerFinder started.")
 
         # Private lessons embeds
