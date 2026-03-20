@@ -17,7 +17,7 @@ DICT_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 NL_FALLBACK_URL = "https://www.woorden.org/woord/{word}"
 
 KV_EN_VOCAB_MSG = "vocab_channel_en_message_id"
-KV_NL_VOCAB_MSG = "vocab_channel_nl_message_id"
+KV_NL_VOCAB_MSG = "vocab_channel_nl_message_id_v2"
 
 
 # =====================
@@ -144,18 +144,19 @@ def build_nl_channel_embed() -> discord.Embed:
     embed = discord.Embed(
         title="🔤 Woorden opzoeken",
         description=(
-            "Gebruik `/d` gevolgd door een Nederlands woord om het hier op te zoeken.\n\n"
+            "Gebruik `/d word: [woord]` overal in de server om een woord op te zoeken.\n\n"
             "**Wat je krijgt:**\n"
-            "Een link naar woorden.org en Van Dale met de betekenis, voorbeelden en verwante woorden.\n\n"
+            "De bot zoekt eerst in het Engels woordenboek. Als het woord daar niet in staat, "
+            "krijg je directe links naar woorden.org en Van Dale.\n\n"
             "**Hoe gebruik je het:**\n"
             "`/d word: nieuwsgierig`\n"
             "`/d word: zelfvertrouwen`\n"
-            "`/d word: uitleggen`\n\n"
+            "`/d word: curious`\n\n"
             "Werkt overal in de server. Resultaten worden hier gepost zodat iedereen ze kan zien.\n\n"
             "Op zoek naar gespreksonderwerpen? Probeer `/onderwerpen`."
         ),
     )
-    embed.set_footer(text="vocabulary:nl:v1")
+    embed.set_footer(text="vocabulary:nl:v2")
     return embed
 
 
@@ -268,8 +269,8 @@ async def setup(bot: commands.Bot, repo, *, guild_id: int, dutch_guild_id: int |
     cog = DictionaryCog(bot, repo)
     await bot.add_cog(cog)
 
-    # Store dutch_guild_id on bot for guild detection in commands
-    if dutch_guild_id and not hasattr(bot, "dutch_guild_id"):
+    # Always set dutch_guild_id on bot for guild detection in commands
+    if dutch_guild_id:
         bot.dutch_guild_id = dutch_guild_id  # type: ignore[attr-defined]
 
     log.info("DictionaryCog loaded.")
