@@ -11,13 +11,11 @@ from discord.ext import commands
 log = logging.getLogger("commands.dictionary")
 
 EN_VOCAB_CHANNEL_ID = 1484159272299401337   # 🔤┃vocabulary
-NL_VOCAB_CHANNEL_ID = 1484159374187434014   # 🔤┃woordenboek
 
 DICT_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 NL_FALLBACK_URL = "https://www.woorden.org/woord/{word}"
 
 KV_EN_VOCAB_MSG = "vocab_channel_en_message_id"
-KV_NL_VOCAB_MSG = "vocab_channel_nl_message_id_v2"
 
 
 # =====================
@@ -82,12 +80,7 @@ def build_result_embed(word: str, data: dict) -> discord.Embed:
         )
         shown += 1
 
-    source = data.get("sourceUrls", [""])[0]
-    if source:
-        embed.set_footer(text=f"dictionaryapi.dev")
-    else:
-        embed.set_footer(text="dictionaryapi.dev")
-
+    embed.set_footer(text="dictionaryapi.dev")
     return embed
 
 
@@ -118,7 +111,7 @@ def build_nl_embed(word: str) -> discord.Embed:
 
 
 # =====================
-# CHANNEL EXPLANATION EMBEDS
+# CHANNEL EXPLANATION EMBED
 # =====================
 
 def build_en_channel_embed() -> discord.Embed:
@@ -140,26 +133,6 @@ def build_en_channel_embed() -> discord.Embed:
     return embed
 
 
-def build_nl_channel_embed() -> discord.Embed:
-    embed = discord.Embed(
-        title="🔤 Woorden opzoeken",
-        description=(
-            "Gebruik `/d word: [woord]` overal in de server om een woord op te zoeken.\n\n"
-            "**Wat je krijgt:**\n"
-            "De bot zoekt eerst in het Engels woordenboek. Als het woord daar niet in staat, "
-            "krijg je directe links naar woorden.org en Van Dale.\n\n"
-            "**Hoe gebruik je het:**\n"
-            "`/d word: nieuwsgierig`\n"
-            "`/d word: zelfvertrouwen`\n"
-            "`/d word: curious`\n\n"
-            "Werkt overal in de server. Resultaten worden hier gepost zodat iedereen ze kan zien.\n\n"
-            "Op zoek naar gespreksonderwerpen? Probeer `/onderwerpen`."
-        ),
-    )
-    embed.set_footer(text="vocabulary:nl:v2")
-    return embed
-
-
 # =====================
 # PUBLISHER
 # =====================
@@ -177,11 +150,8 @@ class VocabPublisher:
         )
 
     async def publish_dutch(self) -> None:
-        await self._publish(
-            channel_id=NL_VOCAB_CHANNEL_ID,
-            embed=build_nl_channel_embed(),
-            kv_key=KV_NL_VOCAB_MSG,
-        )
+        # Dutch vocab channel removed — no-op
+        pass
 
     async def _publish(self, *, channel_id: int, embed: discord.Embed, kv_key: str) -> None:
         channel = self._bot.get_channel(channel_id)
@@ -248,20 +218,16 @@ class DictionaryCog(commands.Cog):
         if data:
             embed = build_result_embed(word, data)
         elif is_nl:
-            # API had no result — fall back to Dutch dictionary links
             embed = build_nl_embed(word)
         else:
             embed = build_not_found_embed(word)
 
-        vocab_channel_id = NL_VOCAB_CHANNEL_ID if is_nl else EN_VOCAB_CHANNEL_ID
-
-        if interaction.channel_id == vocab_channel_id:
+        if interaction.channel_id == EN_VOCAB_CHANNEL_ID:
             await interaction.followup.send(embed=embed)
         else:
-            vocab_mention = f"<#{vocab_channel_id}>"
             await interaction.followup.send(
                 embed=embed,
-                content=f"Result posted. You can also use `/d` directly in {vocab_mention}.",
+                content=f"Result posted. You can also use `/d` directly in <#{EN_VOCAB_CHANNEL_ID}>.",
             )
 
 
@@ -269,7 +235,6 @@ async def setup(bot: commands.Bot, repo, *, guild_id: int, dutch_guild_id: int |
     cog = DictionaryCog(bot, repo)
     await bot.add_cog(cog)
 
-    # Always set dutch_guild_id on bot for guild detection in commands
     if dutch_guild_id:
         bot.dutch_guild_id = dutch_guild_id  # type: ignore[attr-defined]
 

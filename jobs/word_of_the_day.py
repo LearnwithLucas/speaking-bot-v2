@@ -2,7 +2,6 @@ from __future__ import annotations
 
 # jobs/word_of_the_day.py
 import logging
-import random
 import datetime as dt
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -19,10 +18,8 @@ POST_HOUR = 9
 POST_MINUTE = 0
 
 EN_WOTD_CHANNEL_ID = 1484164091202240652   # 🔤┃word-of-the-day
-NL_WOTD_CHANNEL_ID = 1484164145610752151   # 🔤┃woord-van-de-dag
 
 KV_EN_WOTD_DATE = "wotd_en_last_date"
-KV_NL_WOTD_DATE = "wotd_nl_last_date"
 
 DICT_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
@@ -147,7 +144,7 @@ async def fetch_definition(word: str) -> dict | None:
 
 
 def _pick_word(date_str: str) -> tuple[str, str, str]:
-    """Pick a word deterministically by date so EN and NL get the same word."""
+    """Pick a word deterministically by date."""
     idx = hash(date_str) % len(WORD_LIST)
     return WORD_LIST[idx]
 
@@ -196,43 +193,6 @@ def build_en_embed(word: str, data: dict | None, date_str: str) -> discord.Embed
     return embed
 
 
-def build_nl_embed(
-    word: str,
-    translation: str,
-    example: str,
-    data: dict | None,
-    date_str: str,
-) -> discord.Embed:
-    embed = discord.Embed(title=f"Woord van de dag: {word.lower()}")
-
-    definition_en = ""
-    if data:
-        meanings = data.get("meanings", [])
-        for meaning in meanings:
-            defs = meaning.get("definitions", [])
-            if defs:
-                definition_en = defs[0].get("definition", "")
-                break
-
-    description = f"**Nederlands:** {translation}"
-    if definition_en:
-        description += f"\n**Engels:** {definition_en}"
-    embed.description = description
-
-    embed.add_field(
-        name="Voorbeeldzin",
-        value=f"*{example}*",
-        inline=False,
-    )
-    embed.add_field(
-        name="Probeer het",
-        value="Gebruik dit woord in een zin in de chat.",
-        inline=False,
-    )
-    embed.set_footer(text=f"{date_str} | dictionaryapi.dev")
-    return embed
-
-
 class WordOfTheDayJob:
     def __init__(
         self,
@@ -245,7 +205,7 @@ class WordOfTheDayJob:
         self._bot = bot
         self._repo = repo
         self._guild_id = guild_id
-        self._dutch_guild_id = dutch_guild_id
+        # dutch_guild_id kept for signature compatibility but NL channel removed
         self._tz = _get_tz()
         self._tick.start()
 
@@ -273,18 +233,10 @@ class WordOfTheDayJob:
 
         date_str = now.date().isoformat()
 
-        # English
         last_en = await self._repo.kv_get(self._guild_id, KV_EN_WOTD_DATE)
         if last_en != date_str:
             await self._post_english(date_str)
             await self._repo.kv_set(self._guild_id, KV_EN_WOTD_DATE, date_str)
-
-        # Dutch
-        if self._dutch_guild_id:
-            last_nl = await self._repo.kv_get(self._dutch_guild_id, KV_NL_WOTD_DATE)
-            if last_nl != date_str:
-                await self._post_dutch(date_str)
-                await self._repo.kv_set(self._dutch_guild_id, KV_NL_WOTD_DATE, date_str)
 
     @_tick.before_loop
     async def _before(self) -> None:
@@ -303,17 +255,3 @@ class WordOfTheDayJob:
             log.info("WOTD: posted English word '%s' for %s", word, date_str)
         except Exception:
             log.exception("WOTD: failed to post English word")
-
-    async def _post_dutch(self, date_str: str) -> None:
-        word, translation, nl_example = _pick_word(date_str)
-        data = await fetch_definition(word)
-        embed = build_nl_embed(word, translation, nl_example, data, date_str)
-
-        ch = await self._get_channel(NL_WOTD_CHANNEL_ID)
-        if not ch:
-            return
-        try:
-            await ch.send(embed=embed)
-            log.info("WOTD: posted Dutch word '%s' for %s", word, date_str)
-        except Exception:
-            log.exception("WOTD: failed to post Dutch word")
