@@ -1,301 +1,387 @@
-# app.py
 from __future__ import annotations
 
+# jobs/partner_finder.py
 import asyncio
 import logging
-import signal
-from contextlib import suppress
+import time
 
 import discord
-from discord.ext import commands
 
-from config import get_settings
-from utils.logging import setup_logging
 from db.repo import Repo
-from voice.tracker import VoiceTracker
-from jobs.nudges import NudgeJobs
-from jobs.partner_finder import PartnerFinder, PartnerHubView
-from jobs.welcome import send_welcome_dm
-from commands.topics import setup as setup_topics
-from commands.dictionary import setup as setup_dictionary, VocabPublisher
-from jobs.word_of_the_day import WordOfTheDayJob
-from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
-log = logging.getLogger("app")
+log = logging.getLogger("jobs.partner_finder")
+
+# ---- Channel IDs ----
+EN_LOOKING_CHANNEL_ID = 1435902125652578434   # 🙋┃looking-for-a-partner
+NL_LOOKING_CHANNEL_ID = 1484566832982654996   # 🙋┃op-zoek-naar-een-partner
+
+EN_PRACTICE_VOICE_IDS = [
+    1274733631298076745,  # ☕ | Drop In and Talk
+    1456551629301219420,  # 🌍 | Open Conversation
+]
+
+NL_PRACTICE_VOICE_IDS = [
+    1274733631298076745,  # same voice channels for now — update if NL gets dedicated ones
+]
+
+KV_EN_HUB_MSG_ID = "partner_hub_message_id"
+KV_NL_HUB_MSG_ID = "partner_hub_nl_message_id"
+
+AVAILABLE_FOR_SECONDS = 30 * 60  # 30 minutes
 
 
-class SpeakingBot(commands.Bot):
+def _voice_links(is_nl: bool = False) -> str:
+    ids = NL_PRACTICE_VOICE_IDS if is_nl else EN_PRACTICE_VOICE_IDS
+    return " or ".join(f"<#{vc_id}>" for vc_id in ids)
+
+
+# =====================
+# HUB EMBEDS
+# =====================
+
+def build_en_embed(available_count: int = 0) -> discord.Embed:
+    if available_count == 0:
+        status = "Nobody is available right now. Press the button to be the first."
+    elif available_count == 1:
+        status = "1 person is free to practice right now."
+    else:
+        status = f"{available_count} people are free to practice right now."
+
+    embed = discord.Embed(
+        title="🤝 Find a speaking partner",
+        description=(
+            "Press the button when you feel like practicing.\n"
+            "If someone else is free at the same time, you both get a DM.\n"
+            "Your availability lasts 30 minutes.\n\n"
+            f"**Right now:** {status}"
+        ),
+    )
+    embed.set_footer(text="hub:en:partner:v2")
+    return embed
+
+
+def build_nl_embed(available_count: int = 0) -> discord.Embed:
+    if available_count == 0:
+        status = "Er is nu niemand beschikbaar. Druk op de knop om de eerste te zijn."
+    elif available_count == 1:
+        status = "1 persoon is nu vrij om te oefenen."
+    else:
+        status = f"{available_count} mensen zijn nu vrij om te oefenen."
+
+    embed = discord.Embed(
+        title="🤝 Vind een spreekpartner",
+        description=(
+            "Druk op de knop als je zin hebt om te oefenen.\n"
+            "Als iemand anders ook vrij is, krijgen jullie allebei een DM.\n"
+            "Je beschikbaarheid duurt 30 minuten.\n\n"
+            f"**Op dit moment:** {status}"
+        ),
+    )
+    embed.set_footer(text="hub:nl:partner:v2")
+    return embed
+
+
+# =====================
+# PERSISTENT HUB VIEWS
+# =====================
+
+class PartnerHubView(discord.ui.View):
+    """English persistent view in #looking-for-a-partner."""
+
+    def __init__(self, *, finder: "PartnerFinder | None" = None) -> None:
+        super().__init__(timeout=None)
+        self._finder = finder
+
+    @discord.ui.button(
+        label="I'm free to practice",
+        style=discord.ButtonStyle.success,
+        emoji="🙋",
+        custom_id="partner:free_now:en:v2",
+    )
+    async def free_now(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if self._finder is None:
+            await interaction.response.send_message(
+                "Not ready yet. Try again in a moment.", ephemeral=True
+            )
+            return
+        await self._finder.mark_available(
+            user=interaction.user,
+            guild=interaction.guild,
+            interaction=interaction,
+            is_nl=False,
+        )
+
+
+class PartnerHubViewNL(discord.ui.View):
+    """Dutch persistent view in #op-zoek-naar-een-partner."""
+
+    def __init__(self, *, finder: "PartnerFinder | None" = None) -> None:
+        super().__init__(timeout=None)
+        self._finder = finder
+
+    @discord.ui.button(
+        label="Ik ben vrij om te oefenen",
+        style=discord.ButtonStyle.success,
+        emoji="🙋",
+        custom_id="partner:free_now:nl:v2",
+    )
+    async def free_now_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if self._finder is None:
+            await interaction.response.send_message(
+                "Nog niet klaar. Probeer het zo opnieuw.", ephemeral=True
+            )
+            return
+        await self._finder.mark_available(
+            user=interaction.user,
+            guild=interaction.guild,
+            interaction=interaction,
+            is_nl=True,
+        )
+
+
+# =====================
+# CORE SERVICE
+# =====================
+
+class PartnerFinder:
     def __init__(
         self,
         *,
+        bot: discord.Client,
         repo: Repo,
-        tracker: VoiceTracker,
         guild_id: int,
-        announcements_channel_id: int,
-        english_learner_role_id: int,
-        nudge_days: str = "MON,FRI",
-        nudge_time: str = "15:00",
-        debug_commands: bool = False,
         dutch_guild_id: int | None = None,
-    ):
-        intents = discord.Intents.default()
-        intents.guilds = True
-        intents.members = True
-        intents.voice_states = True
-        super().__init__(command_prefix=commands.when_mentioned, intents=intents)
-
-        self.repo = repo
-        self.tracker = tracker
-
-        self.guild_id = guild_id
-        self.announcements_channel_id = announcements_channel_id
-        self.english_learner_role_id = english_learner_role_id
-
-        self.nudge_days = nudge_days
-        self.nudge_time = nudge_time
-
-        self.debug_commands = debug_commands
-        self.dutch_guild_id = dutch_guild_id
-        self._jobs_started = False
-        self._partner_finder: PartnerFinder | None = None
-
-    async def setup_hook(self) -> None:
-        # Load debug tools (dev-only) BEFORE sync so commands appear when enabled.
-        if self.debug_commands:
-            from commands.debug import setup as setup_debug
-
-            await setup_debug(self, self.repo, enabled=True, guild_id=self.guild_id)
-            log.info("Debug commands enabled (DEBUG_COMMANDS=1).")
-        else:
-            log.info("Debug commands disabled (DEBUG_COMMANDS=0).")
-
-        # Load dictionary cog
-        await setup_dictionary(
-            self,
-            self.repo,
-            guild_id=self.guild_id,
-            dutch_guild_id=self.dutch_guild_id,
-        )
-
-        # Load topics cog
-        await setup_topics(
-            self,
-            guild_id=self.guild_id,
-            dutch_guild_id=self.dutch_guild_id,
-        )
-
-        # Register persistent views
-        self.add_view(PartnerHubView(finder=None))
-        self.add_view(EnLessonsView())
-        self.add_view(NlLessonsView())
-        self.add_view(EnSupportedView())
-        self.add_view(NlSupportedView())
-
-        # Sync commands to English guild
-        guild = discord.Object(id=self.guild_id)
-        self.tree.copy_global_to(guild=guild)
-        await self.tree.sync(guild=guild)
-        log.info("Slash commands synced to guild %s", self.guild_id)
-
-        # Sync commands to Dutch guild
-        if self.dutch_guild_id:
-            dutch_guild = discord.Object(id=self.dutch_guild_id)
-            self.tree.copy_global_to(guild=dutch_guild)
-            await self.tree.sync(guild=dutch_guild)
-            log.info("Slash commands synced to Dutch guild %s", self.dutch_guild_id)
-
-    async def on_ready(self) -> None:
-        log.info("Logged in as %s (%s)", self.user, self.user.id)
-
-        guild = self.get_guild(self.guild_id)
-        if not guild:
-            log.error("Guild %s not found. Is the bot in the server?", self.guild_id)
-            return
-
-        # Give tracker a reference to the bot (needed for voice encouragement)
-        self.tracker._bot = self
-        await self.tracker.bootstrap_from_guild(guild)
-
-        if not self._jobs_started:
-            NudgeJobs(
-                bot=self,
-                repo=self.repo,
-                guild_id=self.guild_id,
-                channel_id=self.announcements_channel_id,
-                nudge_days=self.nudge_days,
-                nudge_time=self.nudge_time,
-                dutch_guild_id=self.dutch_guild_id,
-            )
-            self._jobs_started = True
-            log.info(
-                "NudgeJobs started (days=%s time=%s Europe/Amsterdam).",
-                self.nudge_days,
-                self.nudge_time,
-            )
-
-        # Partner Finder
-        if not self._partner_finder:
-            self._partner_finder = PartnerFinder(
-                bot=self,
-                repo=self.repo,
-                guild_id=self.guild_id,
-            )
-            self.add_view(PartnerHubView(finder=self._partner_finder))
-            await self._partner_finder.publish_hub()
-            log.info("PartnerFinder started.")
-
-        # Private lessons embeds
-        pl = PrivateLessonsPublisher(bot=self, repo=self.repo)
-        try:
-            await pl.publish_english()
-        except Exception:
-            log.exception("PrivateLessons: failed to publish English")
-        try:
-            await pl.publish_dutch()
-        except Exception:
-            log.exception("PrivateLessons: failed to publish Dutch")
-        try:
-            await pl.publish_en_supported()
-        except Exception:
-            log.exception("PrivateLessons: failed to publish EN supported")
-        try:
-            await pl.publish_nl_supported()
-        except Exception:
-            log.exception("PrivateLessons: failed to publish NL supported")
-
-        # Vocabulary channel embeds
-        vocab = VocabPublisher(bot=self, repo=self.repo)
-        try:
-            await vocab.publish_english()
-        except Exception:
-            log.exception("VocabPublisher: failed to publish English")
-        try:
-            await vocab.publish_dutch()
-        except Exception:
-            log.exception("VocabPublisher: failed to publish Dutch")
-
-        # Word of the day
-        WordOfTheDayJob(
-            bot=self,
-            repo=self.repo,
-            guild_id=self.guild_id,
-            dutch_guild_id=self.dutch_guild_id,
-        )
-        log.info("WordOfTheDayJob started.")
-
-        log.info("Ready.")
-
-    async def on_member_join(self, member: discord.Member) -> None:
-        if member.bot:
-            return
-
-        # Welcome DM — both servers
-        await send_welcome_dm(
-            member=member,
-            guild_id=member.guild.id,
-            en_guild_id=self.guild_id,
-            nl_guild_id=self.dutch_guild_id or 0,
-        )
-
-        # Auto-assign "English Learner" role — English server only
-        if member.guild.id != self.guild_id:
-            return
-
-        role = member.guild.get_role(self.english_learner_role_id)
-        if role is None:
-            log.warning("English Learner role not found role_id=%s", self.english_learner_role_id)
-            return
-
-        if role in member.roles:
-            return
-
-        try:
-            await member.add_roles(role, reason="Auto-assign English Learner role on join (SpeakingBot V2)")
-            log.info("Assigned role english_learner user=%s", member.id)
-        except discord.Forbidden:
-            log.warning(
-                "Failed to assign role (Forbidden). Check Manage Roles + role hierarchy. user=%s role_id=%s",
-                member.id,
-                role.id,
-            )
-        except discord.HTTPException:
-            log.exception("Failed to assign role (HTTPException) user=%s role_id=%s", member.id, role.id)
-        except Exception:
-            log.exception("Failed to assign role (unexpected) user=%s role_id=%s", member.id, role.id)
-
-    async def on_voice_state_update(
-        self,
-        member: discord.Member,
-        before: discord.VoiceState,
-        after: discord.VoiceState,
     ) -> None:
-        await self.tracker.handle_voice_state_update(member, before, after)
+        self.bot = bot
+        self.repo = repo
+        self.guild_id = guild_id
+        self.dutch_guild_id = dutch_guild_id
 
+        # Separate availability dicts per server
+        # user_id -> expires_at (epoch)
+        self._available_en: dict[int, float] = {}
+        self._available_nl: dict[int, float] = {}
 
-async def _run_bot() -> None:
-    settings = get_settings()
-    setup_logging(settings.log_level)
+    def _pool(self, is_nl: bool) -> dict[int, float]:
+        return self._available_nl if is_nl else self._available_en
 
-    repo = Repo(settings.db_path)
-    await repo.connect()
+    def _clean_expired(self, is_nl: bool) -> None:
+        pool = self._pool(is_nl)
+        now = time.time()
+        for uid in [uid for uid, exp in pool.items() if now >= exp]:
+            del pool[uid]
 
-    tracker = VoiceTracker(
-        repo=repo,
-        guild_id=settings.guild_id,
-        speak_now_category_id=settings.speak_now_category_id,
-        enable_inactivity_nudge=settings.enable_inactivity_nudge,
-        inactivity_variant=settings.inactivity_nudge_variant,
-        afk_channel_id=settings.afk_channel_id,
-        dutch_guild_id=settings.dutch_guild_id,
-        bot=None,
-    )
+    def _available_users(self, is_nl: bool) -> list[int]:
+        self._clean_expired(is_nl)
+        return list(self._pool(is_nl).keys())
 
-    bot = SpeakingBot(
-        repo=repo,
-        tracker=tracker,
-        guild_id=settings.guild_id,
-        announcements_channel_id=settings.announcements_channel_id,
-        english_learner_role_id=settings.english_learner_role_id,
-        nudge_days=settings.nudge_days,
-        nudge_time=settings.nudge_time,
-        debug_commands=settings.debug_commands,
-        dutch_guild_id=settings.dutch_guild_id,
-    )
+    async def mark_available(
+        self,
+        *,
+        user: discord.User | discord.Member,
+        guild: discord.Guild | None,
+        interaction: discord.Interaction,
+        is_nl: bool = False,
+    ) -> None:
+        pool = self._pool(is_nl)
+        self._clean_expired(is_nl)
+        uid = user.id
+        now = time.time()
 
-    shutdown_event = asyncio.Event()
+        already_available = uid in pool
+        pool[uid] = now + AVAILABLE_FOR_SECONDS
 
-    async def _graceful_shutdown(reason: str) -> None:
-        if shutdown_event.is_set():
+        others = [u for u in self._available_users(is_nl) if u != uid]
+
+        if is_nl:
+            if already_available:
+                msg = (
+                    "Je bent nog steeds beschikbaar. Je 30 minuten zijn verlengd.\n"
+                    + ("Er is ook iemand anders vrij." if others else "Er is nog niemand anders vrij. Je krijgt een DM zodra iemand zich aanmeldt.")
+                )
+            elif others:
+                count = len(others)
+                msg = (
+                    f"Je bent vrij om te oefenen. {count} {'persoon is' if count == 1 else 'mensen zijn'} ook vrij.\n"
+                    "Bekijk je DMs."
+                )
+            else:
+                msg = (
+                    "Je bent de komende 30 minuten beschikbaar.\n"
+                    "Je krijgt een DM zodra iemand anders ook vrij is."
+                )
+        else:
+            if already_available:
+                msg = (
+                    "You're still marked as free. Your 30 minutes has been refreshed.\n"
+                    + ("Someone else is also free right now." if others else "Nobody else is free yet. You will get a DM when someone joins.")
+                )
+            elif others:
+                count = len(others)
+                msg = (
+                    f"You're free to practice. {count} {'person is' if count == 1 else 'people are'} also free right now.\n"
+                    "Check your DMs."
+                )
+            else:
+                msg = (
+                    "You're marked as free for the next 30 minutes.\n"
+                    "You will get a DM as soon as someone else is free too."
+                )
+
+        await interaction.response.send_message(msg, ephemeral=True)
+        await self._update_hub_embed(is_nl=is_nl)
+
+        if others and guild:
+            await self._notify_matches(
+                new_user=user,
+                match_ids=others,
+                guild=guild,
+                is_nl=is_nl,
+            )
+
+        asyncio.create_task(self._expire_after(uid, AVAILABLE_FOR_SECONDS, is_nl=is_nl))
+
+    async def _expire_after(self, user_id: int, seconds: float, *, is_nl: bool) -> None:
+        await asyncio.sleep(seconds)
+        self._pool(is_nl).pop(user_id, None)
+        await self._update_hub_embed(is_nl=is_nl)
+        log.info("PartnerFinder: availability expired user=%s is_nl=%s", user_id, is_nl)
+
+    async def _notify_matches(
+        self,
+        *,
+        new_user: discord.User | discord.Member,
+        match_ids: list[int],
+        guild: discord.Guild,
+        is_nl: bool,
+    ) -> None:
+        links = _voice_links(is_nl)
+
+        names = []
+        for mid in match_ids[:3]:
+            try:
+                m = guild.get_member(mid) or await guild.fetch_member(mid)
+                names.append(m.display_name)
+            except Exception:
+                pass
+        names_str = ", ".join(names) if names else ("iemand" if is_nl else "someone")
+        verb = "is" if len(names) == 1 else "are"
+        verb_nl = "is" if len(names) == 1 else "zijn"
+
+        try:
+            if is_nl:
+                await new_user.send(
+                    f"🤝 **Spreekpartner gevonden!**\n\n"
+                    f"**{names_str}** {verb_nl} ook vrij op dit moment.\n\n"
+                    f"Spring in {links} en begin te praten. ☕"
+                )
+            else:
+                await new_user.send(
+                    f"🤝 **Partner match!**\n\n"
+                    f"**{names_str}** {verb} also free right now.\n\n"
+                    f"Jump into {links} and start talking. ☕"
+                )
+        except discord.Forbidden:
+            log.info("PartnerFinder: DM blocked user=%s", new_user.id)
+        except Exception:
+            log.exception("PartnerFinder: failed to DM new user=%s", new_user.id)
+
+        for match_id in match_ids:
+            try:
+                match_member = guild.get_member(match_id) or await guild.fetch_member(match_id)
+                if is_nl:
+                    await match_member.send(
+                        f"🤝 **Spreekpartner gevonden!**\n\n"
+                        f"**{new_user.display_name}** is nu vrij om te oefenen.\n\n"
+                        f"Spring in {links} en begin te praten. ☕"
+                    )
+                else:
+                    await match_member.send(
+                        f"🤝 **Partner match!**\n\n"
+                        f"**{new_user.display_name}** is free to practice right now.\n\n"
+                        f"Jump into {links} and start talking. ☕"
+                    )
+            except discord.Forbidden:
+                log.info("PartnerFinder: DM blocked match=%s", match_id)
+            except Exception:
+                log.exception("PartnerFinder: failed to DM match=%s", match_id)
+
+    # ---- Hub embeds ----
+
+    async def _update_hub_embed(self, *, is_nl: bool) -> None:
+        self._clean_expired(is_nl)
+        count = len(self._pool(is_nl))
+        channel_id = NL_LOOKING_CHANNEL_ID if is_nl else EN_LOOKING_CHANNEL_ID
+        kv_key = KV_NL_HUB_MSG_ID if is_nl else KV_EN_HUB_MSG_ID
+        guild_id = self.dutch_guild_id if is_nl else self.guild_id
+
+        if guild_id is None:
             return
-        shutdown_event.set()
-        log.info("Shutdown requested (%s). Closing bot...", reason)
 
-        with suppress(Exception):
-            await tracker.shutdown()
-        with suppress(Exception):
-            await bot.close()
-        with suppress(Exception):
-            await repo.close()
+        channel = self.bot.get_channel(channel_id)
+        if channel is None:
+            try:
+                channel = await self.bot.fetch_channel(channel_id)
+            except Exception:
+                return
 
-        log.info("Shutdown complete.")
+        if not isinstance(channel, discord.TextChannel):
+            return
 
-    def _signal_handler(sig_name: str) -> None:
-        asyncio.create_task(_graceful_shutdown(sig_name))
+        existing_id_raw = await self.repo.kv_get(guild_id, kv_key)
+        if not existing_id_raw:
+            return
 
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        with suppress(NotImplementedError):
-            loop.add_signal_handler(sig, _signal_handler, sig.name)
+        embed = build_nl_embed(count) if is_nl else build_en_embed(count)
+        view = PartnerHubViewNL(finder=self) if is_nl else PartnerHubView(finder=self)
 
-    try:
-        await bot.start(settings.discord_token)
-    finally:
-        await _graceful_shutdown("finally")
+        try:
+            msg = await channel.fetch_message(int(existing_id_raw))
+            await msg.edit(embed=embed, view=view)
+        except Exception:
+            log.warning("PartnerFinder: could not update hub embed is_nl=%s", is_nl)
 
+    async def publish_hub(self, *, is_nl: bool = False) -> None:
+        channel_id = NL_LOOKING_CHANNEL_ID if is_nl else EN_LOOKING_CHANNEL_ID
+        kv_key = KV_NL_HUB_MSG_ID if is_nl else KV_EN_HUB_MSG_ID
+        guild_id = self.dutch_guild_id if is_nl else self.guild_id
 
-def main() -> None:
-    asyncio.run(_run_bot())
+        if guild_id is None:
+            return
 
+        channel = self.bot.get_channel(channel_id)
+        if channel is None:
+            try:
+                channel = await self.bot.fetch_channel(channel_id)
+            except Exception:
+                log.warning("PartnerFinder: could not fetch channel %s", channel_id)
+                return
 
-if __name__ == "__main__":
-    main()
+        if not isinstance(channel, discord.TextChannel):
+            return
+
+        embed = build_nl_embed(0) if is_nl else build_en_embed(0)
+        view = PartnerHubViewNL(finder=self) if is_nl else PartnerHubView(finder=self)
+
+        existing_id_raw = await self.repo.kv_get(guild_id, kv_key)
+        if existing_id_raw:
+            try:
+                msg = await channel.fetch_message(int(existing_id_raw))
+                await msg.edit(embed=embed, view=view)
+                log.info("PartnerFinder: updated hub message %s is_nl=%s", existing_id_raw, is_nl)
+                return
+            except Exception:
+                log.warning("PartnerFinder: could not edit hub message, recreating is_nl=%s", is_nl)
+
+        try:
+            sent = await channel.send(embed=embed, view=view)
+            await self.repo.kv_set(guild_id, kv_key, str(sent.id))
+            log.info("PartnerFinder: posted hub message %s is_nl=%s", sent.id, is_nl)
+            try:
+                await sent.pin()
+            except discord.Forbidden:
+                log.warning("PartnerFinder: missing pin permission channel=%s", channel_id)
+            except Exception:
+                log.warning("PartnerFinder: could not pin hub message")
+        except Exception:
+            log.exception("PartnerFinder: failed to post hub message is_nl=%s", is_nl)
