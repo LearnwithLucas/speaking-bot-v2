@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="app update" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;LearnwithLucas&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/LearnwithLucas/speaking-bot-v2.git&quot;,
+    &quot;accountId&quot;: &quot;dfd606f3-5c9c-4901-b32e-bc3eafdca6dc&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="37Amlx6cMyA8xezr6fK44hg9f5P" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/jair2/PycharmProjects/speaking-bot-v2/jobs&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\jair2\PycharmProjects\speaking-bot-v2\jobs" />
+      <recent name="C:\Users\jair2\PycharmProjects\speaking-bot-v2\commands" />
+      <recent name="C:\Users\jair2\PycharmProjects\speaking-bot-v2" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="speaking-bot-v2" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.app" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-b3ae9b5d7125-f0eec537fc84-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.23892.439" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="" />
+      <created>1766354406288</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1766354406288</updated>
+    </task>
+    <task id="LOCAL-00001" summary="partner finder update">
+      <option name="closed" value="true" />
+      <created>1773653936998</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1773653936998</updated>
+    </task>
+    <task id="LOCAL-00002" summary="partner finder DM update">
+      <option name="closed" value="true" />
+      <created>1773654363646</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1773654363646</updated>
+    </task>
+    <task id="LOCAL-00003" summary="private lessons update">
+      <option name="closed" value="true" />
+      <created>1773660617528</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1773660617528</updated>
+    </task>
+    <task id="LOCAL-00004" summary="ondersteund spreken update">
+      <option name="closed" value="true" />
+      <created>1773661213944</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1773661213944</updated>
+    </task>
+    <task id="LOCAL-00005" summary="partner finder update">
+      <option name="closed" value="true" />
+      <created>1773748310032</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1773748310032</updated>
+    </task>
+    <task id="LOCAL-00006" summary="welcome message EN &amp; NL update">
+      <option name="closed" value="true" />
+      <created>1773749299376</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1773749299376</updated>
+    </task>
+    <task id="LOCAL-00007" summary="nudges.py update">
+      <option name="closed" value="true" />
+      <created>1773750020855</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1773750020855</updated>
+    </task>
+    <task id="LOCAL-00008" summary="voice channel nudge messages update">
+      <option name="closed" value="true" />
+      <created>1773750609157</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1773750609157</updated>
+    </task>
+    <task id="LOCAL-00009" summary="add topics.py  update">
+      <option name="closed" value="true" />
+      <created>1773751251589</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1773751251589</updated>
+    </task>
+    <task id="LOCAL-00010" summary="private lessons update">
+      <option name="closed" value="true" />
+      <created>1773752556571</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1773752556571</updated>
+    </task>
+    <task id="LOCAL-00011" summary="tracker update better nudges">
+      <option name="closed" value="true" />
+      <created>1773921376779</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1773921376779</updated>
+    </task>
+    <task id="LOCAL-00012" summary="dictionary added nudges">
+      <option name="closed" value="true" />
+      <created>1773921973567</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1773921973567</updated>
+    </task>
+    <task id="LOCAL-00013" summary="dictionary update 2">
+      <option name="closed" value="true" />
+      <created>1773922599936</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1773922599936</updated>
+    </task>
+    <task id="LOCAL-00014" summary="word of the day update">
+      <option name="closed" value="true" />
+      <created>1773924966301</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1773924966301</updated>
+    </task>
+    <task id="LOCAL-00015" summary="finding a partner_finder.py update">
+      <option name="closed" value="true" />
+      <created>1773925240488</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1773925240488</updated>
+    </task>
+    <task id="LOCAL-00016" summary="dictionary.py fix update">
+      <option name="closed" value="true" />
+      <created>1774017184666</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1774017184676</updated>
+    </task>
+    <task id="LOCAL-00017" summary="word of the day Dutch fix update">
+      <option name="closed" value="true" />
+      <created>1774018349747</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1774018349747</updated>
+    </task>
+    <task id="LOCAL-00018" summary="partner find dutch update">
+      <option name="closed" value="true" />
+      <created>1774019102548</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1774019102548</updated>
+    </task>
+    <task id="LOCAL-00019" summary="app update">
+      <option name="closed" value="true" />
+      <created>1774019739996</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1774019739996</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="partner finder DM update" />
+    <MESSAGE value="ondersteund spreken update" />
+    <MESSAGE value="partner finder update" />
+    <MESSAGE value="welcome message EN &amp; NL update" />
+    <MESSAGE value="nudges.py update" />
+    <MESSAGE value="voice channel nudge messages update" />
+    <MESSAGE value="add topics.py  update" />
+    <MESSAGE value="private lessons update" />
+    <MESSAGE value="tracker update better nudges" />
+    <MESSAGE value="dictionary added nudges" />
+    <MESSAGE value="dictionary update 2" />
+    <MESSAGE value="word of the day update" />
+    <MESSAGE value="finding a partner_finder.py update" />
+    <MESSAGE value="dictionary.py fix update" />
+    <MESSAGE value="word of the day Dutch fix update" />
+    <MESSAGE value="partner find dutch update" />
+    <MESSAGE value="app update" />
+    <option name="LAST_COMMIT_MESSAGE" value="app update" />
+  </component>
+</project>
