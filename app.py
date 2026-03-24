@@ -18,7 +18,7 @@ from jobs.partner_finder import PartnerFinder, PartnerHubView, PartnerHubViewNL
 from jobs.welcome import send_welcome_dm
 from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
-from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView
+from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
 from jobs.word_of_the_day import WordOfTheDayJob
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
@@ -96,6 +96,7 @@ class SpeakingBot(commands.Bot):
         # Register persistent views
         self.add_view(PartnerHubView(finder=None))
         self.add_view(AskJerryView(publisher=None))
+        self.add_view(AskJerryViewNL(publisher=None))
         self.add_view(PartnerHubViewNL(finder=None))
         self.add_view(EnLessonsView())
         self.add_view(NlLessonsView())
@@ -192,9 +193,14 @@ class SpeakingBot(commands.Bot):
         # Ask Jerry hub
         if self._ask_jerry_publisher:
             try:
-                await self._ask_jerry_publisher.publish()
+                await self._ask_jerry_publisher.publish(self.guild_id)
             except Exception:
-                log.exception("AskJerry: failed to publish hub")
+                log.exception("AskJerry: failed to publish EN hub")
+            if self.dutch_guild_id:
+                try:
+                    await self._ask_jerry_publisher.publish_dutch(self.dutch_guild_id)
+                except Exception:
+                    log.exception("AskJerry: failed to publish NL hub")
 
         # Word of the day
         WordOfTheDayJob(

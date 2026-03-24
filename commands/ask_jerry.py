@@ -8,8 +8,10 @@ from discord.ext import commands
 
 log = logging.getLogger("commands.ask_jerry")
 
-ASK_JERRY_CHANNEL_ID = 1226103187614728295  # 🦆┃ask-jerry
+ASK_JERRY_CHANNEL_ID = 1486110286523138108  # 🦆┃ask-jerry
 KV_ASK_JERRY_MSG_ID = "ask_jerry_hub_message_id"
+NL_ASK_JERRY_CHANNEL_ID = 1486110860786270438  # 🦆┃vraag-het-jerry
+KV_NL_ASK_JERRY_MSG_ID = "ask_jerry_nl_hub_message_id"
 
 EN_COMMUNITY_INVITE = "https://discord.gg/uhz4DZMPYv"
 EN_SUPPORTED_SPEAKING_URL = "https://learnwithlucas.com/supported-speaking/"
@@ -430,6 +432,395 @@ FAQ: dict[str, dict] = {
     },
 }
 
+NL_FAQ: dict[str, dict] = {
+    "ondersteund_spreken": {
+        "label": "📖 Ondersteund Spreken",
+        "questions": [
+            (
+                "Wat is Ondersteund Spreken?",
+                "Ondersteund Spreken is een wekelijks oefenlidmaatschap voor €7,99 per maand.\n\n"
+                "Je krijgt elke maandag of woensdag een live sessie in een kleine groep op jouw niveau (A2, B1 of B2). "
+                "Op vrijdag krijg je de uitgebreide leden oefengids. Op zondag het spreekonderwerp voor maandag. "
+                "Elke maand ook een verhaal met audio.\n\n"
+                "Geen cursus. Geen vast schema dat je moet volgen. "
+                "Wekelijks live spreken in een rustige sfeer, op jouw eigen tempo.\n\n"
+                f"Meer info: https://learnwithlucas.com/ondersteund-spreken/"
+            ),
+            (
+                "Hoeveel kost het?",
+                "Ondersteund Spreken kost **€7,99 per maand** of **€79,90 per jaar** (2 maanden gratis).\n\n"
+                "Ter vergelijking: een privéles met Lucas kost €28 voor 30 minuten. "
+                "Dit is elke week live oefenen voor minder dan twee kopjes koffie per maand.\n\n"
+                "100% terugbetaling binnen 24 uur als het toch niet is wat je verwachtte. Geen vragen gesteld.\n\n"
+                "Begin vandaag: https://learnwithlucas.com/ondersteund-spreken/"
+            ),
+            (
+                "Wat krijg ik elke week?",
+                "Elke week:\n"
+                "• Maandag of woensdag 19:00 CET: live sessie in een kleine groep op jouw niveau\n"
+                "• Vrijdag: de uitgebreide leden oefengids met foutherkenning en extra oefenzinnen\n"
+                "• Zondag: het spreekonderwerp voor de sessie van maandag of woensdag\n\n"
+                "Elke maand ook een compleet B1-verhaal met audio. "
+                "Lezen en luisteren tegelijk, speciaal geschreven voor leerlingen op jouw niveau."
+            ),
+            (
+                "Hoe werkt de live sessie?",
+                "Elke maandag en woensdag om 19:00 CET, één uur.\n\n"
+                "• 0:00 tot 0:15 — introductie, iedereen samen\n"
+                "• 0:15 tot 0:45 — breakout rooms op niveau (A2, B1 of B2), Lucas bezoekt elke kamer\n"
+                "• 0:45 tot 1:00 — afsluiting, veelgemaakte fouten besproken\n\n"
+                "Max 20 personen per sessie. Rustige sfeer. Je kiest zelf welke avond past, maandag of woensdag. "
+                "Je hoeft niet beide te komen."
+            ),
+            (
+                "Kan ik op elk moment opzeggen?",
+                "Ja. Op elk moment opzeggen, geen vragen gesteld.\n\n"
+                "Er is ook 100% terugbetaling binnen 24 uur als het toch niet is wat je verwachtte. "
+                "Geen formulieren, geen wachttijd.\n\n"
+                "Begin hier: https://learnwithlucas.com/ondersteund-spreken/"
+            ),
+            (
+                "Welk niveau heb ik nodig?",
+                "Ondersteund Spreken werkt het beste als je A2, B1 of B2 niveau hebt. "
+                "Dat betekent dat je Nederlands redelijk begrijpt maar vastloopt als je moet spreken.\n\n"
+                "Er zijn breakout rooms per niveau, dus je oefent altijd met mensen op jouw niveau. "
+                "Je kiest zelf welke kamer je ingaat.\n\n"
+                "Als je nog een complete beginner bent, begin dan met de gratis vrijdagsessie en sluit je aan als je er klaar voor bent."
+            ),
+            (
+                "Kan ik betalen met GCash, DANA of Touch n Go?",
+                "Ja. Als je in de Filipijnen, Indonesië, Maleisië of Thailand zit, "
+                "zijn er Airwallex betaallinks die GCash, DANA en Touch 'n Go accepteren.\n\n"
+                "Ga naar https://learnwithlucas.com/ondersteund-spreken/ en scroll naar het betalingsgedeelte. "
+                "Daar zie je de SEA betaaloptie."
+            ),
+            (
+                "Wat is het verschil met de gratis versie?",
+                "De gratis gids heeft de kernuitleg en 5 oefenzinnen.\n\n"
+                "De leden editie voegt toe:\n"
+                "• 10 extra oefenzinnen\n"
+                "• Een foutherkenning alinea (vind en verbeter verborgen fouten)\n"
+                "• Zelfcontrole vragen\n"
+                "• Een snelle herkenningstest\n\n"
+                "Dat is ongeveer 3 keer meer inhoud per gids. Plus de live sessie en het maandelijkse verhaal."
+            ),
+        ],
+    },
+    "priveles": {
+        "label": "🎙️ Privélessen",
+        "questions": [
+            (
+                "Wat zijn privélessen?",
+                "Privélessen zijn een-op-een sessies met Lucas, via Zoom of Discord.\n\n"
+                "Geen scripts, geen examens, pauzes inbegrepen. Echt gesprek vanaf het begin. "
+                "Het doel is rustige, persoonlijke spreekoefening met iemand die echt luistert en nuttige feedback geeft.\n\n"
+                "Meer info: https://learnwithlucas.com/priveles-nederlands/"
+            ),
+            (
+                "Hoeveel kosten privélessen?",
+                "**Proefsessie** — 30 minuten — €28 (eenmalig)\n"
+                "**Speaking Builder** — 4 x 60 minuten — €219 (10% korting)\n"
+                "**Confidence Intensive** — 10 x 60 minuten — €469 (20% korting)\n\n"
+                "**Examenvoorbereiding:**\n"
+                "Examenvoorbereiding Builder — 4 x 60 minuten — €249\n"
+                "Examenvoorbereiding Intensive — 10 x 60 minuten — €529\n\n"
+                "Niet zeker welk pakket past? Begin met de proefsessie. "
+                "Alle info: https://learnwithlucas.com/priveles-nederlands/"
+            ),
+            (
+                "Welk niveau heb ik nodig voor privélessen?",
+                "Geen minimumniveau. Privélessen werken goed als je:\n"
+                "• Nederlands begrijpt maar aarzelt als het tijd is om te spreken\n"
+                "• Rustige, persoonlijke feedback wilt zonder publiek\n"
+                "• Een specifiek doel hebt zoals een sollicitatiegesprek, presentatie of dagelijks zelfvertrouwen\n"
+                "• Je voorbereidt op NT2, inburgeringsexamen of een zakelijke assessment\n\n"
+                "De eerste sessie begint altijd met een echt gesprek om samen je niveau te ontdekken."
+            ),
+            (
+                "Hoe boek ik een privéles?",
+                "Ga naar https://learnwithlucas.com/priveles-nederlands/ en kies een sessie of pakket.\n\n"
+                "Na betaling ontvang je een kalenderlink. Kies een tijd die voor jou werkt. "
+                "Dan ontmoeten jullie elkaar via Zoom of Discord. Geen installatie nodig.\n\n"
+                "Vragen voor je boekt? Mail dutch@learnwithlucas.com"
+            ),
+            (
+                "Wat gebeurt er in een sessie?",
+                "Echt gesprek vanaf het begin. Je praat over onderwerpen die voor jou relevant zijn.\n\n"
+                "Lucas geeft rustige feedback tijdens of na de sessie, wat het beste voor jou werkt. "
+                "Een korte follow-up na de sessie als dat nuttig is.\n\n"
+                "Sessies zijn 30 of 60 minuten afhankelijk van wat je hebt geboekt. "
+                "Geen scripts, geen grammaticaoefeningen tenzij je daar om vraagt."
+            ),
+            (
+                "Is er nu plek?",
+                "Privélessen zijn beperkt zodat ze rustig en gefocust blijven.\n\n"
+                "Als er nu geen plek is, ben je altijd welkom bij de gratis sessies "
+                "en de spreekgemeenschap hier.\n\n"
+                "Bekijk huidige beschikbaarheid op https://learnwithlucas.com/priveles-nederlands/"
+            ),
+        ],
+    },
+    "spreektips": {
+        "label": "💬 Spreektips",
+        "questions": [
+            (
+                "Ik begrijp Nederlands maar loop vast als ik spreek. Wat doe ik?",
+                "Dat is het meest voorkomende patroon en het heeft een logische reden. "
+                "Begrijpen en spreken gebruiken verschillende delen van je brein.\n\n"
+                "De enige oplossing is meer spreken, maar het gaat erom dat je begint in situaties zonder druk. "
+                "Geen test. Geen presentatie. Gewoon een echt gesprek waarbij fouten maken prima is.\n\n"
+                "Begin hier: ga naar de spraakkanalen en zeg één zin. Dat is het. Dat is de oefening."
+            ),
+            (
+                "Hoe stop ik met terugvallen op mijn eigen taal?",
+                "Terugvallen gebeurt als de druk te hoog is of het woord er nog niet is.\n\n"
+                "Twee dingen helpen:\n"
+                "1. Verlaag de druk. Als je oefent met mensen die begrijpen dat je aan het leren bent, "
+                "is er geen reden om te wisselen.\n"
+                "2. Leer tijd te kopen. Zinnen zoals 'hoe zeg je dat', 'even nadenken' of 'ik denk dat het woord is' "
+                "houden je in het Nederlands terwijl je het woord zoekt.\n\n"
+                "Je hebt geen perfecte zinnen nodig. Je moet alleen elke keer iets langer in het Nederlands blijven."
+            ),
+            (
+                "Hoe bouw ik zelfvertrouwen op bij het spreken?",
+                "Zelfvertrouwen komt na het doen, niet ervoor.\n\n"
+                "De meeste mensen wachten tot ze zich klaar voelen. Dat gevoel komt niet vanzelf. "
+                "Het komt van genoeg keren spreken totdat het normaal begint te voelen.\n\n"
+                "Het praktische antwoord: spreek elke dag een beetje in een omgeving zonder druk. "
+                "Deze server, de spraakkanalen, de live sessies. "
+                "Niet om te presteren. Gewoon om te wennen aan je eigen stem in het Nederlands."
+            ),
+            (
+                "Hoe verbeter ik mijn uitspraak?",
+                "Uitspraak verbetert door luisteren en spreken samen, niet door regels.\n\n"
+                "Luister veel naar Nederlands op jouw niveau. Herhaal zinnen hardop, niet alleen woorden. "
+                "Neem jezelf af en toe op en vergelijk.\n\n"
+                "Het doel is geen perfect accent. Het doel is duidelijk begrepen worden. "
+                "De meeste mensen zijn beter te verstaan dan ze denken."
+            ),
+            (
+                "Hoe onthoud ik nieuwe woorden?",
+                "Je onthoudt woorden het best als je ze gebruikt in echte zinnen, niet door lijsten te leren.\n\n"
+                "Als je een nieuw woord leert, gebruik het dan in een zin die relevant is voor jouw leven. "
+                "Zeg het hardop. Gebruik het dezelfde dag nog in een gesprek als je kunt.\n\n"
+                "Kijk elke ochtend naar het woord van de dag. Daar is dat kanaal voor."
+            ),
+            (
+                "Hoe vaak moet ik oefenen om vooruit te gaan?",
+                "Een beetje elke dag werkt beter dan een lange sessie één keer per week.\n\n"
+                "15 minuten echte spreekoefening per dag brengt je sneller verder dan "
+                "twee uur op zaterdag. De regelmaat is wat de gewoonte opbouwt.\n\n"
+                "Gebruik de spraakkanalen. Doe mee met de live sessies. Druk op de partnerknop als je vrij bent. "
+                "Kleine stappen tellen op."
+            ),
+            (
+                "Ik schaam me voor mijn fouten. Hoe kom ik daar overheen?",
+                "Iedereen voelt dit. Het is geen teken dat je slecht bent in Nederlands. "
+                "Het is een teken dat het je wat kan schelen.\n\n"
+                "De mensen in deze community leren ook. Niemand beoordeelt je grammatica. "
+                "Fouten zijn eigenlijk nuttig want ze laten zien wat je kunt verbeteren.\n\n"
+                "De enige manier om je niet meer te schamen is genoeg spreken totdat het normaal wordt. "
+                "Dat kost tijd. Gun jezelf die tijd."
+            ),
+        ],
+    },
+    "community_nl": {
+        "label": "🏠 Community",
+        "questions": [
+            (
+                "Wanneer zijn de gratis live sessies?",
+                "Gratis live sessies zijn elke vrijdag om 20:30 CET. Open voor iedereen, geen lidmaatschap nodig.\n\n"
+                "Leden van Ondersteund Spreken hebben ook toegang tot de maandag en woensdag sessies om 19:00.\n\n"
+                "Gewoon binnenkomen. Je kunt luisteren, één zin zeggen of een heel gesprek voeren. "
+                "Wat die dag goed voelt. Geen voorbereiding nodig."
+            ),
+            (
+                "Hoe vind ik een spreekpartner?",
+                "Ga naar het kanaal op-zoek-naar-een-partner en druk op de knop als je vrij bent.\n\n"
+                "Als iemand anders ook vrij is binnen 30 minuten, krijgen jullie allebei een DM "
+                "en kunnen jullie samen een spraakkanaal in. Geen planning, geen tijdslots. "
+                "Druk gewoon op de knop als je zin hebt om te oefenen."
+            ),
+            (
+                "Waarvoor zijn de spraakkanalen?",
+                "De spraakkanalen zijn de hele dag open. Je hoeft niet te wachten op een geplande les.\n\n"
+                "Kom binnen als je zin hebt. Blijf zo lang als je wilt. Ga weg wanneer je wilt. Geen druk."
+            ),
+            (
+                "Hoe gebruik ik /onderwerpen?",
+                "Typ `/onderwerpen` en er verschijnt een menu met 10 onderwerpscategorieën: "
+                "familie, eten, hobby's, reizen, werk, leren, gezondheid, toekomst en meer.\n\n"
+                "Kies een onderwerp en je krijgt gesprekskaarten met navigatiepijlen. "
+                "Elke kaart toont een gespreksvraag en handige woordenschat. "
+                "Iedereen in het kanaal kan de kaarten doorbladeren.\n\n"
+                "Handig als het gesprek is stilgevallen en je een nieuwe richting wilt."
+            ),
+            (
+                "Hoe zoek ik een woord op?",
+                "Typ `/d word: [woord]` en je krijgt een definitie, woordtype, voorbeeldzin en synoniemen.\n\n"
+                "De bot probeert eerst de Engelse API. Als het woord daar niet in staat, "
+                "krijg je directe links naar woorden.org en Van Dale.\n\n"
+                "Het resultaat wordt gepost in het kanaal zodat iedereen het kan zien."
+            ),
+            (
+                "Wat is het woord van de dag?",
+                "Elke ochtend om 09:00 CET verschijnt er een nieuw Nederlands woord in het woord-van-de-dag kanaal.\n\n"
+                "B1/B2 niveau, praktisch woordgebruik. Elk bericht bevat de Nederlandse uitleg, "
+                "een voorbeeldzin en een uitnodiging om het woord zelf te gebruiken in de chat."
+            ),
+            (
+                "Waar vind ik gratis leermateriaal?",
+                "Gratis oefengidsen: https://learnwithlucas.com/nederlandse-leermaterialen/\n"
+                "Gratis maandelijks verhaal: https://learnwithlucas.com/gratis-maandelijks-boek/\n"
+                "YouTube: https://www.youtube.com/@learndutchwithlucas\n"
+                "TikTok: https://www.tiktok.com/@dutchwithlucas\n\n"
+                "Alles op die pagina's is gratis. Voor de meeste onderdelen heb je geen account nodig."
+            ),
+        ],
+    },
+    "grammatica": {
+        "label": "📝 Grammatica",
+        "questions": [
+            (
+                "Wanneer gebruik ik 'de' en wanneer 'het'?",
+                "Er is geen perfecte regel, maar deze patronen helpen:\n\n"
+                "**Altijd 'het':** verkleinwoorden (het huisje, het meisje), landen, talen, metalen, "
+                "namen van letters en namen van wetenschappen.\n\n"
+                "**Altijd 'de':** beroepen (de leraar), mensen en dieren met een duidelijk geslacht, "
+                "namen van bergen en rivieren, meervouden.\n\n"
+                "Alles wat niet in een categorie past is onvoorspelbaar en moet je onthouden. "
+                "Het goede nieuws: in de meeste gevallen begrijpen mensen je ook als je de verkeerde kiest."
+            ),
+            (
+                "Wat is het verschil tussen 'er is' en 'er zijn'?",
+                "Gebruik **er is** als er één iets is of als het woord enkelvoud is.\n"
+                "Er is een probleem. Er is geen melk.\n\n"
+                "Gebruik **er zijn** als er meerdere dingen zijn of als het woord meervoud is.\n"
+                "Er zijn drie mensen. Er zijn geen stoelen meer.\n\n"
+                "De truc: kijk naar het zelfstandig naamwoord dat erachter komt. Enkelvoud = er is. Meervoud = er zijn."
+            ),
+            (
+                "Wanneer gebruik ik 'mij' en wanneer 'me'?",
+                "In gesproken Nederlands zijn ze vrijwel uitwisselbaar, maar er is een verschil:\n\n"
+                "**Me** gebruik je als de nadruk niet op het woord ligt.\n"
+                "Hij zag me. Ze gaf het aan me.\n\n"
+                "**Mij** gebruik je als het woord nadruk krijgt of na een voorzetsel.\n"
+                "Hij zag míj, niet jou. Met mij. Voor mij.\n\n"
+                "In spreektaal maakt het niet veel uit. 'Me' is informeler en wordt vaker gebruikt."
+            ),
+            (
+                "Wat is het verschil tussen 'omdat' en 'want'?",
+                "Beide betekenen 'because', maar de woordvolgorde is anders.\n\n"
+                "**Omdat** — het werkwoord gaat naar het einde van de zin.\n"
+                "Ik ben moe *omdat ik weinig heb geslapen*.\n\n"
+                "**Want** — de normale volgorde blijft.\n"
+                "Ik ben moe, *want ik heb weinig geslapen*.\n\n"
+                "In gesproken taal worden beide veel gebruikt. 'Want' is iets informeler."
+            ),
+            (
+                "Hoe gebruik ik de verleden tijd?",
+                "Er zijn twee manieren om de verleden tijd te vormen:\n\n"
+                "**Zwakke werkwoorden** — voeg -te of -de toe (en -ten/-den in meervoud).\n"
+                "werken → ik werkte. leven → hij leefde.\n\n"
+                "**Sterke werkwoorden** — de klinker verandert, geen vaste regel.\n"
+                "rijden → ik reed. schrijven → ik schreef. lopen → ik liep.\n\n"
+                "De meeste werkwoorden zijn zwak. De sterke moet je per stuk leren. "
+                "Begin met de meest gebruikte: zijn, hebben, gaan, komen, zien, zeggen, weten."
+            ),
+            (
+                "Wanneer gebruik ik 'zijn' en wanneer 'hebben' in de voltooide tijd?",
+                "Dit is een van de lastigste punten van Nederlands.\n\n"
+                "**Hebben** gebruik je voor de meeste werkwoorden.\n"
+                "Ik heb gegeten. Ze heeft gewerkt. Hij heeft gebeld.\n\n"
+                "**Zijn** gebruik je voor werkwoorden die een beweging of verandering uitdrukken "
+                "waarbij je van A naar B gaat.\n"
+                "Ik ben gegaan. Ze is gekomen. Hij is gevallen. We zijn gegroeid.\n\n"
+                "Handig ezelsbruggetje: als je het werkwoord kunt combineren met een richting "
+                "(naar huis gaan, omhoog vallen), gebruik dan 'zijn'."
+            ),
+            (
+                "Wat is het verschil tussen 'nog' en 'al'?",
+                "**Nog** betekent dat iets nog steeds het geval is, of dat je verwacht dat het snel zal veranderen.\n"
+                "Ze woont nog in Amsterdam. Heb je nog honger?\n\n"
+                "**Al** betekent dat iets eerder is gebeurd dan verwacht, of dat iets inmiddels het geval is.\n"
+                "Hij is al klaar. Ze heeft al gegeten.\n\n"
+                "In vragen kun je ze allebei gebruiken maar met een ander gevoel:\n"
+                "'Ben je al klaar?' → ik verwacht ja.\n"
+                "'Ben je nog niet klaar?' → ik verwacht nee."
+            ),
+            (
+                "Hoe gebruik ik 'er' in een zin?",
+                "'Er' heeft meerdere functies in het Nederlands en dat maakt het verwarrend.\n\n"
+                "**1. Plaatsaanduiding** (there): Ik wil er niet naartoe. Ben je er al?\n\n"
+                "**2. Met een getal**: Er zijn drie mensen. Er is één probleem.\n\n"
+                "**3. Als verwijzing naar iets**: Ik heb er geen zin in. (= in dat)\n\n"
+                "**4. Met voorzetsels**: Ik denk er vaak aan. Ze houdt er niet van.\n\n"
+                "Het makkelijkst is om 'er' te leren in vaste combinaties. "
+                "Begin met: er is/zijn, er naartoe, er van houden, er aan denken."
+            ),
+        ],
+    },
+    "server_functies": {
+        "label": "🤖 Serverfuncties",
+        "questions": [
+            (
+                "Wat doet deze bot?",
+                "Jerry The Duck verzorgt de meeste geautomatiseerde functies in deze server.\n\n"
+                "Dat omvat het woord van de dag, de spreekpartnervinder, aanmoedigingsberichten in de spraakkanalen, "
+                "de woordenboekzoekfunctie, de onderwerpkaarten, deze FAQ en de productinfopagina's.\n\n"
+                "Als er automatisch iets wordt gepost, is het waarschijnlijk Jerry."
+            ),
+            (
+                "Hoe werkt de spreekpartnervinder?",
+                "Ga naar het kanaal op-zoek-naar-een-partner en druk op de knop als je zin hebt om te oefenen.\n\n"
+                "Je bent 30 minuten beschikbaar. Als iemand anders in datzelfde venster op de knop drukt, "
+                "krijgen jullie allebei een DM met een link naar de spraakkanalen.\n\n"
+                "Geen planning. Geen tijdslots. Druk gewoon als je vrij bent en kijk wie er is."
+            ),
+            (
+                "Hoe gebruik ik /onderwerpen?",
+                "Typ `/onderwerpen` en er verschijnt een dropdown met 10 categorieën.\n\n"
+                "Kies er een en je krijgt gesprekskaarten met navigatiepijlen. "
+                "Elke kaart toont een gespreksvraag en handige woordenschat. "
+                "Iedereen in het kanaal kan de kaarten doorbladeren.\n\n"
+                "Handig als het gesprek is stilgevallen en je een nieuwe richting wilt."
+            ),
+            (
+                "Hoe gebruik ik /d om een woord op te zoeken?",
+                "Typ `/d word: [woord]` en je krijgt een definitie, woordtype, voorbeeldzin en synoniemen.\n\n"
+                "De bot probeert eerst de Engelse API. Als het woord daar niet in staat, "
+                "krijg je directe links naar woorden.org en Van Dale.\n\n"
+                "Het resultaat wordt gepost in het kanaal zodat iedereen het kan zien."
+            ),
+            (
+                "Wat is het woord van de dag?",
+                "Elke ochtend om 09:00 CET verschijnt er een nieuw Nederlands woord in het woord-van-de-dag kanaal.\n\n"
+                "B1/B2 niveau, praktisch woordgebruik. Elk bericht bevat de Nederlandse uitleg, "
+                "een voorbeeldzin en een uitnodiging om het woord zelf te gebruiken in de chat."
+            ),
+            (
+                "Waarom krijg ik berichten in het spraakkanaal?",
+                "Als je een spraakkanaal binnenkomt, stuurt Jerry op het 5- en 30-minutenpunt een kort berichtje.\n\n"
+                "Bij 5 minuten is het gewoon een erkenning dat je er bent. "
+                "Bij 30 minuten een berichtje dat het moeite waard is.\n\n"
+                "Af en toe verschijnt er ook een gespreksopener in de chat. "
+                "Als je niet weet waarover te praten, gebruik /onderwerpen of het woordenboekkanaal."
+            ),
+            (
+                "Waar vind ik info over Ondersteund Spreken?",
+                "Er is een apart kanaal met alle details en een FAQ-menu. "
+                "Of ga direct naar https://learnwithlucas.com/ondersteund-spreken/"
+            ),
+            (
+                "Waar vind ik info over privélessen?",
+                "Er is een apart kanaal met alle details en een FAQ-menu. "
+                "Of ga direct naar https://learnwithlucas.com/priveles-nederlands/"
+            ),
+        ],
+    },
+}
+
+
 
 # =====================
 # CATEGORY BUTTONS
@@ -528,6 +919,81 @@ class QuestionPickerView(discord.ui.View):
         self.add_item(QuestionSelect(questions=questions))
 
 
+class AskJerryViewNL(discord.ui.View):
+    """Dutch persistent view in #vraag-het-jerry."""
+
+    def __init__(self, *, publisher: "AskJerryPublisher | None" = None) -> None:
+        super().__init__(timeout=None)
+        self._publisher = publisher
+
+        for key, data in NL_FAQ.items():
+            self.add_item(CategoryButtonNL(
+                category_key=key,
+                label=data["label"],
+                publisher=publisher,
+            ))
+
+
+class CategoryButtonNL(discord.ui.Button):
+    def __init__(
+        self,
+        *,
+        category_key: str,
+        label: str,
+        publisher: "AskJerryPublisher | None",
+    ) -> None:
+        super().__init__(
+            label=label,
+            style=discord.ButtonStyle.secondary,
+            custom_id=f"askjerry:nl:cat:{category_key}:v1",
+            row=_nl_button_row(category_key),
+        )
+        self._category_key = category_key
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        data = NL_FAQ.get(self._category_key)
+        if not data:
+            await interaction.response.send_message("Categorie niet gevonden.", ephemeral=True)
+            return
+        view = QuestionPickerView(category_key=self._category_key, questions=data["questions"])
+        await interaction.response.send_message(
+            f"**{data['label']}** — kies een vraag:",
+            view=view,
+            ephemeral=True,
+        )
+
+
+def _nl_button_row(key: str) -> int:
+    rows = {
+        "ondersteund_spreken": 0,
+        "priveles": 0,
+        "spreektips": 1,
+        "community_nl": 1,
+        "grammatica": 2,
+        "server_functies": 2,
+    }
+    return rows.get(key, 0)
+
+
+def build_nl_hub_embed() -> discord.Embed:
+    embed = discord.Embed(
+        title="🦆 Vraag het Jerry",
+        description=(
+            "Heb je een vraag? Kies een categorie hieronder.\n\n"
+            "📖 **Ondersteund Spreken** — wat het is, prijs, wat je krijgt\n"
+            "🎙️ **Privélessen** — hoe het werkt, prijs, boeken\n"
+            "💬 **Spreektips** — hoe stop je met vastlopen, zelfvertrouwen opbouwen\n"
+            "🏠 **Community** — live sessies, spraakkanalen, hoe dingen hier werken\n"
+            "📝 **Grammatica** — veelgestelde vragen over Nederlandse grammatica\n"
+            "🤖 **Serverfuncties** — hoe gebruik je de bot, commando's en kanalen\n\n"
+            "Je antwoorden zijn alleen zichtbaar voor jou."
+        ),
+    )
+    embed.set_footer(text="vraag-het-jerry:nl:v1")
+    return embed
+
+
+
 # =====================
 # PUBLISHER
 # =====================
@@ -555,44 +1021,69 @@ class AskJerryPublisher:
         self._bot = bot
         self._repo = repo
 
-    async def publish(self) -> None:
-        channel = self._bot.get_channel(ASK_JERRY_CHANNEL_ID)
+    async def _publish_to_channel(
+        self,
+        *,
+        channel_id: int,
+        guild_id: int,
+        embed: discord.Embed,
+        view: discord.ui.View,
+        kv_key: str,
+        label: str,
+    ) -> None:
+        channel = self._bot.get_channel(channel_id)
         if channel is None:
             try:
-                channel = await self._bot.fetch_channel(ASK_JERRY_CHANNEL_ID)
+                channel = await self._bot.fetch_channel(channel_id)
             except Exception:
-                log.warning("AskJerry: could not fetch channel %s", ASK_JERRY_CHANNEL_ID)
+                log.warning("AskJerry: could not fetch channel %s", channel_id)
                 return
 
         if not isinstance(channel, discord.TextChannel):
             return
 
-        guild_id = channel.guild.id
-        embed = build_hub_embed()
-        view = AskJerryView(publisher=self)
-
-        existing_id_raw = await self._repo.kv_get(guild_id, KV_ASK_JERRY_MSG_ID)
+        existing_id_raw = await self._repo.kv_get(guild_id, kv_key)
         if existing_id_raw:
             try:
                 msg = await channel.fetch_message(int(existing_id_raw))
                 await msg.edit(embed=embed, view=view)
-                log.info("AskJerry: updated hub message %s", existing_id_raw)
+                log.info("AskJerry: updated %s hub message %s", label, existing_id_raw)
                 return
             except Exception:
-                log.warning("AskJerry: could not edit hub message, recreating")
+                log.warning("AskJerry: could not edit %s hub message, recreating", label)
 
         try:
             sent = await channel.send(embed=embed, view=view)
-            await self._repo.kv_set(guild_id, KV_ASK_JERRY_MSG_ID, str(sent.id))
-            log.info("AskJerry: posted hub message %s", sent.id)
+            await self._repo.kv_set(guild_id, kv_key, str(sent.id))
+            log.info("AskJerry: posted %s hub message %s", label, sent.id)
             try:
                 await sent.pin()
             except discord.Forbidden:
-                log.warning("AskJerry: missing pin permission")
+                log.warning("AskJerry: missing pin permission channel=%s", channel_id)
             except Exception:
-                log.warning("AskJerry: could not pin hub message")
+                log.warning("AskJerry: could not pin hub message channel=%s", channel_id)
         except Exception:
-            log.exception("AskJerry: failed to post hub message")
+            log.exception("AskJerry: failed to post hub message channel=%s", channel_id)
+
+    async def publish(self, guild_id: int) -> None:
+        await self._publish_to_channel(
+            channel_id=ASK_JERRY_CHANNEL_ID,
+            guild_id=guild_id,
+            embed=build_hub_embed(),
+            view=AskJerryView(publisher=self),
+            kv_key=KV_ASK_JERRY_MSG_ID,
+            label="EN",
+        )
+
+    async def publish_dutch(self, guild_id: int) -> None:
+        await self._publish_to_channel(
+            channel_id=NL_ASK_JERRY_CHANNEL_ID,
+            guild_id=guild_id,
+            embed=build_nl_hub_embed(),
+            view=AskJerryViewNL(publisher=self),
+            kv_key=KV_NL_ASK_JERRY_MSG_ID,
+            label="NL",
+        )
 
 
 # =====================
@@ -610,8 +1101,9 @@ async def setup(bot: commands.Bot, repo, *, guild_id: int) -> AskJerryPublisher:
     cog = AskJerryCog(bot, publisher)
     await bot.add_cog(cog)
 
-    # Register all persistent category button views
+    # Register persistent views for both languages
     bot.add_view(AskJerryView(publisher=None))
+    bot.add_view(AskJerryViewNL(publisher=None))
 
     log.info("AskJerryCog loaded.")
     return publisher
