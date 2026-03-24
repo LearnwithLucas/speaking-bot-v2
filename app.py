@@ -18,6 +18,7 @@ from jobs.partner_finder import PartnerFinder, PartnerHubView, PartnerHubViewNL
 from jobs.welcome import send_welcome_dm
 from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
+from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView
 from jobs.word_of_the_day import WordOfTheDayJob
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
@@ -58,6 +59,7 @@ class SpeakingBot(commands.Bot):
         self.dutch_guild_id = dutch_guild_id
         self._jobs_started = False
         self._partner_finder: PartnerFinder | None = None
+        self._ask_jerry_publisher = None
 
     async def setup_hook(self) -> None:
         # Load debug tools (dev-only) BEFORE sync so commands appear when enabled.
@@ -68,6 +70,13 @@ class SpeakingBot(commands.Bot):
             log.info("Debug commands enabled (DEBUG_COMMANDS=1).")
         else:
             log.info("Debug commands disabled (DEBUG_COMMANDS=0).")
+
+        # Load Ask Jerry cog
+        self._ask_jerry_publisher = await setup_ask_jerry(
+            self,
+            self.repo,
+            guild_id=self.guild_id,
+        )
 
         # Load dictionary cog
         await setup_dictionary(
@@ -86,6 +95,7 @@ class SpeakingBot(commands.Bot):
 
         # Register persistent views
         self.add_view(PartnerHubView(finder=None))
+        self.add_view(AskJerryView(publisher=None))
         self.add_view(PartnerHubViewNL(finder=None))
         self.add_view(EnLessonsView())
         self.add_view(NlLessonsView())
@@ -178,6 +188,13 @@ class SpeakingBot(commands.Bot):
             await vocab.publish_dutch()
         except Exception:
             log.exception("VocabPublisher: failed to publish Dutch")
+
+        # Ask Jerry hub
+        if self._ask_jerry_publisher:
+            try:
+                await self._ask_jerry_publisher.publish()
+            except Exception:
+                log.exception("AskJerry: failed to publish hub")
 
         # Word of the day
         WordOfTheDayJob(
