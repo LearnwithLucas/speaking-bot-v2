@@ -22,8 +22,8 @@ NL_SUPPORTED_URL = "https://learnwithlucas.com/ondersteund-spreken/"
 # ---- KV keys ----
 KV_EN_PRIVATE_MSG = "private_lessons_en_message_id"
 KV_NL_PRIVATE_MSG = "private_lessons_nl_message_id"
-KV_EN_SUPPORTED_MSG = "supported_speaking_en_message_id"
-KV_NL_SUPPORTED_MSG = "supported_speaking_nl_message_id"
+KV_EN_SUPPORTED_MSG = "supported_speaking_en_message_id_v2"
+KV_NL_SUPPORTED_MSG = "supported_speaking_nl_message_id_v2"
 
 
 # ==============================================================
@@ -274,18 +274,18 @@ def build_en_supported_embed() -> discord.Embed:
             "Extended practice guides every Monday, Friday and Saturday. "
             "Five stories with audio every month. Everything you need to keep improving "
             "between the free live lessons.\n\n"
-            "**€4.99 / month** — or €49.90/year (2 months free)\n\n"
+            "**€7.99 / month** — or €39.95 for 6 months (1 month free) — or €79.90/year (2 months free)\n\n"
             "**What you get:**\n"
             "📖 Supporter edition guides every Mon, Fri & Sat\n"
             "📚 5 B1-level stories with audio every month\n"
             "🎯 Error recognition training in every guide\n"
             "💬 Community access — Discord, WhatsApp, Telegram\n\n"
-            f"[**Start today for €4.99 →**]({EN_SUPPORTED_URL})\n\n"
+            f"[**Start today for €7.99 →**]({EN_SUPPORTED_URL})\n\n"
             "100% refund within 24 hours · cancel anytime · no commitment\n\n"
             "Questions? Use the dropdown below."
         ),
     )
-    embed.set_footer(text="supported-speaking:en:v1")
+    embed.set_footer(text="supported-speaking:en:v2")
     return embed
 
 
@@ -296,18 +296,18 @@ def build_nl_supported_embed() -> discord.Embed:
             "Elke week live Nederlands oefenen met Lucas. In een kleine groep, op jouw niveau.\n\n"
             "Geen cursus om doorheen te werken. Gewoon wekelijks live spreken met mensen op jouw niveau, "
             "met oefenmateriaal dat je echt verder helpt.\n\n"
-            "**€7,99 / maand** — of €79,90/jaar (2 maanden gratis)\n\n"
+            "**€11,99 / maand** — of €59,95 voor 6 maanden (1 maand gratis) — of €119,90/jaar (2 maanden gratis)\n\n"
             "**Wat je krijgt:**\n"
-            "🎙️ Live sessie elke maandag 19:00 CET\n"
+            "🎙️ Live sessie elke maandag of woensdag 19:00 CET\n"
             "📖 Leden oefengids elke vrijdag\n"
             "📅 Spreekonderwerp elke zondag\n"
             "📚 Maandelijks verhaal met audio\n\n"
-            f"[**Begin vandaag voor €7,99 →**]({NL_SUPPORTED_URL})\n\n"
+            f"[**Begin vandaag voor €11,99 →**]({NL_SUPPORTED_URL})\n\n"
             "100% terugbetaling binnen 24 uur · op elk moment opzegbaar\n\n"
             "Vragen? Gebruik het menu hieronder."
         ),
     )
-    embed.set_footer(text="supported-speaking:nl:v1")
+    embed.set_footer(text="supported-speaking:nl:v2")
     return embed
 
 

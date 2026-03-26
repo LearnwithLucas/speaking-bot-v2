@@ -34,7 +34,7 @@ FAQ: dict[str, dict] = {
         "questions": [
             (
                 "What is Supported Speaking?",
-                "Supported Speaking is a weekly practice membership for €4.99/month.\n\n"
+                "Supported Speaking is a weekly practice membership for €7.99/month.\n\n"
                 "Every Monday, Friday and Saturday you get the extended supporter edition practice guide. "
                 "You also get 5 B1-level English stories with audio every month, error recognition training in every guide, "
                 "and full community access on Discord, WhatsApp and Telegram.\n\n"
@@ -44,9 +44,9 @@ FAQ: dict[str, dict] = {
             ),
             (
                 "How much does it cost?",
-                "Supported Speaking costs **€4.99 per month** or **€49.90 per year** (2 months free).\n\n"
+                "Supported Speaking costs **€7.99 per month**, **€39.95 for 6 months** (1 month free), or **€79.90 per year** (2 months free).\n\n"
                 "For comparison: a private lesson with Lucas costs €22 for 30 minutes. "
-                "This is weekly practice material for less than one coffee a week.\n\n"
+                "This is weekly practice for less than one coffee a week.\n\n"
                 "100% refund within 24 hours if it is not what you expected. No questions asked.\n\n"
                 f"[Start today]({EN_SUPPORTED_SPEAKING_URL})"
             ),
@@ -438,7 +438,7 @@ NL_FAQ: dict[str, dict] = {
         "questions": [
             (
                 "Wat is Ondersteund Spreken?",
-                "Ondersteund Spreken is een wekelijks oefenlidmaatschap voor €7,99 per maand.\n\n"
+                "Ondersteund Spreken is een wekelijks oefenlidmaatschap voor €11,99 per maand.\n\n"
                 "Je krijgt elke maandag of woensdag een live sessie in een kleine groep op jouw niveau (A2, B1 of B2). "
                 "Op vrijdag krijg je de uitgebreide leden oefengids. Op zondag het spreekonderwerp voor maandag. "
                 "Elke maand ook een verhaal met audio.\n\n"
@@ -448,7 +448,7 @@ NL_FAQ: dict[str, dict] = {
             ),
             (
                 "Hoeveel kost het?",
-                "Ondersteund Spreken kost **€7,99 per maand** of **€79,90 per jaar** (2 maanden gratis).\n\n"
+                "Ondersteund Spreken kost **€11,99 per maand**, **€59,95 voor 6 maanden** (1 maand gratis) of **€119,90 per jaar** (2 maanden gratis).\n\n"
                 "Ter vergelijking: een privéles met Lucas kost €28 voor 30 minuten. "
                 "Dit is elke week live oefenen voor minder dan twee kopjes koffie per maand.\n\n"
                 "100% terugbetaling binnen 24 uur als het toch niet is wat je verwachtte. Geen vragen gesteld.\n\n"
