@@ -20,6 +20,7 @@ from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
 from jobs.word_of_the_day import WordOfTheDayJob
+from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
@@ -201,6 +202,15 @@ class SpeakingBot(commands.Bot):
                     await self._ask_jerry_publisher.publish_dutch(self.dutch_guild_id)
                 except Exception:
                     log.exception("AskJerry: failed to publish NL hub")
+
+        # Session reminders
+        SessionReminderJob(
+            bot=self,
+            repo=self.repo,
+            guild_id=self.guild_id,
+            dutch_guild_id=self.dutch_guild_id,
+        )
+        log.info("SessionReminderJob started.")
 
         # Word of the day
         WordOfTheDayJob(
