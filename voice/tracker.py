@@ -308,11 +308,20 @@ class VoiceTracker:
     def _is_target_voice_channel(self, guild: discord.Guild, channel) -> bool:
         if channel is None:
             return False
-        if not is_in_speak_now_category(channel, self.speak_now_category_id):
+        # Accept channels in either the English or Dutch Spreek Nu category
+        in_en = is_in_speak_now_category(channel, self.speak_now_category_id)
+        in_nl = is_in_speak_now_category(channel, NL_VOICE_CATEGORY_ID)
+        if not (in_en or in_nl):
             return False
         if self._is_afk_channel(guild, channel):
             return False
         return True
+
+    def _is_nl_channel(self, channel) -> bool:
+        """True if the channel belongs to the Dutch Spreek Nu category."""
+        if channel is None:
+            return False
+        return bool(is_in_speak_now_category(channel, NL_VOICE_CATEGORY_ID))
 
     def _cancel_first_attempt_task(self, user_id: int) -> None:
         task = self._pending_first_attempt.pop(user_id, None)
@@ -572,7 +581,9 @@ class VoiceTracker:
             return
         uid = member.id
         self._cancel_encouragement_task(uid)
-        is_nl = self._is_nl_guild()
+        # Detect language by which category the channel belongs to
+        channel = self._bot.get_channel(channel_id)
+        is_nl = self._is_nl_channel(channel)
         msgs_5 = NL_ENCOURAGEMENT_5MIN if is_nl else EN_ENCOURAGEMENT_5MIN
         msgs_30 = NL_ENCOURAGEMENT_30MIN if is_nl else EN_ENCOURAGEMENT_30MIN
         msgs_engage = NL_ENGAGEMENT_QUESTIONS if is_nl else EN_ENGAGEMENT_QUESTIONS
