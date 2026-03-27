@@ -95,7 +95,7 @@ class SpeakingBot(commands.Bot):
             dutch_guild_id=self.dutch_guild_id,
         )
 
-        # Register /woordvandedag and /wordoftheday commands
+        # Manual commands
         @self.tree.command(
             name="woordvandedag",
             description="Post het woord van de dag nu in het woord-van-de-dag kanaal",
@@ -125,6 +125,30 @@ class SpeakingBot(commands.Bot):
                 "Word of the day is being posted now.", ephemeral=True
             )
             await self._wotd_job.post_en_now()
+
+        @self.tree.command(
+            name="herplaats",
+            description="Herplaats het Ondersteund Spreken informatie embed in het OS kanaal",
+        )
+        async def cmd_herplaats(interaction: discord.Interaction) -> None:
+            await interaction.response.send_message(
+                "Ondersteund Spreken embed wordt opnieuw geplaatst...", ephemeral=True
+            )
+            try:
+                guild_id = self.dutch_guild_id or self.guild_id
+                await self.repo.kv_set(
+                    guild_id, "supported_speaking_nl_message_id_v3", ""
+                )
+                pl = PrivateLessonsPublisher(bot=self, repo=self.repo)
+                await pl.publish_nl_supported()
+                await interaction.followup.send(
+                    "Klaar. Het embed is opnieuw geplaatst.", ephemeral=True
+                )
+            except Exception:
+                log.exception("herplaats: failed to repost NL supported embed")
+                await interaction.followup.send(
+                    "Er ging iets mis. Controleer de logs.", ephemeral=True
+                )
 
         # Register persistent views
         self.add_view(PartnerHubView(finder=None))
