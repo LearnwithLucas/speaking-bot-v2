@@ -332,6 +332,133 @@ class JokesCog(commands.Cog):
         await interaction.response.send_message(joke)
 
 
+
+# =======================================================
+# ROAST — admin only, tags someone in voice
+# =======================================================
+
+LUCAS_USER_ID = 1181651144100036718
+ADMIN_USER_IDS = {LUCAS_USER_ID}
+
+EN_ROASTS: list[str] = [
+    "{name} your Dutch is so bad even autocorrect gave up on you.",
+    "{name} joined a speaking club and the club filed a complaint.",
+    "{name} speaks English like they're reading it backwards underwater.",
+    "{name} once said 'I am very good at English' and proved themselves wrong in the same sentence.",
+    "{name} bought a dictionary. Used it as a doorstop.",
+    "{name}'s pronunciation is a hate crime against vowels.",
+    "{name} has been learning English for years. The language has learned nothing back.",
+    "{name} opened their mouth and the entire room switched to subtitles.",
+    "{name} speaks with such confidence. None of it is correct, but you have to admire the commitment.",
+    "{name} asked for directions and caused a diplomatic incident.",
+    "{name}'s grammar is currently under investigation by three different universities.",
+    "{name} is the reason spell check has anxiety.",
+    "{name} told me they were fluent. I'm still processing the irony.",
+    "{name} has a unique relationship with the English language. Mostly one-sided.",
+    "{name} once tried to order coffee and accidentally started a debate.",
+    "{name} speaks with conviction. The conviction is entirely misplaced.",
+    "{name} is what happens when confidence and competence never meet.",
+    "{name}'s sentences are grammatically incorrect but emotionally powerful.",
+    "{name} talks to natives like a lost tourist reading a map upside down.",
+    "{name} has an A1 mouth and a C1 opinion of themselves.",
+    "{name} mispronounces things so consistently it's almost impressive.",
+    "{name} told me they don't need practice. Their mistakes suggest otherwise.",
+    "{name} once confused past and present tense so badly it affected the timeline.",
+    "{name} says things with such confidence that for a moment you believe them. Then you think about it.",
+    "{name} is proof that enthusiasm is not a substitute for grammar.",
+    "{name} looked up every word in that sentence. Still wrong.",
+    "{name} gave a presentation last week. Three people left the building.",
+    "{name} has the vocabulary of a very confident toddler.",
+    "{name} speaks English like it personally offended them.",
+    "{name} once started a sentence and the sentence gave up.",
+]
+
+NL_ROASTS: list[str] = [
+    "{name} spreekt Nederlands alsof de taal hen wat heeft misdaan.",
+    "{name} heeft een unieke band met grammatica. Voornamelijk vijandig.",
+    "{name} vroeg de weg en veroorzaakte een incident.",
+    "{name}'s uitspraak is een aanval op alle klinkers tegelijk.",
+    "{name} heeft jarenlang Nederlands geleerd. De taal heeft niets geleerd.",
+    "{name} deed zijn mond open en iedereen zocht naar de ondertitels.",
+    "{name} spreekt met zoveel zelfvertrouwen. Niets ervan klopt, maar je moet de inzet bewonderen.",
+    "{name} kocht een woordenboek. Gebruikt het als deurwig.",
+    "{name} is de reden waarom spellingcontrole paniekaanvallen krijgt.",
+    "{name} vertelde me dat ze vloeiend was. Ik verwerk de ironie nog steeds.",
+    "{name} heeft een A1-mond en een C2-mening over zichzelf.",
+    "{name} mispronounced 'gezellig' zo erg dat het woord betekenis verloor.",
+    "{name} sprak met overtuiging. De overtuiging klopte van geen kant.",
+    "{name}'s zinnen zijn grammaticaal incorrect maar emotioneel krachtig.",
+    "{name} bestelde koffie en begon per ongeluk een discussie.",
+    "{name} heeft het woordenboek gelezen. Het heeft niet geholpen.",
+    "{name} is wat er gebeurt als zelfvertrouwen en competentie elkaar nooit tegenkomen.",
+    "{name} zei me dat ze niet hoefden te oefenen. Hun fouten zeggen iets anders.",
+    "{name} heeft de woordenschat van een heel zelfverzekerde peuter.",
+    "{name} begon een zin. De zin gaf het op.",
+    "{name} spreekt zo snel dat niemand snapt wat ze zeggen. Helaas kloppen de woorden ook niet.",
+    "{name} heeft de uitspraak van 'ui' zo vaak fout gezegd dat het nu een eigen dialect is.",
+    "{name} keek elk woord op voor die zin. Nog steeds fout.",
+    "{name} gaf vorige week een presentatie. Twee mensen verlieten het gebouw.",
+    "{name} spreekt met zo veel overtuiging dat je het even gelooft. Dan denk je erover na.",
+    "{name} is het levende bewijs dat enthousiasme geen vervanging is voor grammatica.",
+    "{name} verwarring de-lidwoorden en het-lidwoorden zo consequent dat het bijna een keuze lijkt.",
+    "{name} is de reden dat 'niet' en 'geen' extra uitleg nodig hebben.",
+    "{name} heeft een eigen interpretatie van de werkwoordsvervoeging. Niemand deelt die.",
+    "{name} verloor een discussie met een zin van drie woorden.",
+]
+
+ROAST_SELF_PROTECTION = [
+    "Nice try.",
+    "You think I'd roast myself? I have standards.",
+    "Not today.",
+    "I don't roast the hand that feeds me.",
+    "Absolutely not.",
+]
+
+
+class RoastCog(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
+
+    @app_commands.command(name="roast", description="Roast someone in the voice channel (admin only)")
+    @app_commands.describe(member="The person to roast", language="Language of the roast")
+    @app_commands.choices(language=[
+        app_commands.Choice(name="English", value="en"),
+        app_commands.Choice(name="Nederlands", value="nl"),
+    ])
+    async def roast(
+        self,
+        interaction: discord.Interaction,
+        member: discord.Member,
+        language: app_commands.Choice[str] | None = None,
+    ) -> None:
+        # Admin check
+        if interaction.user.id not in ADMIN_USER_IDS:
+            await interaction.response.send_message(
+                "This command is not for you.", ephemeral=True
+            )
+            return
+
+        # Self-roast protection
+        if member.id == interaction.user.id:
+            await interaction.response.send_message(
+                random.choice(ROAST_SELF_PROTECTION), ephemeral=True
+            )
+            return
+
+        lang = language.value if language else "en"
+        roasts = NL_ROASTS if lang == "nl" else EN_ROASTS
+        roast = random.choice(roasts).format(name=member.mention)
+
+        await interaction.response.send_message(roast)
+        log.info("Roast fired by %s targeting %s lang=%s", interaction.user.id, member.id, lang)
+
+
+async def setup_roast(bot: commands.Bot) -> None:
+    await bot.add_cog(RoastCog(bot))
+    log.info("RoastCog loaded.")
+
+
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(JokesCog(bot))
-    log.info("JokesCog loaded.")
+    await bot.add_cog(RoastCog(bot))
+    log.info("JokesCog and RoastCog loaded.")
