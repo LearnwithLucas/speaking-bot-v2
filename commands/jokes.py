@@ -406,6 +406,73 @@ NL_ROASTS: list[str] = [
     "{name} verloor een discussie met een zin van drie woorden.",
 ]
 
+
+EN_MEAN_ROASTS: list[str] = [
+    "{name} is the human equivalent of a terms and conditions page. Everyone ignores them.",
+    "{name} has the energy of a dying phone battery at 3 percent.",
+    "{name} is the reason 'fine' became a passive aggressive word.",
+    "{name} peaked in a memory nobody else has.",
+    "{name} walks into a room and people suddenly remember they have somewhere to be.",
+    "{name} is not the sharpest tool in the shed. Or in any shed.",
+    "{name} could start an argument in an empty room.",
+    "{name} has the attention span of a goldfish with commitment issues.",
+    "{name} is the type to bring unsolicited opinions to a silent retreat.",
+    "{name} is a before photo that never got an after.",
+    "{name} has achieved the rare ability to be both loud and forgettable.",
+    "{name} is what happens when confidence is not backed by any evidence.",
+    "{name} gives advice nobody asked for and answers questions nobody had.",
+    "{name} is the group chat that nobody mutes but nobody checks.",
+    "{name} has the vibe of a motivational poster in a dentist waiting room.",
+    "{name} could trip over a wireless connection.",
+    "{name} has main character energy but is clearly a background extra.",
+    "{name} takes themselves very seriously. Nobody else does.",
+    "{name} is the type to put a spoiler warning after the spoiler.",
+    "{name} is still processing something that happened in 2019.",
+    "{name} has the emotional range of a loading screen.",
+    "{name} treats every minor inconvenience like a near-death experience.",
+    "{name} is the plot twist nobody wanted in this story.",
+    "{name} has an opinion on everything and expertise in nothing.",
+    "{name} is the person who replies all to a company-wide email.",
+    "{name} brings the energy of Monday morning to every single conversation.",
+    "{name} is the type to clap when the plane lands.",
+    "{name} has the social awareness of a car alarm at 3am.",
+    "{name} is somewhere between a red flag and a yellow flag. Mostly just confusing.",
+    "{name} is the human version of an unskippable ad.",
+]
+
+NL_MEAN_ROASTS: list[str] = [
+    "{name} is het menselijke equivalent van een disclaimer die niemand leest.",
+    "{name} heeft de energie van een telefoon op drie procent.",
+    "{name} is de reden waarom mensen plotseling ergens anders moeten zijn.",
+    "{name} liep voorop in een wedstrijd die niemand begreep.",
+    "{name} heeft het aandachtsvermogen van een goudvis met bindingsangst.",
+    "{name} is niet het scherpste mes in de la. Of in welke la dan ook.",
+    "{name} kan ruzie maken in een lege kamer.",
+    "{name} brengt de energie van een maandagochtend naar elk gesprek.",
+    "{name} geeft advies waar niemand om heeft gevraagd en antwoorden op vragen die niemand stelde.",
+    "{name} is de groepschat die niemand mutet maar niemand checkt.",
+    "{name} heeft de emotionele bandbreedte van een laadscherm.",
+    "{name} is wat er gebeurt als zelfvertrouwen niet wordt ondersteund door enig bewijs.",
+    "{name} heeft de sociale bewustzijn van een autoalarm om drie uur 's nachts.",
+    "{name} is het personage op de achtergrond dat denkt de hoofdrol te spelen.",
+    "{name} neemt zichzelf heel serieus. Niemand anders doet dat.",
+    "{name} heeft de vibe van een motivatieposter in een wachtkamer.",
+    "{name} struikelt over een draadloze verbinding.",
+    "{name} behandelt elk klein ongemak als een bijna-doodervaring.",
+    "{name} is de plotwending die niemand wilde in dit verhaal.",
+    "{name} heeft een mening over alles en expertise in niets.",
+    "{name} is degene die op reply-all drukt bij een bedrijfsbrede e-mail.",
+    "{name} klapt als het vliegtuig landt.",
+    "{name} is ergens tussen een rode vlag en een gele vlag. Voornamelijk verwarrend.",
+    "{name} is de menselijke versie van een niet-overstaanbare advertentie.",
+    "{name} verwerkt nog steeds iets wat in 2019 is gebeurd.",
+    "{name} heeft de energie van een stervende batterij op het verkeerde moment.",
+    "{name} is een voor-foto die nooit een na-foto heeft gekregen.",
+    "{name} heeft het unieke vermogen om zowel luid als vergeetbaar te zijn.",
+    "{name} is het type dat een spoilerwaarschuwing na de spoiler plaatst.",
+    "{name} is de reden dat 'prima' een passief-agressief woord is geworden.",
+]
+
 ROAST_SELF_PROTECTION = [
     "Nice try.",
     "You think I'd roast myself? I have standards.",
@@ -451,6 +518,38 @@ class RoastCog(commands.Cog):
 
         await interaction.response.send_message(roast)
         log.info("Roast fired by %s targeting %s lang=%s", interaction.user.id, member.id, lang)
+
+
+    @app_commands.command(name="roastmean", description="Roast someone extra hard (admin only)")
+    @app_commands.describe(member="The person to roast", language="Language of the roast")
+    @app_commands.choices(language=[
+        app_commands.Choice(name="English", value="en"),
+        app_commands.Choice(name="Nederlands", value="nl"),
+    ])
+    async def roastmean(
+        self,
+        interaction: discord.Interaction,
+        member: discord.Member,
+        language: app_commands.Choice[str] | None = None,
+    ) -> None:
+        if interaction.user.id not in ADMIN_USER_IDS:
+            await interaction.response.send_message(
+                "This command is not for you.", ephemeral=True
+            )
+            return
+
+        if member.id == interaction.user.id:
+            await interaction.response.send_message(
+                random.choice(ROAST_SELF_PROTECTION), ephemeral=True
+            )
+            return
+
+        lang = language.value if language else "en"
+        roasts = NL_MEAN_ROASTS if lang == "nl" else EN_MEAN_ROASTS
+        roast = random.choice(roasts).format(name=member.mention)
+
+        await interaction.response.send_message(roast)
+        log.info("Roastmean fired by %s targeting %s lang=%s", interaction.user.id, member.id, lang)
 
 
 async def setup_roast(bot: commands.Bot) -> None:
