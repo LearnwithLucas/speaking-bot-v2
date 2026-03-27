@@ -19,6 +19,7 @@ from jobs.welcome import send_welcome_dm
 from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
+from commands.jokes import setup as setup_jokes
 from jobs.word_of_the_day import WordOfTheDayJob
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
@@ -87,6 +88,9 @@ class SpeakingBot(commands.Bot):
             guild_id=self.guild_id,
             dutch_guild_id=self.dutch_guild_id,
         )
+
+        # Load jokes cog
+        await setup_jokes(self)
 
         # Load topics cog
         await setup_topics(

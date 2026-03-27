@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="onersteund spreken info" />
+    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="nederlandse vioce tracker" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -322,11 +322,18 @@
       <option name="project" value="LOCAL" />
       <updated>1774643451705</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="nederlandse vioce tracker">
+      <option name="closed" value="true" />
+      <created>1774645052762</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1774645052762</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="partner finder DM update" />
     <MESSAGE value="ondersteund spreken update" />
     <MESSAGE value="partner finder update" />
     <MESSAGE value="welcome message EN &amp; NL update" />
@@ -351,6 +358,7 @@
     <MESSAGE value="private lessons channel update" />
     <MESSAGE value="word van de dag" />
     <MESSAGE value="onersteund spreken info" />
-    <option name="LAST_COMMIT_MESSAGE" value="onersteund spreken info" />
+    <MESSAGE value="nederlandse vioce tracker" />
+    <option name="LAST_COMMIT_MESSAGE" value="nederlandse vioce tracker" />
   </component>
 </project>
