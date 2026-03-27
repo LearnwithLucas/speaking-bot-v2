@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="prcing update" />
+    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="session reminder update">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -52,13 +54,13 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/jair2/PycharmProjects/speaking-bot-v2/commands&quot;
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/jair2/PycharmProjects/speaking-bot-v2/jobs&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\jair2\PycharmProjects\speaking-bot-v2\commands" />
       <recent name="C:\Users\jair2\PycharmProjects\speaking-bot-v2\jobs" />
+      <recent name="C:\Users\jair2\PycharmProjects\speaking-bot-v2\commands" />
       <recent name="C:\Users\jair2\PycharmProjects\speaking-bot-v2" />
     </key>
   </component>
@@ -290,7 +292,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774542507664</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="session reminder update">
+      <option name="closed" value="true" />
+      <created>1774543007746</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1774543007746</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -315,6 +325,7 @@
     <MESSAGE value="ask jerry EN update" />
     <MESSAGE value="ask jerry EN &amp; NL update" />
     <MESSAGE value="prcing update" />
-    <option name="LAST_COMMIT_MESSAGE" value="prcing update" />
+    <MESSAGE value="session reminder update" />
+    <option name="LAST_COMMIT_MESSAGE" value="session reminder update" />
   </component>
 </project>
