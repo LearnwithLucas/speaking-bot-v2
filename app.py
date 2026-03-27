@@ -61,6 +61,7 @@ class SpeakingBot(commands.Bot):
         self._jobs_started = False
         self._partner_finder: PartnerFinder | None = None
         self._ask_jerry_publisher = None
+        self._wotd_job: WordOfTheDayJob | None = None
 
     async def setup_hook(self) -> None:
         # Load debug tools (dev-only) BEFORE sync so commands appear when enabled.
@@ -93,6 +94,37 @@ class SpeakingBot(commands.Bot):
             guild_id=self.guild_id,
             dutch_guild_id=self.dutch_guild_id,
         )
+
+        # Register /woordvandedag and /wordoftheday commands
+        @self.tree.command(
+            name="woordvandedag",
+            description="Post het woord van de dag nu in het woord-van-de-dag kanaal",
+        )
+        async def cmd_woordvandedag(interaction: discord.Interaction) -> None:
+            if self._wotd_job is None:
+                await interaction.response.send_message(
+                    "De bot is nog niet klaar. Probeer het over een minuut.", ephemeral=True
+                )
+                return
+            await interaction.response.send_message(
+                "Woord van de dag wordt nu gepost.", ephemeral=True
+            )
+            await self._wotd_job.post_nl_now()
+
+        @self.tree.command(
+            name="wordoftheday",
+            description="Post the word of the day now in the word-of-the-day channel",
+        )
+        async def cmd_wordoftheday(interaction: discord.Interaction) -> None:
+            if self._wotd_job is None:
+                await interaction.response.send_message(
+                    "Bot is not ready yet. Try again in a moment.", ephemeral=True
+                )
+                return
+            await interaction.response.send_message(
+                "Word of the day is being posted now.", ephemeral=True
+            )
+            await self._wotd_job.post_en_now()
 
         # Register persistent views
         self.add_view(PartnerHubView(finder=None))
@@ -213,7 +245,7 @@ class SpeakingBot(commands.Bot):
         log.info("SessionReminderJob started.")
 
         # Word of the day
-        WordOfTheDayJob(
+        self._wotd_job = WordOfTheDayJob(
             bot=self,
             repo=self.repo,
             guild_id=self.guild_id,
