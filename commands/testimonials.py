@@ -51,70 +51,68 @@ NL_PLACEHOLDERS = [
 # =======================================================
 
 class TestimonialModal(discord.ui.Modal):
-    def __init__(
-        self,
-        *,
-        question: str,
-        placeholder: str,
-        step: int,
-        answers: list[str],
-        is_nl: bool,
-        publisher: "TestimonialPublisher",
-    ) -> None:
-        title = f"{'Stap' if is_nl else 'Step'} {step + 1}/3"
+    """Single modal with all 3 questions — Discord does not allow modal-to-modal chaining."""
+
+    def __init__(self, *, is_nl: bool, publisher: "TestimonialPublisher") -> None:
+        title = "Jouw verhaal" if is_nl else "Your Story"
         super().__init__(title=title)
-        self._step = step
-        self._answers = answers
         self._is_nl = is_nl
         self._publisher = publisher
 
-        self.answer = discord.ui.TextInput(
-            label=question,
+        questions = NL_QUESTIONS if is_nl else EN_QUESTIONS
+        placeholders = NL_PLACEHOLDERS if is_nl else EN_PLACEHOLDERS
+
+        self.q1 = discord.ui.TextInput(
+            label=questions[0],
             style=discord.TextStyle.paragraph,
-            placeholder=placeholder,
-            min_length=10,
+            placeholder=placeholders[0],
+            min_length=5,
             max_length=500,
             required=True,
         )
-        self.add_item(self.answer)
+        self.q2 = discord.ui.TextInput(
+            label=questions[1],
+            style=discord.TextStyle.paragraph,
+            placeholder=placeholders[1],
+            min_length=5,
+            max_length=500,
+            required=True,
+        )
+        self.q3 = discord.ui.TextInput(
+            label=questions[2],
+            style=discord.TextStyle.paragraph,
+            placeholder=placeholders[2],
+            min_length=5,
+            max_length=500,
+            required=True,
+        )
+        self.add_item(self.q1)
+        self.add_item(self.q2)
+        self.add_item(self.q3)
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        self._answers.append(self.answer.value.strip())
-
-        questions = NL_QUESTIONS if self._is_nl else EN_QUESTIONS
-        placeholders = NL_PLACEHOLDERS if self._is_nl else EN_PLACEHOLDERS
-        next_step = self._step + 1
-
-        if next_step < len(questions):
-            # Next question
-            modal = TestimonialModal(
-                question=questions[next_step],
-                placeholder=placeholders[next_step],
-                step=next_step,
-                answers=self._answers,
-                is_nl=self._is_nl,
-                publisher=self._publisher,
+        answers = [
+            self.q1.value.strip(),
+            self.q2.value.strip(),
+            self.q3.value.strip(),
+        ]
+        view = ShareChoiceView(
+            answers=answers,
+            member=interaction.user,
+            is_nl=self._is_nl,
+            publisher=self._publisher,
+        )
+        if self._is_nl:
+            msg = (
+                "Bedankt! Wil je jouw verhaal delen met de community?\n\n"
+                "Je kunt altijd kiezen om het privé te houden."
             )
-            await interaction.response.send_modal(modal)
         else:
-            # All answered — show share/private buttons
-            view = ShareChoiceView(
-                answers=self._answers,
-                member=interaction.user,
-                is_nl=self._is_nl,
-                publisher=self._publisher,
+            msg = (
+                "Thank you! Would you like to share your story with the community?\n\n"
+                "You can always choose to keep it private."
             )
-            if self._is_nl:
-                msg = (
-                    "Bedankt! Wil je jouw verhaal delen met de community?\n\n"
-                    "Je kunt altijd kiezen om het privé te houden."
-                )
-            else:
-                msg = (
-                    "Thank you! Would you like to share your story with the community?\n\n"
-                    "You can always choose to keep it private."
-                )
-            await interaction.response.send_message(msg, view=view, ephemeral=True)
+        await interaction.response.send_message(msg, view=view, ephemeral=True)
 
 
 # =======================================================
@@ -204,10 +202,6 @@ class StartTestimonialView(discord.ui.View):
     )
     async def start_en(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         modal = TestimonialModal(
-            question=EN_QUESTIONS[0],
-            placeholder=EN_PLACEHOLDERS[0],
-            step=0,
-            answers=[],
             is_nl=False,
             publisher=self._publisher or _get_global_publisher(),
         )
@@ -230,10 +224,6 @@ class StartTestimonialViewNL(discord.ui.View):
     )
     async def start_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         modal = TestimonialModal(
-            question=NL_QUESTIONS[0],
-            placeholder=NL_PLACEHOLDERS[0],
-            step=0,
-            answers=[],
             is_nl=True,
             publisher=self._publisher or _get_global_publisher(),
         )

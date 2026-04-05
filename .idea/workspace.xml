@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="roastmean update">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="testimonials.py 2 update" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -356,12 +354,26 @@
       <option name="project" value="LOCAL" />
       <updated>1774648279050</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="testimonials.py update">
+      <option name="closed" value="true" />
+      <created>1775391286289</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1775391286289</updated>
+    </task>
+    <task id="LOCAL-00033" summary="testimonials.py 2 update">
+      <option name="closed" value="true" />
+      <created>1775392051710</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1775392051710</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="nudges.py update" />
-    <MESSAGE value="voice channel nudge messages update" />
     <MESSAGE value="add topics.py  update" />
     <MESSAGE value="private lessons update" />
     <MESSAGE value="tracker update better nudges" />
@@ -385,6 +397,8 @@
     <MESSAGE value="joke update" />
     <MESSAGE value="roast update" />
     <MESSAGE value="roastmean update" />
-    <option name="LAST_COMMIT_MESSAGE" value="roastmean update" />
+    <MESSAGE value="testimonials.py update" />
+    <MESSAGE value="testimonials.py 2 update" />
+    <option name="LAST_COMMIT_MESSAGE" value="testimonials.py 2 update" />
   </component>
 </project>
