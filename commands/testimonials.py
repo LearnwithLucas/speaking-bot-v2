@@ -10,49 +10,103 @@ from discord.ext import commands
 log = logging.getLogger("commands.testimonials")
 
 # ---- Channel IDs ----
-EN_SUCCESS_CHANNEL_ID = 1490320758507962490      # Your Successes and Stories
-NL_SUCCESS_CHANNEL_ID = 1490320826027741185      # Jouw Successen en Verhalen
-EN_COLLECTED_CHANNEL_ID = 1490322440788644011    # 🌱┃collected-testimonials (admin)
-NL_COLLECTED_CHANNEL_ID = 1490322080678543542    # 🌱┃verzamelde-getuigenissen (admin)
+EN_SUCCESS_CHANNEL_ID = 1490320758507962490
+NL_SUCCESS_CHANNEL_ID = 1490320826027741185
+EN_COLLECTED_CHANNEL_ID = 1490322440788644011
+NL_COLLECTED_CHANNEL_ID = 1490322080678543542
 
 LUCAS_USER_ID = 1181651144100036718
 
-KV_EN_HUB_MSG = "testimonial_hub_en_v1"
-KV_NL_HUB_MSG = "testimonial_hub_nl_v1"
+KV_EN_HUB_MSG = "testimonial_hub_en_v2"
+KV_NL_HUB_MSG = "testimonial_hub_nl_v2"
 
-# ---- Questions ----
-# Short labels (≤45 chars) shown in the modal input
-# Full questions shown as placeholders
+# ---- Questions (labels must be <=45 chars) ----
 EN_QUESTIONS = [
     "What are you proud of since joining?",
     "How has practicing here helped you?",
     "How would you describe your progress?",
+    "Anything else you'd like to add?",
 ]
 EN_PLACEHOLDERS = [
     "What's one thing you're proud of since joining?",
     "How has practicing here helped you?",
     "If you were telling a friend, how would you describe your progress?",
+    "Optional — any other thoughts, moments or people you'd like to mention?",
 ]
 
 NL_QUESTIONS = [
     "Waar ben je trots op sinds je lid bent?",
     "Hoe heeft oefenen hier jou geholpen?",
     "Hoe zou je jouw vooruitgang omschrijven?",
+    "Nog iets anders dat je wilt toevoegen?",
 ]
 NL_PLACEHOLDERS = [
     "Wat is iets waar je trots op bent sinds je lid bent geworden?",
     "Hoe heeft het oefenen hier jou geholpen?",
     "Als je het aan een vriend zou vertellen, hoe zou je je vooruitgang omschrijven?",
+    "Optioneel — andere gedachten, momenten of mensen die je wilt noemen?",
+]
+
+# ---- Connectors — 3 sets, rotated by user ID for variety ----
+EN_CONNECTORS = [
+    [
+        "Since joining, I'm proud that",
+        "Practicing here has helped me",
+        "When it comes to my progress,",
+    ],
+    [
+        "One thing I'm really proud of is",
+        "Being here has helped me",
+        "If I had to describe how far I've come,",
+    ],
+    [
+        "Looking back since I joined, I'm proud that",
+        "The practice here has made a real difference —",
+        "In terms of progress,",
+    ],
+]
+
+NL_CONNECTORS = [
+    [
+        "Sinds ik lid ben, ben ik trots dat",
+        "Oefenen hier heeft mij geholpen",
+        "Als ik mijn vooruitgang beschrijf,",
+    ],
+    [
+        "Iets waar ik echt trots op ben is",
+        "Hier zijn heeft mij geholpen",
+        "Als ik terugkijk op hoe ver ik gekomen ben,",
+    ],
+    [
+        "Terugkijkend ben ik trots dat",
+        "De oefensessies hier hebben echt het verschil gemaakt —",
+        "Qua vooruitgang,",
+    ],
 ]
 
 
+def _build_testimonial_block(
+    answers: list[str],
+    member: discord.User | discord.Member,
+    is_nl: bool,
+) -> str:
+    connector_pool = NL_CONNECTORS if is_nl else EN_CONNECTORS
+    connectors = connector_pool[member.id % len(connector_pool)]
+    lines = []
+    for connector, answer in zip(connectors, answers[:3]):
+        a = answer[0].lower() + answer[1:] if answer else answer
+        a = a.rstrip(".")
+        lines.append(f"{connector} {a}.")
+    if len(answers) >= 4 and answers[3].strip():
+        lines.append(f"\n{answers[3].strip()}")
+    return "\n".join(lines)
+
+
 # =======================================================
-# MODAL — one question at a time
+# MODAL — 4 fields, 4th optional
 # =======================================================
 
 class TestimonialModal(discord.ui.Modal):
-    """Single modal with all 3 questions — Discord does not allow modal-to-modal chaining."""
-
     def __init__(self, *, is_nl: bool, publisher: "TestimonialPublisher") -> None:
         title = "Jouw verhaal" if is_nl else "Your Story"
         super().__init__(title=title)
@@ -86,15 +140,24 @@ class TestimonialModal(discord.ui.Modal):
             max_length=500,
             required=True,
         )
+        self.q4 = discord.ui.TextInput(
+            label=questions[3],
+            style=discord.TextStyle.paragraph,
+            placeholder=placeholders[3],
+            max_length=500,
+            required=False,
+        )
         self.add_item(self.q1)
         self.add_item(self.q2)
         self.add_item(self.q3)
+        self.add_item(self.q4)
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         answers = [
             self.q1.value.strip(),
             self.q2.value.strip(),
             self.q3.value.strip(),
+            self.q4.value.strip(),
         ]
         view = ShareChoiceView(
             answers=answers,
@@ -104,13 +167,25 @@ class TestimonialModal(discord.ui.Modal):
         )
         if self._is_nl:
             msg = (
-                "Bedankt! Wil je jouw verhaal delen met de community?\n\n"
-                "Je kunt altijd kiezen om het privé te houden."
+                "Dankjewel voor het delen! 🙏\n\n"
+                "**Wat wil je doen met jouw verhaal?**\n\n"
+                "🌟 **Ja, deel mijn verhaal** — Je verhaal wordt geplaatst in dit kanaal "
+                "en ik kan het ook gebruiken op mijn sociale media (zoals TikTok of Instagram) "
+                "om andere leerders te inspireren. Je naam wordt erbij vermeld. "
+                "Verhalen worden licht gecorrigeerd op grammatica.\n\n"
+                "🔒 **Houd het privé** — Je verhaal komt alleen bij mij terecht. "
+                "Ik lees het, maar het wordt nergens publiek gedeeld."
             )
         else:
             msg = (
-                "Thank you! Would you like to share your story with the community?\n\n"
-                "You can always choose to keep it private."
+                "Thank you for sharing! 🙏\n\n"
+                "**What would you like to do with your story?**\n\n"
+                "🌟 **Yes, share my story** — Your story will be posted in this channel "
+                "and I may also use it on my social media (like TikTok or Instagram) "
+                "to inspire other learners. Your name will be included. "
+                "Stories may be lightly corrected for grammar.\n\n"
+                "🔒 **Keep it private** — Your story comes to me only. "
+                "I'll read it, but it won't be shared anywhere publicly."
             )
         await interaction.response.send_message(msg, view=view, ephemeral=True)
 
@@ -138,18 +213,16 @@ class ShareChoiceView(discord.ui.View):
         label="Yes, share my story",
         style=discord.ButtonStyle.success,
         emoji="🌟",
-        custom_id="testimonial:share",
+        custom_id="testimonial:share:v2",
     )
     async def share(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         if interaction.user.id != self._member.id:
-            await interaction.response.send_message("This is not your form.", ephemeral=True)
+            msg = "Dit is niet jouw formulier." if self._is_nl else "This is not your form."
+            await interaction.response.send_message(msg, ephemeral=True)
             return
         self._disable_all()
-        await interaction.response.edit_message(
-            content="✅ Your story has been shared. Thank you!" if not self._is_nl
-            else "✅ Jouw verhaal is gedeeld. Bedankt!",
-            view=self,
-        )
+        confirm = "✅ Jouw verhaal is gedeeld. Bedankt!" if self._is_nl else "✅ Your story has been shared. Thank you!"
+        await interaction.response.edit_message(content=confirm, view=self)
         await self._publisher.publish_testimonial(
             answers=self._answers,
             member=self._member,
@@ -161,18 +234,20 @@ class ShareChoiceView(discord.ui.View):
         label="Keep it private",
         style=discord.ButtonStyle.secondary,
         emoji="🔒",
-        custom_id="testimonial:private",
+        custom_id="testimonial:private:v2",
     )
     async def keep_private(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         if interaction.user.id != self._member.id:
-            await interaction.response.send_message("This is not your form.", ephemeral=True)
+            msg = "Dit is niet jouw formulier." if self._is_nl else "This is not your form."
+            await interaction.response.send_message(msg, ephemeral=True)
             return
         self._disable_all()
-        await interaction.response.edit_message(
-            content="🔒 Your story has been kept private. Thank you for sharing it with us." if not self._is_nl
-            else "🔒 Jouw verhaal blijft privé. Bedankt dat je het met ons hebt gedeeld.",
-            view=self,
+        confirm = (
+            "🔒 Jouw verhaal blijft privé. Bedankt dat je het met ons hebt gedeeld."
+            if self._is_nl else
+            "🔒 Your story has been kept private. Thank you for sharing it with us."
         )
+        await interaction.response.edit_message(content=confirm, view=self)
         await self._publisher.publish_testimonial(
             answers=self._answers,
             member=self._member,
@@ -186,7 +261,7 @@ class ShareChoiceView(discord.ui.View):
 
 
 # =======================================================
-# START BUTTON VIEW (on the hub embed)
+# START BUTTON VIEWS (hub embed)
 # =======================================================
 
 class StartTestimonialView(discord.ui.View):
@@ -233,7 +308,6 @@ class StartTestimonialViewNL(discord.ui.View):
         self._publisher = publisher
 
 
-# Global publisher reference for persistent views (after restart)
 _global_publisher: "TestimonialPublisher | None" = None
 
 
@@ -244,7 +318,7 @@ def _get_global_publisher() -> "TestimonialPublisher":
 
 
 # =======================================================
-# PUBLISHER
+# EMBEDS
 # =======================================================
 
 def _build_public_embed(
@@ -253,22 +327,26 @@ def _build_public_embed(
     is_nl: bool,
 ) -> discord.Embed:
     questions = NL_PLACEHOLDERS if is_nl else EN_PLACEHOLDERS
+
     if is_nl:
         title = f"🌟 Verhaal van {member.display_name}"
-        footer = "Gedeeld door een lid van de community"
+        footer = "Gedeeld door een lid van de community • Licht gecorrigeerd op grammatica"
+        sep_label = "💬 **In hun eigen woorden:**"
     else:
         title = f"🌟 {member.display_name}'s Story"
-        footer = "Shared by a community member"
+        footer = "Shared by a community member • Lightly corrected for grammar"
+        sep_label = "💬 **In their own words:**"
 
     lines = []
-    for q, a in zip(questions, answers):
+    for i, (q, a) in enumerate(zip(questions, answers)):
+        if i == 3 and not a:
+            continue
         lines.append(f"**{q}**\n{a}")
 
-    embed = discord.Embed(
-        title=title,
-        description="\n\n".join(lines),
-        color=discord.Color.gold(),
-    )
+    block = _build_testimonial_block(answers, member, is_nl)
+    description = "\n\n".join(lines) + f"\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n{sep_label}\n{block}"
+
+    embed = discord.Embed(title=title, description=description, color=discord.Color.gold())
     embed.set_footer(text=footer)
     if member.avatar:
         embed.set_thumbnail(url=member.avatar.url)
@@ -283,17 +361,32 @@ def _build_admin_embed(
 ) -> discord.Embed:
     questions = NL_PLACEHOLDERS if is_nl else EN_PLACEHOLDERS
     lang = "NL" if is_nl else "EN"
-    visibility = ("🔓 Publiek gedeeld" if is_nl else "🔓 Shared publicly") if public \
-        else ("🔒 Privé gehouden" if is_nl else "🔒 Kept private")
 
-    lines = [f"**User:** {member.display_name} (`{member.id}`)", f"**Language:** {lang}", f"**Visibility:** {visibility}", ""]
-    for q, a in zip(questions, answers):
+    if public:
+        visibility = "🔓 Publiek gedeeld" if is_nl else "🔓 Shared publicly"
+        color = discord.Color.green()
+    else:
+        visibility = "🔒 Niet delen" if is_nl else "🔒 Do not share"
+        color = discord.Color.light_grey()
+
+    lines = [
+        f"**User:** {member.display_name} (`{member.id}`)",
+        f"**Language:** {lang}",
+        f"**Visibility:** {visibility}",
+        "",
+    ]
+    for i, (q, a) in enumerate(zip(questions, answers)):
+        if i == 3 and not a:
+            continue
         lines.append(f"**{q}**\n{a}")
+
+    block = _build_testimonial_block(answers, member, is_nl)
+    description = "\n\n".join(lines) + f"\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n💬 **Testimonial block:**\n{block}"
 
     embed = discord.Embed(
         title=f"📋 Testimonial — {member.display_name}",
-        description="\n\n".join(lines),
-        color=discord.Color.green() if public else discord.Color.light_grey(),
+        description=description,
+        color=color,
     )
     if member.avatar:
         embed.set_thumbnail(url=member.avatar.url)
@@ -308,12 +401,16 @@ def _build_hub_embed_en() -> discord.Embed:
             "Every step forward counts. Whether you had your first real conversation, "
             "finally understood a joke, or just showed up when it was hard.\n\n"
             "**Share your story** and inspire others who are on the same journey.\n\n"
-            "It takes less than 2 minutes. Three simple questions, then you choose "
-            "whether to share it publicly or keep it just between us."
+            "It takes less than 2 minutes. Answer a few simple questions, "
+            "then choose what happens next:\n\n"
+            "🌟 **Share publicly** — your story gets posted here and I may use it "
+            "on my social media to inspire other learners. Your name will be included. "
+            "Stories may be lightly corrected for grammar.\n\n"
+            "🔒 **Keep it private** — your story comes to me only. No one else sees it."
         ),
         color=discord.Color.gold(),
     )
-    embed.set_footer(text="testimonial:hub:en:v1")
+    embed.set_footer(text="testimonial:hub:en:v2")
     return embed
 
 
@@ -325,14 +422,22 @@ def _build_hub_embed_nl() -> discord.Embed:
             "Elke stap telt. Of je nu je eerste echte gesprek had, "
             "eindelijk een grap begreep, of gewoon opdaagde op een moeilijke dag.\n\n"
             "**Deel jouw verhaal** en inspireer anderen die hetzelfde pad bewandelen.\n\n"
-            "Het duurt minder dan 2 minuten. Drie eenvoudige vragen, dan kies jij zelf "
-            "of je het publiek deelt of privé houdt."
+            "Het duurt minder dan 2 minuten. Beantwoord een paar eenvoudige vragen, "
+            "kies daarna wat er mee gebeurt:\n\n"
+            "🌟 **Publiek delen** — jouw verhaal wordt hier geplaatst en ik kan het "
+            "ook gebruiken op mijn sociale media om andere leerders te inspireren. "
+            "Je naam wordt erbij vermeld. Verhalen worden licht gecorrigeerd op grammatica.\n\n"
+            "🔒 **Privé houden** — jouw verhaal komt alleen bij mij terecht. Niemand anders ziet het."
         ),
         color=discord.Color.gold(),
     )
-    embed.set_footer(text="testimonial:hub:nl:v1")
+    embed.set_footer(text="testimonial:hub:nl:v2")
     return embed
 
+
+# =======================================================
+# PUBLISHER
+# =======================================================
 
 class TestimonialPublisher:
     def __init__(self, *, bot: discord.Client, repo: Any) -> None:
@@ -342,7 +447,7 @@ class TestimonialPublisher:
     async def publish_hub(self, is_nl: bool) -> None:
         channel_id = NL_SUCCESS_CHANNEL_ID if is_nl else EN_SUCCESS_CHANNEL_ID
         kv_key = KV_NL_HUB_MSG if is_nl else KV_EN_HUB_MSG
-        marker = "testimonial:hub:nl:v1" if is_nl else "testimonial:hub:en:v1"
+        marker = "testimonial:hub:nl:v2" if is_nl else "testimonial:hub:en:v2"
         embed = _build_hub_embed_nl() if is_nl else _build_hub_embed_en()
         view = StartTestimonialViewNL(publisher=self) if is_nl else StartTestimonialView(publisher=self)
 
@@ -357,7 +462,6 @@ class TestimonialPublisher:
         if not isinstance(channel, discord.TextChannel):
             return
 
-        # Find existing hub message by footer marker
         existing = None
         try:
             async for msg in channel.history(limit=50):
@@ -379,7 +483,6 @@ class TestimonialPublisher:
         try:
             msg = await channel.send(embed=embed, view=view)
             log.info("Testimonials: posted hub in channel %s", channel_id)
-            # Store message ID
             guild_id = getattr(self._bot, "dutch_guild_id" if is_nl else "guild_id", None)
             if guild_id and hasattr(self._repo, "kv_set"):
                 await self._repo.kv_set(guild_id, kv_key, str(msg.id))
@@ -395,7 +498,8 @@ class TestimonialPublisher:
         public: bool,
     ) -> None:
         success_channel_id = NL_SUCCESS_CHANNEL_ID if is_nl else EN_SUCCESS_CHANNEL_ID
-        collected_channel_id = NL_COLLECTED_CHANNEL_ID if is_nl else EN_COLLECTED_CHANNEL_ID
+        # All testimonials go to the same EN collected channel regardless of language
+        collected_channel_id = EN_COLLECTED_CHANNEL_ID
 
         admin_embed = _build_admin_embed(answers, member, is_nl, public)
 
@@ -454,7 +558,6 @@ async def setup(
 
     await bot.add_cog(TestimonialsCog(bot, publisher))
 
-    # Register persistent views
     bot.add_view(StartTestimonialView(publisher=publisher))
     bot.add_view(StartTestimonialViewNL(publisher=publisher))
 

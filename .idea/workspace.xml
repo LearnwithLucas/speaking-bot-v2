@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="testimonials.py 2 update" />
+    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="testimonials.py 3 update" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -370,11 +370,18 @@
       <option name="project" value="LOCAL" />
       <updated>1775392051710</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="testimonials.py 3 update">
+      <option name="closed" value="true" />
+      <created>1775393884445</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1775393884445</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="add topics.py  update" />
     <MESSAGE value="private lessons update" />
     <MESSAGE value="tracker update better nudges" />
     <MESSAGE value="dictionary added nudges" />
@@ -399,6 +406,7 @@
     <MESSAGE value="roastmean update" />
     <MESSAGE value="testimonials.py update" />
     <MESSAGE value="testimonials.py 2 update" />
-    <option name="LAST_COMMIT_MESSAGE" value="testimonials.py 2 update" />
+    <MESSAGE value="testimonials.py 3 update" />
+    <option name="LAST_COMMIT_MESSAGE" value="testimonials.py 3 update" />
   </component>
 </project>
