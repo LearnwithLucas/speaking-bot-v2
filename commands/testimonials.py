@@ -21,13 +21,25 @@ KV_EN_HUB_MSG = "testimonial_hub_en_v1"
 KV_NL_HUB_MSG = "testimonial_hub_nl_v1"
 
 # ---- Questions ----
+# Short labels (≤45 chars) shown in the modal input
+# Full questions shown as placeholders
 EN_QUESTIONS = [
+    "What are you proud of since joining?",
+    "How has practicing here helped you?",
+    "How would you describe your progress?",
+]
+EN_PLACEHOLDERS = [
     "What's one thing you're proud of since joining?",
     "How has practicing here helped you?",
     "If you were telling a friend, how would you describe your progress?",
 ]
 
 NL_QUESTIONS = [
+    "Waar ben je trots op sinds je lid bent?",
+    "Hoe heeft oefenen hier jou geholpen?",
+    "Hoe zou je jouw vooruitgang omschrijven?",
+]
+NL_PLACEHOLDERS = [
     "Wat is iets waar je trots op bent sinds je lid bent geworden?",
     "Hoe heeft het oefenen hier jou geholpen?",
     "Als je het aan een vriend zou vertellen, hoe zou je je vooruitgang omschrijven?",
@@ -43,6 +55,7 @@ class TestimonialModal(discord.ui.Modal):
         self,
         *,
         question: str,
+        placeholder: str,
         step: int,
         answers: list[str],
         is_nl: bool,
@@ -58,7 +71,7 @@ class TestimonialModal(discord.ui.Modal):
         self.answer = discord.ui.TextInput(
             label=question,
             style=discord.TextStyle.paragraph,
-            placeholder="...",
+            placeholder=placeholder,
             min_length=10,
             max_length=500,
             required=True,
@@ -69,12 +82,14 @@ class TestimonialModal(discord.ui.Modal):
         self._answers.append(self.answer.value.strip())
 
         questions = NL_QUESTIONS if self._is_nl else EN_QUESTIONS
+        placeholders = NL_PLACEHOLDERS if self._is_nl else EN_PLACEHOLDERS
         next_step = self._step + 1
 
         if next_step < len(questions):
             # Next question
             modal = TestimonialModal(
                 question=questions[next_step],
+                placeholder=placeholders[next_step],
                 step=next_step,
                 answers=self._answers,
                 is_nl=self._is_nl,
@@ -190,6 +205,7 @@ class StartTestimonialView(discord.ui.View):
     async def start_en(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         modal = TestimonialModal(
             question=EN_QUESTIONS[0],
+            placeholder=EN_PLACEHOLDERS[0],
             step=0,
             answers=[],
             is_nl=False,
@@ -215,6 +231,7 @@ class StartTestimonialViewNL(discord.ui.View):
     async def start_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         modal = TestimonialModal(
             question=NL_QUESTIONS[0],
+            placeholder=NL_PLACEHOLDERS[0],
             step=0,
             answers=[],
             is_nl=True,
@@ -245,7 +262,7 @@ def _build_public_embed(
     member: discord.User | discord.Member,
     is_nl: bool,
 ) -> discord.Embed:
-    questions = NL_QUESTIONS if is_nl else EN_QUESTIONS
+    questions = NL_PLACEHOLDERS if is_nl else EN_PLACEHOLDERS
     if is_nl:
         title = f"🌟 Verhaal van {member.display_name}"
         footer = "Gedeeld door een lid van de community"
@@ -274,7 +291,7 @@ def _build_admin_embed(
     is_nl: bool,
     public: bool,
 ) -> discord.Embed:
-    questions = NL_QUESTIONS if is_nl else EN_QUESTIONS
+    questions = NL_PLACEHOLDERS if is_nl else EN_PLACEHOLDERS
     lang = "NL" if is_nl else "EN"
     visibility = ("🔓 Publiek gedeeld" if is_nl else "🔓 Shared publicly") if public \
         else ("🔒 Privé gehouden" if is_nl else "🔒 Kept private")
