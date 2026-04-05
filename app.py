@@ -21,6 +21,7 @@ from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
 from commands.jokes import setup as setup_jokes
 from jobs.word_of_the_day import WordOfTheDayJob
+from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
@@ -63,6 +64,7 @@ class SpeakingBot(commands.Bot):
         self._partner_finder: PartnerFinder | None = None
         self._ask_jerry_publisher = None
         self._wotd_job: WordOfTheDayJob | None = None
+        self._testimonial_publisher = None
 
     async def setup_hook(self) -> None:
         # Load debug tools (dev-only) BEFORE sync so commands appear when enabled.
@@ -91,6 +93,14 @@ class SpeakingBot(commands.Bot):
 
         # Load jokes cog
         await setup_jokes(self)
+
+        # Load testimonials cog
+        self._testimonial_publisher = await setup_testimonials(
+            self,
+            self.repo,
+            guild_id=self.guild_id,
+            dutch_guild_id=self.dutch_guild_id,
+        )
 
         # Load topics cog
         await setup_topics(
@@ -163,6 +173,8 @@ class SpeakingBot(commands.Bot):
         self.add_view(NlLessonsView())
         self.add_view(EnSupportedView())
         self.add_view(NlSupportedView())
+        self.add_view(StartTestimonialView())
+        self.add_view(StartTestimonialViewNL())
 
         # Sync commands to English guild
         guild = discord.Object(id=self.guild_id)
@@ -264,6 +276,18 @@ class SpeakingBot(commands.Bot):
                     log.exception("AskJerry: failed to publish NL hub")
 
         # Session reminders
+        # Testimonial hubs
+        if self._testimonial_publisher:
+            try:
+                await self._testimonial_publisher.publish_hub(is_nl=False)
+            except Exception:
+                log.exception("Testimonials: failed to publish EN hub")
+            if self.dutch_guild_id:
+                try:
+                    await self._testimonial_publisher.publish_hub(is_nl=True)
+                except Exception:
+                    log.exception("Testimonials: failed to publish NL hub")
+
         SessionReminderJob(
             bot=self,
             repo=self.repo,

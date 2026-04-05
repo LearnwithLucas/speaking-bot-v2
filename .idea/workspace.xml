@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="roast update">
-      <change beforePath="$PROJECT_DIR$/commands/jokes.py" beforeDir="false" afterPath="$PROJECT_DIR$/commands/jokes.py" afterDir="false" />
+    <list default="true" id="ac984f7e-da51-4885-a630-5af1a4c6eda6" name="Changes" comment="roastmean update">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,18 +45,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.app.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/jair2/PycharmProjects/speaking-bot-v2/commands"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/jair2/PycharmProjects/speaking-bot-v2/commands&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\jair2\PycharmProjects\speaking-bot-v2\commands" />
@@ -348,11 +348,18 @@
       <option name="project" value="LOCAL" />
       <updated>1774647759246</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="roastmean update">
+      <option name="closed" value="true" />
+      <created>1774648279050</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1774648279050</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="welcome message EN &amp; NL update" />
     <MESSAGE value="nudges.py update" />
     <MESSAGE value="voice channel nudge messages update" />
     <MESSAGE value="add topics.py  update" />
@@ -377,6 +384,7 @@
     <MESSAGE value="nederlandse vioce tracker" />
     <MESSAGE value="joke update" />
     <MESSAGE value="roast update" />
-    <option name="LAST_COMMIT_MESSAGE" value="roast update" />
+    <MESSAGE value="roastmean update" />
+    <option name="LAST_COMMIT_MESSAGE" value="roastmean update" />
   </component>
 </project>
