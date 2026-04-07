@@ -547,6 +547,11 @@ class TestimonialPublisher:
 # =======================================================
 
 OUTREACH_COOLDOWN_SECONDS = 180 * 86400  # 6 months
+ADMIN_USER_ID = 1181651144100036718
+
+
+def _admin_only(interaction: discord.Interaction) -> bool:
+    return interaction.user.id == ADMIN_USER_ID
 
 
 class TestimonialsCog(commands.Cog):
@@ -554,337 +559,251 @@ class TestimonialsCog(commands.Cog):
         self.bot = bot
         self._publisher = publisher
 
-    def _is_admin(self, ctx: commands.Context) -> bool:
-        return ctx.author.id == LUCAS_USER_ID
-
     async def _resolve_member(
-        self, ctx: commands.Context, username: str
+        self, interaction: discord.Interaction, username: str
     ) -> discord.Member | None:
-        """Find a member by display name, username, or ID."""
-        guild = ctx.guild
+        guild = interaction.guild
         if not guild:
             return None
-        # Try ID first
         if username.isdigit():
-            member = guild.get_member(int(username))
-            if member:
-                return member
-        # Try mention
+            m = guild.get_member(int(username))
+            if m:
+                return m
         if username.startswith("<@") and username.endswith(">"):
             uid = username.strip("<@!>")
             if uid.isdigit():
-                member = guild.get_member(int(uid))
-                if member:
-                    return member
-        # Try display name / username case-insensitive
-        username_lower = username.lower()
-        for member in guild.members:
-            if (
-                member.display_name.lower() == username_lower
-                or member.name.lower() == username_lower
-            ):
-                return member
+                m = guild.get_member(int(uid))
+                if m:
+                    return m
+        ulow = username.lower()
+        for m in guild.members:
+            if m.display_name.lower() == ulow or m.name.lower() == ulow:
+                return m
         return None
 
-    @commands.command(name="testimonial")
-    async def cmd_testimonial(self, ctx: commands.Context, *, username: str) -> None:
-        """!testimonial <username> — send the testimonial DM and save as contacted."""
-        if not self._is_admin(ctx):
-            await ctx.message.add_reaction("🚫")
+    async def _log_action(self, msg: str) -> None:
+        try:
+            ch = self.bot.get_channel(EN_COLLECTED_CHANNEL_ID)
+            if ch is None:
+                ch = await self.bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
+            if isinstance(ch, discord.TextChannel):
+                await ch.send(msg)
+        except Exception:
+            log.exception("Testimonials: failed to log action")
+
+    async def _send_dm_and_save(
+        self,
+        interaction: discord.Interaction,
+        username: str,
+        force_nl: bool = False,
+    ) -> None:
+        if not _admin_only(interaction):
+            await interaction.response.send_message("Not for you.", ephemeral=True)
             return
 
-        member = await self._resolve_member(ctx, username)
+        member = await self._resolve_member(interaction, username)
         if not member:
-            await ctx.reply(f"Member `{username}` not found.", mention_author=False)
+            await interaction.response.send_message(
+                f"Member `{username}` not found.", ephemeral=True
+            )
             return
 
-        guild = ctx.guild
-        is_nl = guild.id == NL_GUILD_ID if guild else False
+        guild = interaction.guild
+        is_nl = force_nl or (guild.id == NL_GUILD_ID if guild else False)
+        guild_id = guild.id if guild else (NL_GUILD_ID if is_nl else EN_GUILD_ID)
 
-        # Send DM
+        await interaction.response.defer(ephemeral=True)
+
         try:
             from jobs.testimonial_outreach import _build_dm_embed_en, _build_dm_embed_nl
             embed = _build_dm_embed_nl(member) if is_nl else _build_dm_embed_en(member)
             await member.send(embed=embed)
         except discord.Forbidden:
-            await ctx.reply(
+            await interaction.followup.send(
                 f"Could not DM **{member.display_name}** — their DMs are closed.",
-                mention_author=False,
+                ephemeral=True,
             )
             return
         except Exception as e:
-            await ctx.reply(f"DM failed: {e}", mention_author=False)
+            await interaction.followup.send(f"DM failed: {e}", ephemeral=True)
             return
 
-        # Save timestamp in KV so outreach job won't re-send
+        kv_key = f"testimonial_dm_sent:{member.id}"
+        try:
+            await self._publisher._repo.kv_set(guild_id, kv_key, str(int(time.time())))
+        except Exception:
+            log.exception("testimonial slash: KV save failed uid=%s", member.id)
+
+        lang = "NL" if is_nl else "EN"
+        cmd = "!getuigenis" if is_nl else "!testimonial"
+        await self._log_action(
+            f"📨 DM sent to **{member.display_name}** (`{member.id}`) [{lang}] — manual via {cmd}"
+        )
+        await interaction.followup.send(
+            f"✅ DM sent to **{member.display_name}**.", ephemeral=True
+        )
+
+    async def _save_only(
+        self,
+        interaction: discord.Interaction,
+        username: str,
+        force_nl: bool = False,
+    ) -> None:
+        if not _admin_only(interaction):
+            await interaction.response.send_message("Not for you.", ephemeral=True)
+            return
+
+        member = await self._resolve_member(interaction, username)
+        if not member:
+            await interaction.response.send_message(
+                f"Member `{username}` not found.", ephemeral=True
+            )
+            return
+
+        guild = interaction.guild
+        is_nl = force_nl or (guild.id == NL_GUILD_ID if guild else False)
         guild_id = guild.id if guild else (NL_GUILD_ID if is_nl else EN_GUILD_ID)
+
+        await interaction.response.defer(ephemeral=True)
+
         kv_key = f"testimonial_dm_sent:{member.id}"
         try:
             await self._publisher._repo.kv_set(guild_id, kv_key, str(int(time.time())))
         except Exception:
-            log.exception("cmd_testimonial: failed to save KV for user=%s", member.id)
+            await interaction.followup.send("Failed to save to KV.", ephemeral=True)
+            return
 
-        # Log to admin channel
-        try:
-            log_ch = self.bot.get_channel(EN_COLLECTED_CHANNEL_ID)
-            if log_ch is None:
-                log_ch = await self.bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
-            if isinstance(log_ch, discord.TextChannel):
-                lang = "NL" if is_nl else "EN"
-                await log_ch.send(
-                    f"📨 DM sent to **{member.display_name}** (`{member.id}`) [{lang}] — manual via !testimonial"
-                )
-        except Exception:
-            log.exception("cmd_testimonial: failed to log")
-
-        await ctx.reply(
-            f"✅ DM sent to **{member.display_name}**.",
-            mention_author=False,
+        lang = "NL" if is_nl else "EN"
+        cmd = "!getuigenisopslaan" if is_nl else "!testimonialsave"
+        await self._log_action(
+            f"💾 Saved (no DM) **{member.display_name}** (`{member.id}`) [{lang}] — via {cmd}"
         )
-        await ctx.message.add_reaction("✅")
-
-    @commands.command(name="testimonialsave")
-    async def cmd_testimonialsave(self, ctx: commands.Context, *, username: str) -> None:
-        """!testimonialsave <username> — mark as contacted without sending DM."""
-        if not self._is_admin(ctx):
-            await ctx.message.add_reaction("🚫")
-            return
-
-        member = await self._resolve_member(ctx, username)
-        if not member:
-            await ctx.reply(f"Member `{username}` not found.", mention_author=False)
-            return
-
-        guild = ctx.guild
-        guild_id = guild.id if guild else EN_GUILD_ID
-        is_nl = guild.id == NL_GUILD_ID if guild else False
-
-        kv_key = f"testimonial_dm_sent:{member.id}"
-        try:
-            await self._publisher._repo.kv_set(guild_id, kv_key, str(int(time.time())))
-        except Exception:
-            await ctx.reply("Failed to save to KV.", mention_author=False)
-            return
-
-        # Log to admin channel
-        try:
-            log_ch = self.bot.get_channel(EN_COLLECTED_CHANNEL_ID)
-            if log_ch is None:
-                log_ch = await self.bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
-            if isinstance(log_ch, discord.TextChannel):
-                lang = "NL" if is_nl else "EN"
-                await log_ch.send(
-                    f"💾 Saved (no DM) **{member.display_name}** (`{member.id}`) [{lang}] — manual via !testimonialsave"
-                )
-        except Exception:
-            log.exception("cmd_testimonialsave: failed to log")
-
-        await ctx.reply(
-            f"✅ **{member.display_name}** marked as contacted (no DM sent).",
-            mention_author=False,
+        await interaction.followup.send(
+            f"✅ **{member.display_name}** marked as contacted (no DM sent).", ephemeral=True
         )
-        await ctx.message.add_reaction("✅")
 
-
-    # ----------------------------------------------------------
-    # !getuigenis <username> — Dutch DM (force NL)
-    # ----------------------------------------------------------
-
-    @commands.command(name="getuigenis")
-    async def cmd_getuigenis(self, ctx: commands.Context, *, username: str) -> None:
-        """!getuigenis <username> — stuur de NL testimonial DM en sla op."""
-        if not self._is_admin(ctx):
-            await ctx.message.add_reaction("🚫")
+    async def _list_overview(
+        self, interaction: discord.Interaction, is_nl: bool
+    ) -> None:
+        if not _admin_only(interaction):
+            await interaction.response.send_message("Not for you.", ephemeral=True)
             return
 
-        member = await self._resolve_member(ctx, username)
-        if not member:
-            await ctx.reply(f"Lid `{username}` niet gevonden.", mention_author=False)
-            return
+        await interaction.response.defer(ephemeral=True)
 
-        guild = ctx.guild
-        guild_id = guild.id if guild else NL_GUILD_ID
-
-        try:
-            from jobs.testimonial_outreach import _build_dm_embed_nl
-            await member.send(embed=_build_dm_embed_nl(member))
-        except discord.Forbidden:
-            await ctx.reply(
-                f"Kon **{member.display_name}** geen DM sturen — DMs zijn gesloten.",
-                mention_author=False,
-            )
-            return
-        except Exception as e:
-            await ctx.reply(f"DM mislukt: {e}", mention_author=False)
-            return
-
-        kv_key = f"testimonial_dm_sent:{member.id}"
-        try:
-            await self._publisher._repo.kv_set(guild_id, kv_key, str(int(time.time())))
-        except Exception:
-            log.exception("cmd_getuigenis: KV opslaan mislukt uid=%s", member.id)
-
-        try:
-            log_ch = self.bot.get_channel(EN_COLLECTED_CHANNEL_ID)
-            if log_ch is None:
-                log_ch = await self.bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
-            if isinstance(log_ch, discord.TextChannel):
-                await log_ch.send(
-                    f"📨 DM verzonden naar **{member.display_name}** (`{member.id}`) [NL] — handmatig via !getuigenis"
-                )
-        except Exception:
-            log.exception("cmd_getuigenis: loggen mislukt")
-
-        await ctx.reply(f"✅ DM verzonden naar **{member.display_name}**.", mention_author=False)
-        await ctx.message.add_reaction("✅")
-
-    # ----------------------------------------------------------
-    # !getuigenisopslaan <username> — Dutch save only
-    # ----------------------------------------------------------
-
-    @commands.command(name="getuigenisopslaan")
-    async def cmd_getuigenisopslaan(self, ctx: commands.Context, *, username: str) -> None:
-        """!getuigenisopslaan <username> — markeer als gecontacteerd, geen DM."""
-        if not self._is_admin(ctx):
-            await ctx.message.add_reaction("🚫")
-            return
-
-        member = await self._resolve_member(ctx, username)
-        if not member:
-            await ctx.reply(f"Lid `{username}` niet gevonden.", mention_author=False)
-            return
-
-        guild = ctx.guild
-        guild_id = guild.id if guild else NL_GUILD_ID
-
-        kv_key = f"testimonial_dm_sent:{member.id}"
-        try:
-            await self._publisher._repo.kv_set(guild_id, kv_key, str(int(time.time())))
-        except Exception:
-            await ctx.reply("KV opslaan mislukt.", mention_author=False)
-            return
-
-        try:
-            log_ch = self.bot.get_channel(EN_COLLECTED_CHANNEL_ID)
-            if log_ch is None:
-                log_ch = await self.bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
-            if isinstance(log_ch, discord.TextChannel):
-                await log_ch.send(
-                    f"💾 Opgeslagen (geen DM) **{member.display_name}** (`{member.id}`) [NL] — via !getuigenisopslaan"
-                )
-        except Exception:
-            log.exception("cmd_getuigenisopslaan: loggen mislukt")
-
-        await ctx.reply(
-            f"✅ **{member.display_name}** gemarkeerd als gecontacteerd (geen DM verzonden).",
-            mention_author=False,
-        )
-        await ctx.message.add_reaction("✅")
-
-    # ----------------------------------------------------------
-    # !testimonialslist / !getuigenislijst — show sent + received
-    # ----------------------------------------------------------
-
-    async def _build_list_embed(self, is_nl: bool) -> discord.Embed:
-        """Scan the collected channel and count sent DMs vs received testimonials."""
-        collected_channel_id = EN_COLLECTED_CHANNEL_ID
         sent, received_public, received_private = 0, 0, 0
         sent_names: list[str] = []
         received_names: list[str] = []
 
         try:
-            ch = self.bot.get_channel(collected_channel_id)
+            ch = self.bot.get_channel(EN_COLLECTED_CHANNEL_ID)
             if ch is None:
-                ch = await self.bot.fetch_channel(collected_channel_id)
+                ch = await self.bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
             if isinstance(ch, discord.TextChannel):
                 async for msg in ch.history(limit=500, oldest_first=False):
                     if msg.author.id != self.bot.user.id:  # type: ignore[union-attr]
                         continue
-                    content = msg.content or ""
-                    # Sent DM log lines
-                    if "📨" in content:
+                    text = msg.content or ""
+                    if "📨" in text:
                         sent += 1
-                        # Extract name between ** **
-                        parts = content.split("**")
+                        parts = text.split("**")
                         if len(parts) >= 2:
                             sent_names.append(parts[1])
-                    # Received testimonials (embeds with visibility field)
-                    for embed in msg.embeds:
-                        desc = embed.description or ""
-                        if "📋 Testimonial" in (embed.title or ""):
+                    for emb in msg.embeds:
+                        if "📋 Testimonial" in (emb.title or ""):
+                            desc = emb.description or ""
                             if "🔓" in desc:
                                 received_public += 1
                             elif "🔒" in desc:
                                 received_private += 1
-                            name = (embed.title or "").replace("📋 Testimonial — ", "").strip()
+                            name = (emb.title or "").replace("📋 Testimonial — ", "").strip()
                             if name:
                                 received_names.append(name)
         except Exception:
-            log.exception("_build_list_embed: failed to scan channel")
+            log.exception("testimonial list: channel scan failed")
 
-        total_received = received_public + received_private
+        total = received_public + received_private
 
         if is_nl:
             title = "📊 Getuigenissen — Overzicht"
-            desc_lines = [
+            lines = [
                 f"**📨 DMs verzonden:** {sent}",
-                f"**📋 Getuigenissen ontvangen:** {total_received} "
-                f"({received_public} publiek · {received_private} privé)",
+                f"**📋 Ontvangen:** {total} ({received_public} publiek · {received_private} privé)",
                 "",
             ]
             if received_names:
-                desc_lines.append("**Ontvangen van:**")
-                desc_lines.append(", ".join(received_names[:30]) + ("..." if len(received_names) > 30 else ""))
-                desc_lines.append("")
+                lines += ["**Ontvangen van:**", ", ".join(received_names[:30]) + ("..." if len(received_names) > 30 else ""), ""]
             if sent_names:
-                desc_lines.append("**DM verzonden naar (recent):**")
-                desc_lines.append(", ".join(sent_names[:30]) + ("..." if len(sent_names) > 30 else ""))
-            footer = "Gebaseerd op de laatste 500 berichten in het kanaal"
+                lines += ["**DM verzonden naar (recent):**", ", ".join(sent_names[:30]) + ("..." if len(sent_names) > 30 else "")]
+            footer = "Gebaseerd op de laatste 500 berichten"
         else:
             title = "📊 Testimonials — Overview"
-            desc_lines = [
+            lines = [
                 f"**📨 DMs sent:** {sent}",
-                f"**📋 Testimonials received:** {total_received} "
-                f"({received_public} public · {received_private} private)",
+                f"**📋 Received:** {total} ({received_public} public · {received_private} private)",
                 "",
             ]
             if received_names:
-                desc_lines.append("**Received from:**")
-                desc_lines.append(", ".join(received_names[:30]) + ("..." if len(received_names) > 30 else ""))
-                desc_lines.append("")
+                lines += ["**Received from:**", ", ".join(received_names[:30]) + ("..." if len(received_names) > 30 else ""), ""]
             if sent_names:
-                desc_lines.append("**DM sent to (recent):**")
-                desc_lines.append(", ".join(sent_names[:30]) + ("..." if len(sent_names) > 30 else ""))
+                lines += ["**DM sent to (recent):**", ", ".join(sent_names[:30]) + ("..." if len(sent_names) > 30 else "")]
             footer = "Based on last 500 messages in the channel"
 
         embed = discord.Embed(
             title=title,
-            description="\n".join(desc_lines),
+            description="\n".join(lines),
             color=discord.Color.blurple(),
         )
         embed.set_footer(text=footer)
-        return embed
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @commands.command(name="testimonialslist")
-    async def cmd_testimonialslist(self, ctx: commands.Context) -> None:
-        """!testimonialslist — overview of sent DMs and received testimonials."""
-        if not self._is_admin(ctx):
-            await ctx.message.add_reaction("🚫")
-            return
-        async with ctx.typing():
-            embed = await self._build_list_embed(is_nl=False)
-        await ctx.reply(embed=embed, mention_author=False)
+    # ---- Slash commands ----
 
-    @commands.command(name="getuigenislijst")
-    async def cmd_getuigenislijst(self, ctx: commands.Context) -> None:
-        """!getuigenislijst — overzicht van verzonden DMs en ontvangen getuigenissen."""
-        if not self._is_admin(ctx):
-            await ctx.message.add_reaction("🚫")
-            return
-        async with ctx.typing():
-            embed = await self._build_list_embed(is_nl=True)
-        await ctx.reply(embed=embed, mention_author=False)
+    @discord.app_commands.command(
+        name="testimonial",
+        description="Send the EN testimonial DM to a member (admin only)",
+    )
+    @discord.app_commands.describe(username="Display name, username, mention or user ID")
+    async def slash_testimonial(self, interaction: discord.Interaction, username: str) -> None:
+        await self._send_dm_and_save(interaction, username, force_nl=False)
 
+    @discord.app_commands.command(
+        name="getuigenis",
+        description="Stuur de NL testimonial DM naar een lid (alleen admin)",
+    )
+    @discord.app_commands.describe(username="Weergavenaam, gebruikersnaam, vermelding of gebruikers-ID")
+    async def slash_getuigenis(self, interaction: discord.Interaction, username: str) -> None:
+        await self._send_dm_and_save(interaction, username, force_nl=True)
+
+    @discord.app_commands.command(
+        name="testimonialsave",
+        description="Mark member as contacted without sending DM (admin only)",
+    )
+    @discord.app_commands.describe(username="Display name, username, mention or user ID")
+    async def slash_testimonialsave(self, interaction: discord.Interaction, username: str) -> None:
+        await self._save_only(interaction, username, force_nl=False)
+
+    @discord.app_commands.command(
+        name="getuigenisopslaan",
+        description="Markeer lid als gecontacteerd zonder DM te sturen (alleen admin)",
+    )
+    @discord.app_commands.describe(username="Weergavenaam, gebruikersnaam, vermelding of gebruikers-ID")
+    async def slash_getuigenisopslaan(self, interaction: discord.Interaction, username: str) -> None:
+        await self._save_only(interaction, username, force_nl=True)
+
+    @discord.app_commands.command(
+        name="testimonialslist",
+        description="Overview of sent DMs and received testimonials (admin only)",
+    )
+    async def slash_testimonialslist(self, interaction: discord.Interaction) -> None:
+        await self._list_overview(interaction, is_nl=False)
+
+    @discord.app_commands.command(
+        name="getuigenislijst",
+        description="Overzicht van verzonden DMs en ontvangen getuigenissen (alleen admin)",
+    )
+    async def slash_getuigenislijst(self, interaction: discord.Interaction) -> None:
+        await self._list_overview(interaction, is_nl=True)
 async def setup(
     bot: commands.Bot,
     repo: Any,

@@ -48,7 +48,7 @@ class SpeakingBot(commands.Bot):
         intents.guilds = True
         intents.members = True
         intents.voice_states = True
-        super().__init__(command_prefix=commands.when_mentioned_or("!"), intents=intents)
+        super().__init__(command_prefix=commands.when_mentioned, intents=intents)
 
         self.repo = repo
         self.tracker = tracker
