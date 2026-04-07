@@ -4,7 +4,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import time
+
 import discord
+from discord import app_commands
 from discord.ext import commands
 
 log = logging.getLogger("commands.testimonials")
@@ -16,9 +19,12 @@ EN_COLLECTED_CHANNEL_ID = 1490322440788644011
 NL_COLLECTED_CHANNEL_ID = 1490322080678543542
 
 LUCAS_USER_ID = 1181651144100036718
+EN_GUILD_ID = 1181652389732831323
+NL_GUILD_ID = 1336419808811679754
 
 KV_EN_HUB_MSG = "testimonial_hub_en_v2"
 KV_NL_HUB_MSG = "testimonial_hub_nl_v2"
+KV_SAVED_PREFIX = "testimonial_saved:"    # key = f"{KV_SAVED_PREFIX}{user_id}"
 
 # ---- Questions (labels must be <=45 chars) ----
 EN_QUESTIONS = [
@@ -540,10 +546,144 @@ class TestimonialPublisher:
 # COG + SETUP
 # =======================================================
 
+OUTREACH_COOLDOWN_SECONDS = 180 * 86400  # 6 months
+
+
 class TestimonialsCog(commands.Cog):
     def __init__(self, bot: commands.Bot, publisher: TestimonialPublisher) -> None:
         self.bot = bot
         self._publisher = publisher
+
+    def _is_admin(self, ctx: commands.Context) -> bool:
+        return ctx.author.id == LUCAS_USER_ID
+
+    async def _resolve_member(
+        self, ctx: commands.Context, username: str
+    ) -> discord.Member | None:
+        """Find a member by display name, username, or ID."""
+        guild = ctx.guild
+        if not guild:
+            return None
+        # Try ID first
+        if username.isdigit():
+            member = guild.get_member(int(username))
+            if member:
+                return member
+        # Try mention
+        if username.startswith("<@") and username.endswith(">"):
+            uid = username.strip("<@!>")
+            if uid.isdigit():
+                member = guild.get_member(int(uid))
+                if member:
+                    return member
+        # Try display name / username case-insensitive
+        username_lower = username.lower()
+        for member in guild.members:
+            if (
+                member.display_name.lower() == username_lower
+                or member.name.lower() == username_lower
+            ):
+                return member
+        return None
+
+    @commands.command(name="testimonial")
+    async def cmd_testimonial(self, ctx: commands.Context, *, username: str) -> None:
+        """!testimonial <username> — send the testimonial DM and save as contacted."""
+        if not self._is_admin(ctx):
+            await ctx.message.add_reaction("🚫")
+            return
+
+        member = await self._resolve_member(ctx, username)
+        if not member:
+            await ctx.reply(f"Member `{username}` not found.", mention_author=False)
+            return
+
+        guild = ctx.guild
+        is_nl = guild.id == NL_GUILD_ID if guild else False
+
+        # Send DM
+        try:
+            from jobs.testimonial_outreach import _build_dm_embed_en, _build_dm_embed_nl
+            embed = _build_dm_embed_nl(member) if is_nl else _build_dm_embed_en(member)
+            await member.send(embed=embed)
+        except discord.Forbidden:
+            await ctx.reply(
+                f"Could not DM **{member.display_name}** — their DMs are closed.",
+                mention_author=False,
+            )
+            return
+        except Exception as e:
+            await ctx.reply(f"DM failed: {e}", mention_author=False)
+            return
+
+        # Save timestamp in KV so outreach job won't re-send
+        guild_id = guild.id if guild else (NL_GUILD_ID if is_nl else EN_GUILD_ID)
+        kv_key = f"testimonial_dm_sent:{member.id}"
+        try:
+            await self._publisher._repo.kv_set(guild_id, kv_key, str(int(time.time())))
+        except Exception:
+            log.exception("cmd_testimonial: failed to save KV for user=%s", member.id)
+
+        # Log to admin channel
+        try:
+            log_ch = self.bot.get_channel(EN_COLLECTED_CHANNEL_ID)
+            if log_ch is None:
+                log_ch = await self.bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
+            if isinstance(log_ch, discord.TextChannel):
+                lang = "NL" if is_nl else "EN"
+                await log_ch.send(
+                    f"📨 DM sent to **{member.display_name}** (`{member.id}`) [{lang}] — manual via !testimonial"
+                )
+        except Exception:
+            log.exception("cmd_testimonial: failed to log")
+
+        await ctx.reply(
+            f"✅ DM sent to **{member.display_name}**.",
+            mention_author=False,
+        )
+        await ctx.message.add_reaction("✅")
+
+    @commands.command(name="testimonialsave")
+    async def cmd_testimonialsave(self, ctx: commands.Context, *, username: str) -> None:
+        """!testimonialsave <username> — mark as contacted without sending DM."""
+        if not self._is_admin(ctx):
+            await ctx.message.add_reaction("🚫")
+            return
+
+        member = await self._resolve_member(ctx, username)
+        if not member:
+            await ctx.reply(f"Member `{username}` not found.", mention_author=False)
+            return
+
+        guild = ctx.guild
+        guild_id = guild.id if guild else EN_GUILD_ID
+        is_nl = guild.id == NL_GUILD_ID if guild else False
+
+        kv_key = f"testimonial_dm_sent:{member.id}"
+        try:
+            await self._publisher._repo.kv_set(guild_id, kv_key, str(int(time.time())))
+        except Exception:
+            await ctx.reply("Failed to save to KV.", mention_author=False)
+            return
+
+        # Log to admin channel
+        try:
+            log_ch = self.bot.get_channel(EN_COLLECTED_CHANNEL_ID)
+            if log_ch is None:
+                log_ch = await self.bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
+            if isinstance(log_ch, discord.TextChannel):
+                lang = "NL" if is_nl else "EN"
+                await log_ch.send(
+                    f"💾 Saved (no DM) **{member.display_name}** (`{member.id}`) [{lang}] — manual via !testimonialsave"
+                )
+        except Exception:
+            log.exception("cmd_testimonialsave: failed to log")
+
+        await ctx.reply(
+            f"✅ **{member.display_name}** marked as contacted (no DM sent).",
+            mention_author=False,
+        )
+        await ctx.message.add_reaction("✅")
 
 
 async def setup(
