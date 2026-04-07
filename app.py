@@ -22,10 +22,12 @@ from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryV
 from commands.jokes import setup as setup_jokes
 from jobs.word_of_the_day import WordOfTheDayJob
 from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
+from jobs.testimonial_outreach import TestimonialOutreachJob
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
+NL_GUILD_ID = 1336419808811679754  # Dutch guild fallback
 
 
 class SpeakingBot(commands.Bot):
@@ -65,6 +67,7 @@ class SpeakingBot(commands.Bot):
         self._ask_jerry_publisher = None
         self._wotd_job: WordOfTheDayJob | None = None
         self._testimonial_publisher = None
+        self._testimonial_outreach: TestimonialOutreachJob | None = None
 
     async def setup_hook(self) -> None:
         # Load debug tools (dev-only) BEFORE sync so commands appear when enabled.
@@ -287,6 +290,15 @@ class SpeakingBot(commands.Bot):
                     await self._testimonial_publisher.publish_hub(is_nl=True)
                 except Exception:
                     log.exception("Testimonials: failed to publish NL hub")
+
+        # Testimonial outreach
+        self._testimonial_outreach = TestimonialOutreachJob(
+            bot=self,
+            repo=self.repo,
+            en_guild_id=self.guild_id,
+            nl_guild_id=self.dutch_guild_id or NL_GUILD_ID,
+        )
+        log.info("TestimonialOutreachJob started.")
 
         SessionReminderJob(
             bot=self,
