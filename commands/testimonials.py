@@ -22,6 +22,9 @@ LUCAS_USER_ID = 1181651144100036718
 EN_GUILD_ID = 1181652389732831323
 NL_GUILD_ID = 1336419808811679754
 
+EN_STORY_URL = "https://discord.com/channels/1181652389732831323/1490320758507962490/1490341318801756402"
+NL_STORY_URL = "https://discord.com/channels/1336419808811679754/1490320826027741185/1490341327362195606"
+
 KV_EN_HUB_MSG = "testimonial_hub_en_v2"
 KV_NL_HUB_MSG = "testimonial_hub_nl_v2"
 KV_SAVED_PREFIX = "testimonial_saved:"    # key = f"{KV_SAVED_PREFIX}{user_id}"
@@ -89,6 +92,23 @@ NL_CONNECTORS = [
         "Qua vooruitgang,",
     ],
 ]
+
+
+def _dm_link_view(is_nl: bool) -> discord.ui.View:
+    view = discord.ui.View(timeout=None)
+    if is_nl:
+        view.add_item(discord.ui.Button(
+            label="Deel mijn verhaal ✍️",
+            style=discord.ButtonStyle.link,
+            url=NL_STORY_URL,
+        ))
+    else:
+        view.add_item(discord.ui.Button(
+            label="Share my story ✍️",
+            style=discord.ButtonStyle.link,
+            url=EN_STORY_URL,
+        ))
+    return view
 
 
 def _build_testimonial_block(
@@ -617,7 +637,7 @@ class TestimonialsCog(commands.Cog):
         try:
             from jobs.testimonial_outreach import _build_dm_embed_en, _build_dm_embed_nl
             embed = _build_dm_embed_nl(member) if is_nl else _build_dm_embed_en(member)
-            await member.send(embed=embed)
+            await member.send(embed=embed, view=_dm_link_view(is_nl))
         except discord.Forbidden:
             await interaction.followup.send(
                 f"Could not DM **{member.display_name}** — their DMs are closed.",

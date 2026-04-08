@@ -40,6 +40,30 @@ def _kv_key(user_id: int) -> str:
 
 # ---- DM content ----
 
+EN_STORY_URL = "https://discord.com/channels/1181652389732831323/1490320758507962490/1490341318801756402"
+NL_STORY_URL = "https://discord.com/channels/1336419808811679754/1490320826027741185/1490341327362195606"
+
+
+class ShareStoryViewEN(discord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+        self.add_item(discord.ui.Button(
+            label="Share my story ✍️",
+            style=discord.ButtonStyle.link,
+            url=EN_STORY_URL,
+        ))
+
+
+class ShareStoryViewNL(discord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+        self.add_item(discord.ui.Button(
+            label="Deel mijn verhaal ✍️",
+            style=discord.ButtonStyle.link,
+            url=NL_STORY_URL,
+        ))
+
+
 def _build_dm_embed_en(member: discord.Member) -> discord.Embed:
     embed = discord.Embed(
         title="🌟 Would you share your story?",
