@@ -20,6 +20,7 @@ from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
 from commands.admin_refresh import setup as setup_admin_refresh
+from commands.community_guide import setup as setup_community_guide
 from commands.jokes import setup as setup_jokes
 from jobs.word_of_the_day import WordOfTheDayJob
 from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
@@ -115,6 +116,9 @@ class SpeakingBot(commands.Bot):
 
         # Load admin refresh command
         await setup_admin_refresh(self)
+
+        # Load community guide command
+        await setup_community_guide(self)
 
         # Manual commands
         @self.tree.command(
