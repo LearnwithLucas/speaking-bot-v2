@@ -82,4 +82,16 @@ CREATE TABLE IF NOT EXISTS partner_slots (
 
 CREATE INDEX IF NOT EXISTS idx_partner_slots_slot
   ON partner_slots (guild_id, slot_key);
+
+-- Admin-only health summaries: broad command usage, no message content.
+CREATE TABLE IF NOT EXISTS command_usage (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  command_name TEXT NOT NULL,
+  used_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_command_usage_time
+  ON command_usage (guild_id, command_name, used_at);
 """
