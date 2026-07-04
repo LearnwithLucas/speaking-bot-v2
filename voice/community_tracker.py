@@ -48,21 +48,26 @@ def _amsterdam_week_start_epoch() -> int:
     return int(week_start.timestamp())
 
 
-def _format_duration(seconds: int) -> str:
+def _format_duration(seconds: int, *, is_nl: bool) -> str:
     minutes = max(1, int((seconds / 60.0) + 0.5))
     if minutes < 60:
-        return f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
+        if is_nl:
+            return "1 minuut" if minutes == 1 else f"{minutes} minuten"
+        return "1 minute" if minutes == 1 else f"{minutes} minutes"
+
     hours = minutes // 60
     remainder = minutes % 60
     if remainder == 0:
-        return f"{hours} hour" if hours == 1 else f"{hours} hours"
+        if is_nl:
+            return "1 uur" if hours == 1 else f"{hours} uur"
+        return "1 hour" if hours == 1 else f"{hours} hours"
     return f"{hours}h {remainder}m"
 
 
 def _build_weekly_recap_message(*, seconds: int, is_nl: bool) -> str:
     if is_nl:
         if seconds >= 60:
-            opener = f"Deze week was je ongeveer {_format_duration(seconds)} in voice. Mooi dat je geoefend hebt."
+            opener = f"Deze week was je ongeveer {_format_duration(seconds, is_nl=True)} in voice. Mooi dat je geoefend hebt."
         else:
             opener = "Je bent deze week in voice geweest. Dat telt al."
         return (
@@ -72,7 +77,7 @@ def _build_weekly_recap_message(*, seconds: int, is_nl: bool) -> str:
         )
 
     if seconds >= 60:
-        opener = f"This week you spent about {_format_duration(seconds)} in voice. Nice work showing up."
+        opener = f"This week you spent about {_format_duration(seconds, is_nl=False)} in voice. Nice work showing up."
     else:
         opener = "You joined voice this week. That counts already."
     return (
