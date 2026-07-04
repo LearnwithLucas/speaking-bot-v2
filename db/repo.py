@@ -182,6 +182,114 @@ class Repo:
         (total,) = await cur.fetchone()
         return max(0, int(total or 0))
 
+    async def command_usage_record(self, guild_id: int, user_id: int, command_name: str, used_at: int | None = None) -> None:
+        if used_at is None:
+            used_at = int(time.time())
+        await self.conn.execute(
+            """
+            INSERT INTO command_usage (guild_id, user_id, command_name, used_at)
+            VALUES (?, ?, ?, ?)
+            """,
+            (guild_id, user_id, command_name, used_at),
+        )
+        await self.conn.commit()
+
+    async def community_health_summary(self, guild_id: int, since_epoch: int) -> dict[str, Any]:
+        now_epoch = int(time.time())
+
+        cur = await self.conn.execute(
+            """
+            SELECT
+                COUNT(*) AS sessions,
+                COUNT(DISTINCT user_id) AS active_users,
+                COALESCE(SUM(
+                    CASE
+                        WHEN COALESCE(ended_at, ?) <= ? THEN 0
+                        ELSE COALESCE(ended_at, ?) -
+                            CASE WHEN started_at < ? THEN ? ELSE started_at END
+                    END
+                ), 0) AS seconds
+            FROM voice_sessions
+            WHERE guild_id = ?
+              AND started_at <= ?
+              AND COALESCE(ended_at, ?) >= ?
+            """,
+            (
+                now_epoch,
+                since_epoch,
+                now_epoch,
+                since_epoch,
+                since_epoch,
+                guild_id,
+                now_epoch,
+                now_epoch,
+                since_epoch,
+            ),
+        )
+        sessions, active_users, seconds = await cur.fetchone()
+
+        cur = await self.conn.execute(
+            "SELECT COUNT(DISTINCT user_id) FROM voice_sessions WHERE guild_id=? AND ended_at IS NULL",
+            (guild_id,),
+        )
+        (active_now,) = await cur.fetchone()
+
+        cur = await self.conn.execute(
+            "SELECT COUNT(*) FROM user_state WHERE guild_id=? AND last_weekly_dm_at >= ?",
+            (guild_id, since_epoch),
+        )
+        (weekly_recaps_sent,) = await cur.fetchone()
+
+        cur = await self.conn.execute(
+            "SELECT COUNT(*) FROM user_state WHERE guild_id=? AND last_inactivity_nudge_at >= ?",
+            (guild_id, since_epoch),
+        )
+        (inactivity_nudges_sent,) = await cur.fetchone()
+
+        cur = await self.conn.execute(
+            "SELECT COUNT(*) FROM achievements WHERE guild_id=? AND earned_at >= ?",
+            (guild_id, since_epoch),
+        )
+        (achievements_awarded,) = await cur.fetchone()
+
+        cur = await self.conn.execute(
+            "SELECT COUNT(*) FROM voice_met WHERE guild_id=? AND first_met_at >= ?",
+            (guild_id, since_epoch),
+        )
+        (new_voice_pairs,) = await cur.fetchone()
+
+        cur = await self.conn.execute(
+            "SELECT COUNT(DISTINCT user_id) FROM partner_slots WHERE guild_id=? AND updated_at >= ?",
+            (guild_id, since_epoch),
+        )
+        (partner_profiles_updated,) = await cur.fetchone()
+
+        cur = await self.conn.execute(
+            """
+            SELECT command_name, COUNT(*) AS uses, COUNT(DISTINCT user_id) AS unique_users
+            FROM command_usage
+            WHERE guild_id=? AND used_at >= ?
+            GROUP BY command_name
+            ORDER BY uses DESC, command_name ASC
+            LIMIT 8
+            """,
+            (guild_id, since_epoch),
+        )
+        command_rows = await cur.fetchall()
+
+        return {
+            "sessions": int(sessions or 0),
+            "active_users": int(active_users or 0),
+            "seconds": int(seconds or 0),
+            "active_now": int(active_now or 0),
+            "weekly_recaps_sent": int(weekly_recaps_sent or 0),
+            "inactivity_nudges_sent": int(inactivity_nudges_sent or 0),
+            "achievements_awarded": int(achievements_awarded or 0),
+            "new_voice_pairs": int(new_voice_pairs or 0),
+            "partner_profiles_updated": int(partner_profiles_updated or 0),
+            "commands": [(str(name), int(uses or 0), int(unique or 0)) for name, uses, unique in command_rows],
+        }
+
     # -------------------------
     # KV
     # -------------------------
