@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import time
 from typing import Any
 
 import discord
@@ -17,6 +19,8 @@ from jobs.private_lessons import (
     NL_SUPPORTED_CHANNEL_ID,
     NL_SUPPORTED_URL,
 )
+
+log = logging.getLogger(__name__)
 
 FREE_EN_GUIDES_URL = "https://learnwithlucas.com/nederlandse-leermaterialen/"
 FREE_NL_GUIDES_URL = "https://learnwithlucas.com/nederlandse-leermaterialen/"
@@ -155,6 +159,17 @@ async def setup(bot: Any) -> None:
         description="Get a simple guide to the community and next steps.",
     )
     async def cmd_guide(interaction: discord.Interaction) -> None:
+        if interaction.guild_id is not None:
+            try:
+                await bot.repo.command_usage_record(
+                    interaction.guild_id,
+                    interaction.user.id,
+                    "guide",
+                    int(time.time()),
+                )
+            except Exception:
+                log.exception("guide: failed to record command usage")
+
         is_nl = bool(bot.dutch_guild_id and interaction.guild_id == bot.dutch_guild_id)
         embed = build_nl_guide_embed() if is_nl else build_en_guide_embed()
         view = GuideLinks(guild_id=interaction.guild_id, is_nl=is_nl)
