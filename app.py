@@ -24,7 +24,7 @@ from jobs.word_of_the_day import WordOfTheDayJob
 from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
 from jobs.testimonial_outreach import TestimonialOutreachJob
 from jobs.session_reminder import SessionReminderJob
-from jobs.private_lessons import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
+from jobs.private_lessons_summer import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
 NL_GUILD_ID = 1336419808811679754  # Dutch guild fallback
@@ -323,7 +323,7 @@ class SpeakingBot(commands.Bot):
         if member.bot:
             return
 
-        # Welcome DM — both servers
+        # Welcome DM - both servers
         await send_welcome_dm(
             member=member,
             guild_id=member.guild.id,
@@ -331,7 +331,7 @@ class SpeakingBot(commands.Bot):
             nl_guild_id=self.dutch_guild_id or 0,
         )
 
-        # Auto-assign "English Learner" role — English server only
+        # Auto-assign "English Learner" role - English server only
         if member.guild.id != self.guild_id:
             return
 
