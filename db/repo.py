@@ -144,7 +144,7 @@ class Repo:
                 ORDER BY seconds DESC
                 LIMIT ?
                 """,
-                (guild_id, limit),
+                (guild_id, since_epoch, limit),
             )
         rows = await cur.fetchall()
         return [(int(uid), int(sec or 0)) for (uid, sec) in rows]
