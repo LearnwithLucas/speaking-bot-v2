@@ -12,7 +12,7 @@ from discord.ext import commands
 from config import get_settings
 from utils.logging import setup_logging
 from db.repo import Repo
-from voice.tracker import VoiceTracker
+from voice.community_tracker import VoiceTracker
 from jobs.nudges import NudgeJobs
 from jobs.partner_finder import PartnerFinder, PartnerHubView, PartnerHubViewNL
 from jobs.welcome import send_welcome_dm
