@@ -81,6 +81,21 @@ def apply_ask_jerry_summer_copy() -> None:
         _replace_answer(
             ask_jerry.NL_FAQ,
             "priveles",
+            "Hoeveel kosten privélessen?",
+            "**Zomeractie - beperkt aantal plekken**\n\n"
+            "**Proefsessie** - 30 minuten - **EUR 28** (eenmalig)\n"
+            "**Speaking Builder** - 4 x 60 minuten - **EUR 219** "
+            "(EUR 54,75/uur, 10% korting)\n"
+            "Zomer split: **EUR 110 nu**, **EUR 109 voor sessie 3**\n\n"
+            "**Confidence Intensive** - 10 x 60 minuten - **EUR 469** "
+            "(EUR 46,90/uur, 20% korting)\n"
+            "Zomer split: **EUR 235 nu**, **EUR 234 voor sessie 6**\n\n"
+            "Niet zeker welk pakket past? Begin met de proefsessie. "
+            "Alle info: https://learnwithlucas.com/priveles-nederlands/",
+        ),
+        _replace_answer(
+            ask_jerry.NL_FAQ,
+            "priveles",
             "Is er nu plek?",
             "Privelessen zijn beperkt zodat ze rustig en gefocust blijven.\n\n"
             "Huidige zomerbeschikbaarheid:\n"
