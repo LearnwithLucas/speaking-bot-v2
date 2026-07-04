@@ -19,6 +19,7 @@ from jobs.welcome import send_welcome_dm
 from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
+from commands.chat_jerry import setup as setup_chat_jerry, ChatJerryHubView
 from commands.admin_refresh import setup as setup_admin_refresh
 from commands.admin_health import setup as setup_admin_health
 from commands.community_guide import setup as setup_community_guide
@@ -51,6 +52,7 @@ class SpeakingBot(commands.Bot):
         intents.guilds = True
         intents.members = True
         intents.voice_states = True
+        intents.message_content = True
         super().__init__(command_prefix=commands.when_mentioned, intents=intents)
 
         self.repo = repo
@@ -68,6 +70,7 @@ class SpeakingBot(commands.Bot):
         self._jobs_started = False
         self._partner_finder: PartnerFinder | None = None
         self._ask_jerry_publisher = None
+        self._chat_jerry_publisher = None
         self._wotd_job: WordOfTheDayJob | None = None
         self._testimonial_publisher = None
         self._testimonial_outreach: TestimonialOutreachJob | None = None
@@ -84,6 +87,13 @@ class SpeakingBot(commands.Bot):
 
         # Load Ask Jerry cog
         self._ask_jerry_publisher = await setup_ask_jerry(
+            self,
+            self.repo,
+            guild_id=self.guild_id,
+        )
+
+        # Load Chat with Jerry cog
+        self._chat_jerry_publisher = await setup_chat_jerry(
             self,
             self.repo,
             guild_id=self.guild_id,
@@ -181,6 +191,7 @@ class SpeakingBot(commands.Bot):
         self.add_view(PartnerHubView(finder=None))
         self.add_view(AskJerryView(publisher=None))
         self.add_view(AskJerryViewNL(publisher=None))
+        self.add_view(ChatJerryHubView(publisher=None))
         self.add_view(PartnerHubViewNL(finder=None))
         self.add_view(EnLessonsView())
         self.add_view(NlLessonsView())
@@ -288,6 +299,14 @@ class SpeakingBot(commands.Bot):
                 except Exception:
                     log.exception("AskJerry: failed to publish NL hub")
 
+        # Chat with Jerry hub and daily starter
+        if self._chat_jerry_publisher:
+            try:
+                await self._chat_jerry_publisher.publish(self.guild_id)
+                await self._chat_jerry_publisher.publish_daily_question(self.guild_id)
+            except Exception:
+                log.exception("ChatJerry: failed to publish EN chat hub")
+
         # Session reminders
         # Testimonial hubs
         if self._testimonial_publisher:
@@ -374,6 +393,16 @@ class SpeakingBot(commands.Bot):
         after: discord.VoiceState,
     ) -> None:
         await self.tracker.handle_voice_state_update(member, before, after)
+
+    async def on_message(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
+
+        chat_cog = self.get_cog("ChatJerryCog")
+        if chat_cog is not None and hasattr(chat_cog, "handle_message"):
+            await chat_cog.handle_message(message)
+
+        await self.process_commands(message)
 
 
 async def _run_bot() -> None:
