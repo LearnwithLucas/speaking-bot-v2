@@ -5,6 +5,7 @@ from typing import Any, Awaitable
 
 import discord
 
+from commands.ask_jerry_summer import apply_ask_jerry_summer_copy
 from commands.chat_jerry import CHAT_WITH_JERRY_CHANNEL_ID, KV_CHAT_JERRY_HUB_MSG, ChatJerryPublisher
 from commands.dictionary import VocabPublisher
 from jobs import private_lessons as lesson_config
@@ -14,6 +15,9 @@ log = logging.getLogger(__name__)
 
 ADMIN_TESTING_CHANNEL_ID = 1205828956360548383
 ADMIN_LOGS_CHANNEL_ID = 1340397297053339719
+
+# Keep Ask Jerry's long FAQ copy aligned without rewriting the full FAQ module.
+apply_ask_jerry_summer_copy()
 
 
 async def _send_admin_log(bot: discord.Client, message: str) -> None:
@@ -157,12 +161,7 @@ async def setup(bot: Any) -> None:
             refreshed=refreshed,
             failed=failed,
         )
-        await _run_step(
-            label="Dutch vocabulary hub",
-            work=vocab.publish_dutch(),
-            refreshed=refreshed,
-            failed=failed,
-        )
+        skipped.append("Dutch vocabulary hub (not configured)")
 
         ask_jerry = getattr(bot, "_ask_jerry_publisher", None)
         if ask_jerry is not None:
