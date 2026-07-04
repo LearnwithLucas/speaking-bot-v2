@@ -5,6 +5,7 @@ from typing import Any, Awaitable
 
 import discord
 
+from commands.chat_jerry import CHAT_WITH_JERRY_CHANNEL_ID, KV_CHAT_JERRY_HUB_MSG, ChatJerryPublisher
 from commands.dictionary import VocabPublisher
 from jobs import private_lessons as lesson_config
 from jobs.private_lessons_summer import PrivateLessonsPublisher
@@ -180,6 +181,21 @@ async def setup(bot: Any) -> None:
                 )
         else:
             skipped.append("Ask Jerry hub")
+
+        chat_jerry = getattr(bot, "_chat_jerry_publisher", None)
+        if chat_jerry is None:
+            chat_jerry = ChatJerryPublisher(bot=bot, repo=bot.repo)
+        await _run_step(
+            label="Chat with Jerry hub",
+            work=_publish_and_verify_message(
+                bot=bot,
+                work=chat_jerry.publish(bot.guild_id),
+                channel_id=CHAT_WITH_JERRY_CHANNEL_ID,
+                kv_key=KV_CHAT_JERRY_HUB_MSG,
+            ),
+            refreshed=refreshed,
+            failed=failed,
+        )
 
         testimonial = getattr(bot, "_testimonial_publisher", None)
         if testimonial is not None:
