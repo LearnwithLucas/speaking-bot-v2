@@ -47,7 +47,7 @@ def _format_period(summary: dict[str, Any]) -> str:
         f"New voice pairs: **{summary['new_voice_pairs']}**\n"
         f"Achievements awarded: **{summary['achievements_awarded']}**\n"
         f"Weekly recaps sent: **{summary['weekly_recaps_sent']}**\n"
-        f"Inactivity nudges sent: **{summary['inactivity_nudges_sent']}"
+        f"Inactivity nudges sent: **{summary['inactivity_nudges_sent']}**"
     )
 
 
