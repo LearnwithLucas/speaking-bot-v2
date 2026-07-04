@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import discord
 
+from commands.admin_check import setup as setup_admin_check
 from commands.admin_refresh import ADMIN_LOGS_CHANNEL_ID, ADMIN_TESTING_CHANNEL_ID
 
 log = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ def _format_period(summary: dict[str, Any]) -> str:
         f"New voice pairs: **{summary['new_voice_pairs']}**\n"
         f"Achievements awarded: **{summary['achievements_awarded']}**\n"
         f"Weekly recaps sent: **{summary['weekly_recaps_sent']}**\n"
-        f"Inactivity nudges sent: **{summary['inactivity_nudges_sent']}**"
+        f"Inactivity nudges sent: **{summary['inactivity_nudges_sent']}"
     )
 
 
@@ -128,3 +129,5 @@ async def setup(bot: Any) -> None:
             bot,
             f"Admin health summary viewed by {interaction.user.mention} in <#1205828956360548383>.",
         )
+
+    await setup_admin_check(bot)
