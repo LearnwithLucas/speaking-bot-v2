@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import discord
 
+from commands.admin_check import setup as setup_admin_check
 from commands.admin_refresh import ADMIN_LOGS_CHANNEL_ID, ADMIN_TESTING_CHANNEL_ID
 
 log = logging.getLogger(__name__)
@@ -128,3 +129,5 @@ async def setup(bot: Any) -> None:
             bot,
             f"Admin health summary viewed by {interaction.user.mention} in <#1205828956360548383>.",
         )
+
+    await setup_admin_check(bot)
