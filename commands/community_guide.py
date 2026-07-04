@@ -68,8 +68,8 @@ class GuideChoiceButton(discord.ui.Button):
 
 
 class GuideBackButton(discord.ui.Button):
-    def __init__(self) -> None:
-        super().__init__(label="Back", style=discord.ButtonStyle.secondary, custom_id="guide:back", row=1)
+    def __init__(self, label: str) -> None:
+        super().__init__(label=label, style=discord.ButtonStyle.secondary, custom_id="guide:back", row=1)
 
     async def callback(self, interaction: discord.Interaction) -> None:
         view = self.view
@@ -130,7 +130,7 @@ class GuideDetailView(discord.ui.View):
             self._add_nl_links(guild_id, choice)
         else:
             self._add_en_links(guild_id, choice)
-        self.add_item(GuideBackButton())
+        self.add_item(GuideBackButton("Terug" if is_nl else "Back"))
 
     def _add_en_links(self, guild_id: int | None, choice: str) -> None:
         supported_url = _channel_url(guild_id, EN_SUPPORTED_CHANNEL_ID) or EN_SUPPORTED_URL
@@ -352,7 +352,7 @@ def build_nl_choice_embed(choice: str) -> discord.Embed:
             inline=False,
         )
 
-    embed.set_footer(text="Gebruik Back als je iets anders zoekt")
+    embed.set_footer(text="Gebruik Terug als je iets anders zoekt")
     return embed
 
 
