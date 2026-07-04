@@ -149,6 +149,39 @@ class Repo:
         rows = await cur.fetchall()
         return [(int(uid), int(sec or 0)) for (uid, sec) in rows]
 
+    async def user_voice_seconds_since(self, guild_id: int, user_id: int, since_epoch: int) -> int:
+        now_epoch = int(time.time())
+        cur = await self.conn.execute(
+            """
+            SELECT COALESCE(SUM(
+                CASE
+                    WHEN COALESCE(ended_at, ?) <= ? THEN 0
+                    ELSE COALESCE(ended_at, ?) -
+                        CASE WHEN started_at < ? THEN ? ELSE started_at END
+                END
+            ), 0)
+            FROM voice_sessions
+            WHERE guild_id = ?
+              AND user_id = ?
+              AND started_at <= ?
+              AND COALESCE(ended_at, ?) >= ?
+            """,
+            (
+                now_epoch,
+                since_epoch,
+                now_epoch,
+                since_epoch,
+                since_epoch,
+                guild_id,
+                user_id,
+                now_epoch,
+                now_epoch,
+                since_epoch,
+            ),
+        )
+        (total,) = await cur.fetchone()
+        return max(0, int(total or 0))
+
     # -------------------------
     # KV
     # -------------------------
