@@ -15,14 +15,26 @@ log = logging.getLogger("commands.chat_jerry")
 
 CHAT_WITH_JERRY_CHANNEL_ID = 1523060567621763163
 KV_CHAT_JERRY_HUB_MSG = "chat_jerry_hub_message_id_v1"
-KV_CHAT_JERRY_DAILY_DATE = "chat_jerry_daily_question_date_v1"
+KV_CHAT_JERRY_DAILY_DATE = "chat_jerry_daily_check_in_date_v2"
 
 QUESTION_SETS = [
+    {
+        "question": "How are you today, really?",
+        "easier": "Start with: Today I feel... because...",
+        "sample": "Today I feel a little tired because I had a busy morning, but I am okay.",
+        "words": "today I feel, a little, because, busy, calm, tired, okay",
+    },
     {
         "question": "What is one small thing you did today?",
         "easier": "Start with: Today I...",
         "sample": "Today I had coffee and answered a few messages. It was a quiet start.",
         "words": "small thing, quiet start, a few messages, after that, later today",
+    },
+    {
+        "question": "What is one thing you want to explain better in English?",
+        "easier": "Start with: I want to explain... better because...",
+        "sample": "I want to explain my work better because I often need English in meetings.",
+        "words": "explain, better, meetings, daily life, clearly, step by step",
     },
     {
         "question": "What is something you want to get better at this month?",
@@ -60,6 +72,8 @@ NERVOUS_WORDS = {"nervous", "scared", "shy", "afraid", "embarrassed", "anxious",
 HELP_WORDS = {"help", "stuck", "confused", "hard", "difficult", "don't know", "dont know"}
 GREETING_WORDS = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening"}
 THANKS_WORDS = {"thanks", "thank you", "thx"}
+FEELING_WORDS = {"feel", "feeling", "happy", "sad", "tired", "okay", "fine", "good", "bad", "busy", "calm"}
+PRACTICE_WORDS = {"practice", "practise", "improve", "better", "learn", "speak", "speaking", "english"}
 
 
 def _pick_question(seed: int | None = None) -> dict[str, str]:
@@ -89,24 +103,77 @@ def _is_greeting(text: str) -> bool:
     return any(cleaned.startswith(greeting + " ") for greeting in GREETING_WORDS)
 
 
+def _clean_sentence(text: str) -> str:
+    sentence = " ".join(text.strip().split())
+    if not sentence:
+        return ""
+    sentence = sentence[0].upper() + sentence[1:]
+    if sentence[-1] not in ".!?":
+        sentence += "."
+    return sentence
+
+
+def _smoother_version(text: str) -> str:
+    cleaned = _clean_sentence(text)
+    words = _word_count(text)
+    lower = text.lower()
+    if words <= 3:
+        base = text.strip().strip(string.punctuation)
+        if not base:
+            return "Today I feel ... because ..."
+        return f"{base[0].upper() + base[1:]} because ..."
+    if "because" not in lower and "?" not in text:
+        return cleaned[:-1] + " because ..."
+    return cleaned
+
+
+def _follow_up_question(text: str) -> str:
+    lower = text.lower()
+    if any(word in lower for word in FEELING_WORDS):
+        return "What made you feel that way?"
+    if any(word in lower for word in PRACTICE_WORDS):
+        return "Where do you want to use this English first?"
+    if "today" in lower or "morning" in lower or "evening" in lower:
+        return "What was the best or most difficult part?"
+    if "visit" in lower or "travel" in lower or "place" in lower:
+        return "What would you like to do there first?"
+    return "Can you add one small detail?"
+
+
+def _useful_phrase(text: str) -> str:
+    lower = text.lower()
+    if any(word in lower for word in FEELING_WORDS):
+        return "A useful phrase: `I feel ___ because ___.`"
+    if any(word in lower for word in PRACTICE_WORDS):
+        return "A useful phrase: `I want to get better at ___ because ___.`"
+    if "?" in text:
+        return "A useful phrase: `What I mean is...`"
+    return "A useful phrase: `One reason is...`"
+
+
+def _add_check_in_fields(embed: discord.Embed, text: str) -> None:
+    embed.add_field(name="Try this version", value=f"`{_smoother_version(text)}`", inline=False)
+    embed.add_field(name="Follow-up", value=_follow_up_question(text), inline=False)
+    embed.add_field(name="Useful phrase", value=_useful_phrase(text), inline=False)
+
+
 def build_hub_embed() -> discord.Embed:
     embed = discord.Embed(
         title="Chat with Jerry",
         description=(
             "A calm place to practise tiny English conversations.\n\n"
-            "If you are new, just type `hi`, `hey`, or `hello`. Jerry will explain how this channel works "
-            "and help you choose a first sentence.\n\n"
-            "You can also type a sentence, answer a question, or use the buttons below. "
-            "This is practice, not a test. Short answers are welcome."
+            "Every day Jerry posts a **Daily English Check-in**. Reply with one sentence, and Jerry will help you "
+            "continue with a smoother version, a follow-up question, and one useful phrase.\n\n"
+            "If you are new, just type `hi`, `hey`, or `hello`. This is practice, not a test."
         ),
     )
     embed.add_field(
         name="Good ways to start",
         value=(
-            "`Hi, I want to practise speaking.`\n"
-            "`Today I...`\n"
-            "`I think... because...`\n"
-            "`I want to practise talking about...`"
+            "`Today I feel... because...`\n"
+            "`One thing I did today was...`\n"
+            "`I want to explain... better.`\n"
+            "`Hi, I want to practise speaking.`"
         ),
         inline=False,
     )
@@ -114,13 +181,21 @@ def build_hub_embed() -> discord.Embed:
     return embed
 
 
-def build_prompt_embed(prompt: dict[str, str], *, title: str = "Small speaking question") -> discord.Embed:
+def build_prompt_embed(prompt: dict[str, str], *, title: str = "Daily English Check-in") -> discord.Embed:
     embed = discord.Embed(
         title=title,
-        description=f"**{prompt['question']}**",
+        description=(
+            f"**{prompt['question']}**\n\n"
+            "Reply with one short sentence. Jerry will help you continue."
+        ),
     )
     embed.add_field(name="Make it easier", value=prompt["easier"], inline=False)
-    embed.set_footer(text="Reply in the channel, or press a button for help.")
+    embed.add_field(
+        name="After you answer",
+        value="Jerry gives a smoother version, one follow-up question, and one useful phrase.",
+        inline=False,
+    )
+    embed.set_footer(text="One sentence is enough. No perfect English needed.")
     return embed
 
 
@@ -134,45 +209,51 @@ def _reply_embed_for_text(text: str, display_name: str) -> discord.Embed:
             f"Thanks for saying that, {display_name}. Feeling nervous does not mean your English is bad. "
             "It usually means the moment matters to you. Start with one short sentence and let it be enough."
         )
+        embed = discord.Embed(title=title, description=desc)
+        _add_check_in_fields(embed, text)
     elif any(word in lower for word in HELP_WORDS):
         title = "Let's make it smaller"
         desc = (
             "When English feels too big, reduce the task. Say one idea, then add one reason.\n\n"
             "Try: `I think ___ because ___.`"
         )
+        embed = discord.Embed(title=title, description=desc)
     elif _is_greeting(text):
         title = "Hi, welcome to Chat with Jerry"
         desc = (
             f"Good to see you, {display_name}. This channel is for easy English practice in small steps.\n\n"
             "You can do one of three things:\n"
-            "1. Press **Give me a question** for a simple topic.\n"
+            "1. Press **Give me a question** for today's check-in.\n"
             "2. Press **Useful phrases** if you need words first.\n"
             "3. Type one short sentence, for example: `Today I feel okay because...`\n\n"
             "No perfect English needed here. One small message is enough to start."
         )
+        embed = discord.Embed(title=title, description=desc)
     elif any(word in lower for word in THANKS_WORDS):
         title = "You're welcome"
         desc = "Keep going. One small message is still real practice."
+        embed = discord.Embed(title=title, description=desc)
     elif "?" in text:
         title = "Good question"
         desc = (
             "I can help with basic speaking practice here. For a quick answer, keep your question short. "
             "If it is about grammar or vocabulary, try `/d` or Ask Jerry too."
         )
+        embed = discord.Embed(title=title, description=desc)
+        _add_check_in_fields(embed, text)
     elif words <= 3:
         title = "Good start"
-        desc = (
-            "Now make it one step bigger. Add **because** and one reason.\n\n"
-            f"Example: `{text.strip()} because...`"
-        )
+        desc = "Now make it one step bigger. Add **because** and one reason."
+        embed = discord.Embed(title=title, description=desc)
+        _add_check_in_fields(embed, text)
     else:
-        title = "Nice, that works"
+        title = "Nice check-in"
         desc = (
-            "You gave me a real sentence to work with. To make it more conversational, add one detail "
-            "or ask the other person a follow-up question."
+            "You gave me a real sentence to work with. Here is a simple way to keep the conversation going."
         )
+        embed = discord.Embed(title=title, description=desc)
+        _add_check_in_fields(embed, text)
 
-    embed = discord.Embed(title=title, description=desc)
     embed.set_footer(text="Use the buttons for a next step.")
     return embed
 
@@ -189,10 +270,10 @@ def _feedback_for_text(text: str) -> str:
         return (
             "Try making it a full sentence with **because**.\n\n"
             f"Your start: `{text.strip()}`\n"
-            f"Next version: `{text.strip()} because ...`"
+            f"Next version: `{_smoother_version(text)}`"
         )
     if "because" not in text.lower():
-        return "Good. To make it stronger, add a reason with **because**."
+        return f"Good. To make it stronger, add a reason:\n`{_smoother_version(text)}`"
     return "Good sentence. Next step: add one extra detail, then ask a follow-up question."
 
 
@@ -347,11 +428,11 @@ class ChatJerryPublisher:
 
         prompt = _pick_question(sum(ord(ch) for ch in today))
         try:
-            await channel.send(embed=build_prompt_embed(prompt, title="Today's small speaking question"), view=ChatPromptView(prompt))
+            await channel.send(embed=build_prompt_embed(prompt), view=ChatPromptView(prompt))
             await self._repo.kv_set(guild_id, KV_CHAT_JERRY_DAILY_DATE, today)
-            log.info("ChatJerry: posted daily question for %s", today)
+            log.info("ChatJerry: posted daily check-in for %s", today)
         except Exception:
-            log.exception("ChatJerry: failed to post daily question")
+            log.exception("ChatJerry: failed to post daily check-in")
 
 
 class ChatJerryCog(commands.Cog):
