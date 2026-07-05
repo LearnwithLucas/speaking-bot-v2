@@ -16,14 +16,6 @@ EN_LOOKING_CHANNEL_ID = 1435902125652578434   # 🙋┃looking-for-a-partner
 NL_LOOKING_CHANNEL_ID = 1484566832982654996   # 🙋┃op-zoek-naar-een-partner
 OPEN_CONVERSATION_CHANNEL_ID = 1456551629301219420  # 🌍 | Open Conversation
 
-EN_PRACTICE_VOICE_IDS = [
-    OPEN_CONVERSATION_CHANNEL_ID,
-]
-
-NL_PRACTICE_VOICE_IDS = [
-    OPEN_CONVERSATION_CHANNEL_ID,
-]
-
 KV_EN_HUB_MSG_ID = "partner_hub_message_id"
 KV_NL_HUB_MSG_ID = "partner_hub_nl_message_id"
 
@@ -51,9 +43,8 @@ def _duration_label(seconds: int, *, is_nl: bool = False) -> str:
     return f"{hours:g} hour" if hours == 1 else f"{hours:g} hours"
 
 
-def _voice_links(is_nl: bool = False) -> str:
-    ids = NL_PRACTICE_VOICE_IDS if is_nl else EN_PRACTICE_VOICE_IDS
-    return " or ".join(f"<#{vc_id}>" for vc_id in ids)
+def _open_conversation_link(guild_id: int) -> str:
+    return f"https://discord.com/channels/{guild_id}/{OPEN_CONVERSATION_CHANNEL_ID}"
 
 
 # =====================
@@ -323,7 +314,7 @@ class PartnerFinder:
         guild: discord.Guild,
         is_nl: bool,
     ) -> None:
-        links = _voice_links(is_nl)
+        open_conversation = _open_conversation_link(guild.id)
 
         names = []
         for mid in match_ids[:3]:
@@ -341,13 +332,15 @@ class PartnerFinder:
                 await new_user.send(
                     f"🤝 **Spreekpartner gevonden!**\n\n"
                     f"**{names_str}** {verb_nl} ook vrij op dit moment.\n\n"
-                    f"Ga naar {links} en begin rustig. Je kunt gewoon hoi zeggen."
+                    f"Ga naar Open Conversation: {open_conversation}\n"
+                    "Begin rustig. Je kunt gewoon hoi zeggen."
                 )
             else:
                 await new_user.send(
                     f"🤝 **Partner match!**\n\n"
                     f"**{names_str}** {verb} also free right now.\n\n"
-                    f"Go to {links} and start gently. You can just say hi."
+                    f"Go to Open Conversation: {open_conversation}\n"
+                    "Start gently. You can just say hi."
                 )
         except discord.Forbidden:
             log.info("PartnerFinder: DM blocked user=%s", new_user.id)
@@ -361,13 +354,15 @@ class PartnerFinder:
                     await match_member.send(
                         f"🤝 **Spreekpartner gevonden!**\n\n"
                         f"**{new_user.display_name}** is nu vrij om te oefenen.\n\n"
-                        f"Ga naar {links} en begin rustig. Je kunt gewoon hoi zeggen."
+                        f"Ga naar Open Conversation: {open_conversation}\n"
+                        "Begin rustig. Je kunt gewoon hoi zeggen."
                     )
                 else:
                     await match_member.send(
                         f"🤝 **Partner match!**\n\n"
                         f"**{new_user.display_name}** is free to practice right now.\n\n"
-                        f"Go to {links} and start gently. You can just say hi."
+                        f"Go to Open Conversation: {open_conversation}\n"
+                        "Start gently. You can just say hi."
                     )
             except discord.Forbidden:
                 log.info("PartnerFinder: DM blocked match=%s", match_id)
