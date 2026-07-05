@@ -47,6 +47,24 @@ def _open_conversation_link(guild_id: int) -> str:
     return f"https://discord.com/channels/{guild_id}/{OPEN_CONVERSATION_CHANNEL_ID}"
 
 
+def _conversation_starters(*, is_nl: bool) -> str:
+    if is_nl:
+        return (
+            "\n\n**Makkelijke starters:**\n"
+            "- What did you do today?\n"
+            "- Tell me about a food you like.\n"
+            "- What is one thing you want to practice in English?\n\n"
+            "Je hoeft niet perfect te praten. Kies gewoon een vraag."
+        )
+    return (
+        "\n\n**Easy starters:**\n"
+        "- What did you do today?\n"
+        "- Tell me about a food you like.\n"
+        "- What is one thing you want to practice in English?\n\n"
+        "No need to make it perfect. Pick one and start there."
+    )
+
+
 # =====================
 # HUB EMBEDS
 # =====================
@@ -315,6 +333,7 @@ class PartnerFinder:
         is_nl: bool,
     ) -> None:
         open_conversation = _open_conversation_link(guild.id)
+        starters = _conversation_starters(is_nl=is_nl)
 
         names = []
         for mid in match_ids[:3]:
@@ -333,14 +352,14 @@ class PartnerFinder:
                     f"🤝 **Spreekpartner gevonden!**\n\n"
                     f"**{names_str}** {verb_nl} ook vrij op dit moment.\n\n"
                     f"Ga naar Open Conversation: {open_conversation}\n"
-                    "Begin rustig. Je kunt gewoon hoi zeggen."
+                    f"Begin rustig. Je kunt gewoon hoi zeggen.{starters}"
                 )
             else:
                 await new_user.send(
                     f"🤝 **Partner match!**\n\n"
                     f"**{names_str}** {verb} also free right now.\n\n"
                     f"Go to Open Conversation: {open_conversation}\n"
-                    "Start gently. You can just say hi."
+                    f"Start gently. You can just say hi.{starters}"
                 )
         except discord.Forbidden:
             log.info("PartnerFinder: DM blocked user=%s", new_user.id)
@@ -355,14 +374,14 @@ class PartnerFinder:
                         f"🤝 **Spreekpartner gevonden!**\n\n"
                         f"**{new_user.display_name}** is nu vrij om te oefenen.\n\n"
                         f"Ga naar Open Conversation: {open_conversation}\n"
-                        "Begin rustig. Je kunt gewoon hoi zeggen."
+                        f"Begin rustig. Je kunt gewoon hoi zeggen.{starters}"
                     )
                 else:
                     await match_member.send(
                         f"🤝 **Partner match!**\n\n"
                         f"**{new_user.display_name}** is free to practice right now.\n\n"
                         f"Go to Open Conversation: {open_conversation}\n"
-                        "Start gently. You can just say hi."
+                        f"Start gently. You can just say hi.{starters}"
                     )
             except discord.Forbidden:
                 log.info("PartnerFinder: DM blocked match=%s", match_id)
