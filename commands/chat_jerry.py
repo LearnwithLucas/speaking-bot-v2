@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import random
+import string
 import time
 from typing import Any
 
@@ -75,19 +76,34 @@ def _word_count(text: str) -> int:
     return len([part for part in text.replace("\n", " ").split(" ") if part.strip()])
 
 
+def _clean_for_greeting(text: str) -> str:
+    cleaned = text.lower().strip()
+    cleaned = cleaned.strip(string.whitespace + string.punctuation)
+    return " ".join(cleaned.split())
+
+
+def _is_greeting(text: str) -> bool:
+    cleaned = _clean_for_greeting(text)
+    if cleaned in GREETING_WORDS:
+        return True
+    return any(cleaned.startswith(greeting + " ") for greeting in GREETING_WORDS)
+
+
 def build_hub_embed() -> discord.Embed:
     embed = discord.Embed(
         title="Chat with Jerry",
         description=(
-            "A calm place to practise small English conversations.\n\n"
-            "You can type a sentence, answer a question, or use the buttons below. "
-            "Jerry will reply with simple help and a next step.\n\n"
+            "A calm place to practise tiny English conversations.\n\n"
+            "If you are new, just type `hi`, `hey`, or `hello`. Jerry will explain how this channel works "
+            "and help you choose a first sentence.\n\n"
+            "You can also type a sentence, answer a question, or use the buttons below. "
             "This is practice, not a test. Short answers are welcome."
         ),
     )
     embed.add_field(
         name="Good ways to start",
         value=(
+            "`Hi, I want to practise speaking.`\n"
             "`Today I...`\n"
             "`I think... because...`\n"
             "`I want to practise talking about...`"
@@ -124,9 +140,16 @@ def _reply_embed_for_text(text: str, display_name: str) -> discord.Embed:
             "When English feels too big, reduce the task. Say one idea, then add one reason.\n\n"
             "Try: `I think ___ because ___.`"
         )
-    elif any(lower == word or lower.startswith(word + " ") for word in GREETING_WORDS):
-        title = "Hi, I'm here"
-        desc = "Want a small question to answer, or do you want useful words first?"
+    elif _is_greeting(text):
+        title = "Hi, welcome to Chat with Jerry"
+        desc = (
+            f"Good to see you, {display_name}. This channel is for easy English practice in small steps.\n\n"
+            "You can do one of three things:\n"
+            "1. Press **Give me a question** for a simple topic.\n"
+            "2. Press **Useful phrases** if you need words first.\n"
+            "3. Type one short sentence, for example: `Today I feel okay because...`\n\n"
+            "No perfect English needed here. One small message is enough to start."
+        )
     elif any(word in lower for word in THANKS_WORDS):
         title = "You're welcome"
         desc = "Keep going. One small message is still real practice."
@@ -156,6 +179,12 @@ def _reply_embed_for_text(text: str, display_name: str) -> discord.Embed:
 
 def _feedback_for_text(text: str) -> str:
     words = _word_count(text)
+    if _is_greeting(text):
+        return (
+            "A greeting is a good start. Now add what you want to practise.\n\n"
+            "Try: `Hi, I want to practise speaking about my day.`\n"
+            "Or: `Hello, can I answer a simple question?`"
+        )
     if words <= 3:
         return (
             "Try making it a full sentence with **because**.\n\n"
