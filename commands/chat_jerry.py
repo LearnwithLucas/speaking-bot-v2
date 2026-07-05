@@ -15,7 +15,7 @@ log = logging.getLogger("commands.chat_jerry")
 
 CHAT_WITH_JERRY_CHANNEL_ID = 1523060567621763163
 KV_CHAT_JERRY_HUB_MSG = "chat_jerry_hub_message_id_v1"
-KV_CHAT_JERRY_DAILY_DATE = "chat_jerry_daily_question_date_v1"
+KV_CHAT_JERRY_DAILY_DATE = "chat_jerry_daily_check_in_date_v2"
 
 QUESTION_SETS = [
     {
