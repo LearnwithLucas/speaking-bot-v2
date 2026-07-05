@@ -14,20 +14,41 @@ log = logging.getLogger("jobs.partner_finder")
 # ---- Channel IDs ----
 EN_LOOKING_CHANNEL_ID = 1435902125652578434   # 🙋┃looking-for-a-partner
 NL_LOOKING_CHANNEL_ID = 1484566832982654996   # 🙋┃op-zoek-naar-een-partner
+OPEN_CONVERSATION_CHANNEL_ID = 1456551629301219420  # 🌍 | Open Conversation
 
 EN_PRACTICE_VOICE_IDS = [
-    1274733631298076745,  # ☕ | Drop In and Talk
-    1456551629301219420,  # 🌍 | Open Conversation
+    OPEN_CONVERSATION_CHANNEL_ID,
 ]
 
 NL_PRACTICE_VOICE_IDS = [
-    1274733631298076745,  # same voice channels for now — update if NL gets dedicated ones
+    OPEN_CONVERSATION_CHANNEL_ID,
 ]
 
 KV_EN_HUB_MSG_ID = "partner_hub_message_id"
 KV_NL_HUB_MSG_ID = "partner_hub_nl_message_id"
 
-AVAILABLE_FOR_SECONDS = 30 * 60  # 30 minutes
+DURATION_OPTIONS: tuple[tuple[int, str, str], ...] = (
+    (15 * 60, "15 min", "15 min"),
+    (30 * 60, "30 min", "30 min"),
+    (45 * 60, "45 min", "45 min"),
+    (60 * 60, "1 hour", "1 uur"),
+    (2 * 60 * 60, "2 hours", "2 uur"),
+    (3 * 60 * 60, "3 hours", "3 uur"),
+)
+DEFAULT_DURATION_SECONDS = 30 * 60
+
+
+def _duration_label(seconds: int, *, is_nl: bool = False) -> str:
+    for option_seconds, en_label, nl_label in DURATION_OPTIONS:
+        if option_seconds == seconds:
+            return nl_label if is_nl else en_label
+    minutes = max(1, int(seconds / 60))
+    if minutes < 60:
+        return f"{minutes} min"
+    hours = round(minutes / 60, 1)
+    if is_nl:
+        return f"{hours:g} uur"
+    return f"{hours:g} hour" if hours == 1 else f"{hours:g} hours"
 
 
 def _voice_links(is_nl: bool = False) -> str:
@@ -41,7 +62,7 @@ def _voice_links(is_nl: bool = False) -> str:
 
 def build_en_embed(available_count: int = 0) -> discord.Embed:
     if available_count == 0:
-        status = "Nobody is available right now. Press the button to be the first."
+        status = "Nobody is available right now. Press a time button to be the first."
     elif available_count == 1:
         status = "1 person is free to practice right now."
     else:
@@ -50,19 +71,19 @@ def build_en_embed(available_count: int = 0) -> discord.Embed:
     embed = discord.Embed(
         title="🤝 Find a speaking partner",
         description=(
-            "Press the button when you feel like practicing.\n"
-            "If someone else is free at the same time, you both get a DM.\n"
-            "Your availability lasts 30 minutes.\n\n"
+            "Choose how long you are available to practice.\n"
+            "If someone else is free at the same time, you both get a DM with the Open Conversation channel.\n"
+            "You can refresh or change your time whenever you want.\n\n"
             f"**Right now:** {status}"
         ),
     )
-    embed.set_footer(text="hub:en:partner:v2")
+    embed.set_footer(text="hub:en:partner:v3")
     return embed
 
 
 def build_nl_embed(available_count: int = 0) -> discord.Embed:
     if available_count == 0:
-        status = "Er is nu niemand beschikbaar. Druk op de knop om de eerste te zijn."
+        status = "Er is nu niemand beschikbaar. Druk op een tijdknop om de eerste te zijn."
     elif available_count == 1:
         status = "1 persoon is nu vrij om te oefenen."
     else:
@@ -71,13 +92,13 @@ def build_nl_embed(available_count: int = 0) -> discord.Embed:
     embed = discord.Embed(
         title="🤝 Vind een spreekpartner",
         description=(
-            "Druk op de knop als je zin hebt om te oefenen.\n"
-            "Als iemand anders ook vrij is, krijgen jullie allebei een DM.\n"
-            "Je beschikbaarheid duurt 30 minuten.\n\n"
+            "Kies hoe lang je beschikbaar bent om te oefenen.\n"
+            "Als iemand anders ook vrij is, krijgen jullie allebei een DM met het Open Conversation kanaal.\n"
+            "Je kunt je tijd altijd vernieuwen of aanpassen.\n\n"
             f"**Op dit moment:** {status}"
         ),
     )
-    embed.set_footer(text="hub:nl:partner:v2")
+    embed.set_footer(text="hub:nl:partner:v3")
     return embed
 
 
@@ -92,13 +113,7 @@ class PartnerHubView(discord.ui.View):
         super().__init__(timeout=None)
         self._finder = finder
 
-    @discord.ui.button(
-        label="I'm free to practice",
-        style=discord.ButtonStyle.success,
-        emoji="🙋",
-        custom_id="partner:free_now:en:v2",
-    )
-    async def free_now(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    async def _mark(self, interaction: discord.Interaction, *, duration_seconds: int) -> None:
         if self._finder is None:
             await interaction.response.send_message(
                 "Not ready yet. Try again in a moment.", ephemeral=True
@@ -108,8 +123,33 @@ class PartnerHubView(discord.ui.View):
             user=interaction.user,
             guild=interaction.guild,
             interaction=interaction,
+            duration_seconds=duration_seconds,
             is_nl=False,
         )
+
+    @discord.ui.button(label="15 min", style=discord.ButtonStyle.secondary, custom_id="partner:free:en:15m:v3", row=0)
+    async def free_15(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=15 * 60)
+
+    @discord.ui.button(label="30 min", style=discord.ButtonStyle.success, custom_id="partner:free:en:30m:v3", row=0)
+    async def free_30(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=30 * 60)
+
+    @discord.ui.button(label="45 min", style=discord.ButtonStyle.secondary, custom_id="partner:free:en:45m:v3", row=0)
+    async def free_45(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=45 * 60)
+
+    @discord.ui.button(label="1 hour", style=discord.ButtonStyle.secondary, custom_id="partner:free:en:1h:v3", row=1)
+    async def free_1h(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=60 * 60)
+
+    @discord.ui.button(label="2 hours", style=discord.ButtonStyle.secondary, custom_id="partner:free:en:2h:v3", row=1)
+    async def free_2h(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=2 * 60 * 60)
+
+    @discord.ui.button(label="3 hours", style=discord.ButtonStyle.secondary, custom_id="partner:free:en:3h:v3", row=1)
+    async def free_3h(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=3 * 60 * 60)
 
 
 class PartnerHubViewNL(discord.ui.View):
@@ -119,13 +159,7 @@ class PartnerHubViewNL(discord.ui.View):
         super().__init__(timeout=None)
         self._finder = finder
 
-    @discord.ui.button(
-        label="Ik ben vrij om te oefenen",
-        style=discord.ButtonStyle.success,
-        emoji="🙋",
-        custom_id="partner:free_now:nl:v2",
-    )
-    async def free_now_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    async def _mark(self, interaction: discord.Interaction, *, duration_seconds: int) -> None:
         if self._finder is None:
             await interaction.response.send_message(
                 "Nog niet klaar. Probeer het zo opnieuw.", ephemeral=True
@@ -135,8 +169,33 @@ class PartnerHubViewNL(discord.ui.View):
             user=interaction.user,
             guild=interaction.guild,
             interaction=interaction,
+            duration_seconds=duration_seconds,
             is_nl=True,
         )
+
+    @discord.ui.button(label="15 min", style=discord.ButtonStyle.secondary, custom_id="partner:free:nl:15m:v3", row=0)
+    async def free_15_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=15 * 60)
+
+    @discord.ui.button(label="30 min", style=discord.ButtonStyle.success, custom_id="partner:free:nl:30m:v3", row=0)
+    async def free_30_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=30 * 60)
+
+    @discord.ui.button(label="45 min", style=discord.ButtonStyle.secondary, custom_id="partner:free:nl:45m:v3", row=0)
+    async def free_45_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=45 * 60)
+
+    @discord.ui.button(label="1 uur", style=discord.ButtonStyle.secondary, custom_id="partner:free:nl:1h:v3", row=1)
+    async def free_1h_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=60 * 60)
+
+    @discord.ui.button(label="2 uur", style=discord.ButtonStyle.secondary, custom_id="partner:free:nl:2h:v3", row=1)
+    async def free_2h_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=2 * 60 * 60)
+
+    @discord.ui.button(label="3 uur", style=discord.ButtonStyle.secondary, custom_id="partner:free:nl:3h:v3", row=1)
+    async def free_3h_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._mark(interaction, duration_seconds=3 * 60 * 60)
 
 
 # =====================
@@ -181,50 +240,53 @@ class PartnerFinder:
         user: discord.User | discord.Member,
         guild: discord.Guild | None,
         interaction: discord.Interaction,
+        duration_seconds: int = DEFAULT_DURATION_SECONDS,
         is_nl: bool = False,
     ) -> None:
         pool = self._pool(is_nl)
         self._clean_expired(is_nl)
         uid = user.id
         now = time.time()
+        duration_label = _duration_label(duration_seconds, is_nl=is_nl)
 
         already_available = uid in pool
-        pool[uid] = now + AVAILABLE_FOR_SECONDS
+        expires_at = now + duration_seconds
+        pool[uid] = expires_at
 
         others = [u for u in self._available_users(is_nl) if u != uid]
 
         if is_nl:
             if already_available:
                 msg = (
-                    "Je bent nog steeds beschikbaar. Je 30 minuten zijn verlengd.\n"
-                    + ("Er is ook iemand anders vrij." if others else "Er is nog niemand anders vrij. Je krijgt een DM zodra iemand zich aanmeldt.")
+                    f"Je bent nog steeds beschikbaar. Je tijd is bijgewerkt naar **{duration_label}**.\n"
+                    + ("Er is ook iemand anders vrij. Bekijk je DMs." if others else "Er is nog niemand anders vrij. Je krijgt een DM zodra iemand zich aanmeldt.")
                 )
             elif others:
                 count = len(others)
                 msg = (
-                    f"Je bent vrij om te oefenen. {count} {'persoon is' if count == 1 else 'mensen zijn'} ook vrij.\n"
+                    f"Je bent **{duration_label}** vrij om te oefenen. {count} {'persoon is' if count == 1 else 'mensen zijn'} ook vrij.\n"
                     "Bekijk je DMs."
                 )
             else:
                 msg = (
-                    "Je bent de komende 30 minuten beschikbaar.\n"
+                    f"Je bent de komende **{duration_label}** beschikbaar.\n"
                     "Je krijgt een DM zodra iemand anders ook vrij is."
                 )
         else:
             if already_available:
                 msg = (
-                    "You're still marked as free. Your 30 minutes has been refreshed.\n"
-                    + ("Someone else is also free right now." if others else "Nobody else is free yet. You will get a DM when someone joins.")
+                    f"You're still marked as free. Your time is now **{duration_label}**.\n"
+                    + ("Someone else is also free right now. Check your DMs." if others else "Nobody else is free yet. You will get a DM when someone joins.")
                 )
             elif others:
                 count = len(others)
                 msg = (
-                    f"You're free to practice. {count} {'person is' if count == 1 else 'people are'} also free right now.\n"
+                    f"You're free to practice for **{duration_label}**. {count} {'person is' if count == 1 else 'people are'} also free right now.\n"
                     "Check your DMs."
                 )
             else:
                 msg = (
-                    "You're marked as free for the next 30 minutes.\n"
+                    f"You're marked as free for the next **{duration_label}**.\n"
                     "You will get a DM as soon as someone else is free too."
                 )
 
@@ -239,11 +301,17 @@ class PartnerFinder:
                 is_nl=is_nl,
             )
 
-        asyncio.create_task(self._expire_after(uid, AVAILABLE_FOR_SECONDS, is_nl=is_nl))
+        asyncio.create_task(self._expire_after(uid, duration_seconds, expires_at=expires_at, is_nl=is_nl))
 
-    async def _expire_after(self, user_id: int, seconds: float, *, is_nl: bool) -> None:
+    async def _expire_after(self, user_id: int, seconds: float, *, expires_at: float, is_nl: bool) -> None:
         await asyncio.sleep(seconds)
-        self._pool(is_nl).pop(user_id, None)
+        pool = self._pool(is_nl)
+        current_expires_at = pool.get(user_id)
+        if current_expires_at is None:
+            return
+        if current_expires_at > expires_at + 0.5:
+            return
+        pool.pop(user_id, None)
         await self._update_hub_embed(is_nl=is_nl)
         log.info("PartnerFinder: availability expired user=%s is_nl=%s", user_id, is_nl)
 
@@ -273,13 +341,13 @@ class PartnerFinder:
                 await new_user.send(
                     f"🤝 **Spreekpartner gevonden!**\n\n"
                     f"**{names_str}** {verb_nl} ook vrij op dit moment.\n\n"
-                    f"Spring in {links} en begin te praten. ☕"
+                    f"Ga naar {links} en begin rustig. Je kunt gewoon hoi zeggen."
                 )
             else:
                 await new_user.send(
                     f"🤝 **Partner match!**\n\n"
                     f"**{names_str}** {verb} also free right now.\n\n"
-                    f"Jump into {links} and start talking. ☕"
+                    f"Go to {links} and start gently. You can just say hi."
                 )
         except discord.Forbidden:
             log.info("PartnerFinder: DM blocked user=%s", new_user.id)
@@ -293,13 +361,13 @@ class PartnerFinder:
                     await match_member.send(
                         f"🤝 **Spreekpartner gevonden!**\n\n"
                         f"**{new_user.display_name}** is nu vrij om te oefenen.\n\n"
-                        f"Spring in {links} en begin te praten. ☕"
+                        f"Ga naar {links} en begin rustig. Je kunt gewoon hoi zeggen."
                     )
                 else:
                     await match_member.send(
                         f"🤝 **Partner match!**\n\n"
                         f"**{new_user.display_name}** is free to practice right now.\n\n"
-                        f"Jump into {links} and start talking. ☕"
+                        f"Go to {links} and start gently. You can just say hi."
                     )
             except discord.Forbidden:
                 log.info("PartnerFinder: DM blocked match=%s", match_id)
