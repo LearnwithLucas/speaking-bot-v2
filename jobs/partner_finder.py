@@ -8,6 +8,7 @@ import time
 import discord
 
 from db.repo import Repo
+from jobs.partner_planner import PartnerPlanStartView
 
 log = logging.getLogger("jobs.partner_finder")
 
@@ -82,6 +83,7 @@ def build_en_embed(available_count: int = 0) -> discord.Embed:
         description=(
             "Choose how long you are available to practice.\n"
             "If someone else is free at the same time, you both get a DM with the Open Conversation channel.\n"
+            "You can also plan a rough time for later.\n"
             "You can refresh or change your time whenever you want.\n\n"
             f"**Right now:** {status}"
         ),
@@ -103,6 +105,7 @@ def build_nl_embed(available_count: int = 0) -> discord.Embed:
         description=(
             "Kies hoe lang je beschikbaar bent om te oefenen.\n"
             "Als iemand anders ook vrij is, krijgen jullie allebei een DM met het Open Conversation kanaal.\n"
+            "Je kunt ook een rustig moment voor later plannen.\n"
             "Je kunt je tijd altijd vernieuwen of aanpassen.\n\n"
             f"**Op dit moment:** {status}"
         ),
@@ -136,6 +139,18 @@ class PartnerHubView(discord.ui.View):
             is_nl=False,
         )
 
+    async def _plan_later(self, interaction: discord.Interaction, *, is_nl: bool) -> None:
+        if self._finder is None:
+            await interaction.response.send_message(
+                "Not ready yet. Try again in a moment.", ephemeral=True
+            )
+            return
+        await interaction.response.send_message(
+            "When would you like to practice?",
+            view=PartnerPlanStartView(bot=self._finder.bot, is_nl=is_nl),
+            ephemeral=True,
+        )
+
     @discord.ui.button(label="15 min", style=discord.ButtonStyle.secondary, custom_id="partner:free:en:15m:v3", row=0)
     async def free_15(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._mark(interaction, duration_seconds=15 * 60)
@@ -160,6 +175,10 @@ class PartnerHubView(discord.ui.View):
     async def free_3h(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._mark(interaction, duration_seconds=3 * 60 * 60)
 
+    @discord.ui.button(label="Plan for later", style=discord.ButtonStyle.primary, custom_id="partner:plan:en:v1", row=2)
+    async def plan_later(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._plan_later(interaction, is_nl=False)
+
 
 class PartnerHubViewNL(discord.ui.View):
     """Dutch persistent view in #op-zoek-naar-een-partner."""
@@ -180,6 +199,18 @@ class PartnerHubViewNL(discord.ui.View):
             interaction=interaction,
             duration_seconds=duration_seconds,
             is_nl=True,
+        )
+
+    async def _plan_later(self, interaction: discord.Interaction, *, is_nl: bool) -> None:
+        if self._finder is None:
+            await interaction.response.send_message(
+                "Nog niet klaar. Probeer het zo opnieuw.", ephemeral=True
+            )
+            return
+        await interaction.response.send_message(
+            "Wanneer wil je ongeveer oefenen?",
+            view=PartnerPlanStartView(bot=self._finder.bot, is_nl=is_nl),
+            ephemeral=True,
         )
 
     @discord.ui.button(label="15 min", style=discord.ButtonStyle.secondary, custom_id="partner:free:nl:15m:v3", row=0)
@@ -205,6 +236,10 @@ class PartnerHubViewNL(discord.ui.View):
     @discord.ui.button(label="3 uur", style=discord.ButtonStyle.secondary, custom_id="partner:free:nl:3h:v3", row=1)
     async def free_3h_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._mark(interaction, duration_seconds=3 * 60 * 60)
+
+    @discord.ui.button(label="Plan voor later", style=discord.ButtonStyle.primary, custom_id="partner:plan:nl:v1", row=2)
+    async def plan_later_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._plan_later(interaction, is_nl=True)
 
 
 # =====================
