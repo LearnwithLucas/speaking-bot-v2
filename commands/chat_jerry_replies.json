@@ -1,280 +1,263 @@
 {
   "fallback_suggestions": [
-    "how your day is going",
-    "a place you want to visit",
-    "food you like",
-    "your work or studies",
-    "something you want to practise in English"
+    "your day",
+    "travel",
+    "food",
+    "work",
+    "English practice"
   ],
   "intents": [
     {
       "id": "greeting",
       "match": "greeting",
       "keywords": ["hey", "hi", "hello", "good morning", "good afternoon", "good evening"],
-      "titles": ["Hey", "Hi there", "Hello"],
       "replies": [
-        "Hey {name}. How are you today?",
-        "Hi {name}. Good to see you here. How is your day going?",
-        "Hello {name}. I am here. Want to practise a small conversation?"
+        "Hey {name}. How are you?",
+        "Hi {name}. How is your day going?",
+        "Hello {name}. Nice to see you."
       ],
       "follow_ups": [
-        "You can answer with: I am good because...",
-        "Tell me one small thing about your day.",
-        "What do you want to talk about today?"
+        "What are you doing today?",
+        "Feeling good, tired, or busy?",
+        "Want a question?"
       ]
     },
     {
       "id": "how_are_you",
       "match": "contains",
       "keywords": ["how are you", "how's it going", "how are u", "how do you feel"],
-      "titles": ["I am good", "Doing okay"],
       "replies": [
-        "I am good, thanks for asking. I am ready for a small English conversation.",
-        "I am doing well. My day is mostly helping people make better sentences.",
-        "I am okay. Calm, awake, and ready to chat."
+        "I'm good, thanks.",
+        "I'm doing okay.",
+        "Pretty good. Ready to chat."
       ],
       "follow_ups": [
-        "How are you feeling today?",
-        "What kind of day are you having?",
-        "Tell me one good or difficult thing about today."
+        "How are you?",
+        "How has your day been?",
+        "What have you been doing?"
       ]
     },
     {
       "id": "identity",
       "match": "contains",
       "keywords": ["who are you", "what are you", "your name", "what is your name", "are you jerry"],
-      "titles": ["I am Jerry", "That is me"],
       "replies": [
-        "I am Jerry, the practice bot for this server. I help you keep small English conversations going.",
-        "I am Jerry. You can talk to me when you want easy English practice without pressure."
+        "I'm Jerry.",
+        "I'm Jerry, your little English chat buddy.",
+        "Jerry. I help you practise small conversations."
       ],
       "follow_ups": [
-        "Want a simple question to answer?",
-        "Do you want to practise speaking about your day, travel, food, or work?"
+        "What should we talk about?",
+        "Want an easy question?",
+        "Tell me something about your day."
       ]
     },
     {
       "id": "help",
       "match": "contains",
       "keywords": ["help", "what can you do", "how does this work", "what should i do", "what do i say"],
-      "titles": ["I can help", "Start small"],
       "replies": [
-        "Yes. Send me one short sentence, and I can help you continue the conversation.",
-        "I can answer basic chat questions, give you a simple topic, or make your sentence sound smoother.",
-        "Start with one idea. It can be very simple."
+        "Sure. Send me one sentence.",
+        "I can chat, ask questions, or help with a sentence.",
+        "Start simple."
       ],
       "follow_ups": [
-        "Try: Today I feel okay because...",
-        "Try asking: What should I talk about?",
-        "Try telling me: I want to practise English for work."
+        "What do you want to say?",
+        "Want a topic?",
+        "Try: I want to talk about..."
       ]
     },
     {
       "id": "topic_request",
       "match": "contains",
       "keywords": ["topic", "talk about", "question for me", "ask me something", "ask me a simple question", "give me a question"],
-      "titles": ["Here is a topic", "Try this question"],
       "replies": [
-        "Sure. Let us keep it easy.",
-        "Yes. Here is a simple conversation starter.",
-        "Good idea. Answer this in one or two sentences."
+        "Sure.",
+        "Okay.",
+        "Let's do an easy one."
       ],
       "follow_ups": [
-        "What is one small thing you did today?",
-        "What food do you really like, and why?",
-        "Where would you like to travel one day?",
-        "What is something you want to explain better in English?"
+        "What did you do today?",
+        "What food do you like?",
+        "Where would you like to travel?",
+        "What do you want to get better at?"
       ]
     },
     {
       "id": "english_practice",
       "match": "contains",
       "keywords": ["english", "practice", "practise", "speaking", "grammar", "vocabulary", "sentence", "improve", "better"],
-      "titles": ["Good practice topic", "We can practise that"],
       "replies": [
-        "That is a good thing to practise. Say one small idea first, then add one reason.",
-        "We can work with that. You do not need a perfect sentence to start.",
-        "Nice. English practice works best when the sentence is small enough to actually say."
+        "Nice. We can practise that.",
+        "Good idea.",
+        "Sure, let's make it easy."
       ],
       "follow_ups": [
-        "Where do you want to use English first?",
-        "Do you want help with speaking, vocabulary, or making sentences smoother?",
-        "Can you give me one example sentence?"
-      ],
-      "include_practice_fields": true
+        "Send me one sentence.",
+        "Where do you want to use English?",
+        "Do you want speaking, vocabulary, or grammar?"
+      ]
     },
     {
       "id": "feelings",
       "match": "contains",
       "keywords": ["i feel", "i am happy", "i'm happy", "i am tired", "i'm tired", "i am sad", "i'm sad", "i am nervous", "i'm nervous", "i am good", "i'm good", "i am fine", "i'm fine", "i am okay", "i'm okay"],
-      "titles": ["Thanks for telling me", "I hear you"],
       "replies": [
-        "Thanks for telling me. That is already a real conversation.",
-        "I understand. Feelings are a good topic because you can add a reason.",
-        "That makes sense. Let us make it one sentence stronger."
+        "Thanks for telling me.",
+        "I get that.",
+        "That makes sense."
       ],
       "follow_ups": [
         "Why do you feel that way?",
-        "What happened today?",
-        "What would make the day a little better?"
-      ],
-      "include_practice_fields": true
+        "What happened?",
+        "What would make today better?"
+      ]
     },
     {
       "id": "short_feeling",
       "match": "exact",
       "keywords": ["good", "fine", "okay", "tired", "happy", "sad"],
-      "titles": ["Thanks for telling me", "Good answer"],
       "replies": [
-        "That is a good short answer. Now make it one sentence bigger.",
-        "Good. Add one reason and it becomes a real conversation answer."
+        "Good answer.",
+        "Okay.",
+        "I hear you."
       ],
       "follow_ups": [
-        "Why do you feel that way?",
-        "Can you say: I feel that way because...?"
+        "Why?",
+        "What happened today?",
+        "Can you say it in a full sentence?"
       ]
     },
     {
       "id": "travel",
       "match": "contains",
       "keywords": ["travel", "trip", "visit", "country", "city", "france", "paris", "eiffel", "evil tour", "evil tower", "vacation", "holiday"],
-      "titles": ["Travel is a good topic", "That sounds like a trip"],
       "replies": [
-        "Travel is a great conversation topic. You can talk about places, food, plans, and reasons.",
-        "That sounds interesting. Let us make it sound natural and keep going.",
-        "Nice. Tell me what you want to see first."
+        "Nice. I like that topic.",
+        "That sounds fun.",
+        "Good travel idea."
       ],
       "follow_ups": [
-        "What would you like to do there first?",
-        "Who would you like to go with?",
-        "What food would you like to try there?"
-      ],
-      "include_practice_fields": true
+        "Why do you want to go there?",
+        "What would you do first?",
+        "Who would you go with?"
+      ]
     },
     {
       "id": "food",
       "match": "contains",
       "keywords": ["food", "eat", "cook", "cooking", "restaurant", "coffee", "tea", "breakfast", "lunch", "dinner"],
-      "titles": ["Food is easy to talk about", "Good food topic"],
       "replies": [
-        "Food is a nice topic because everyone has an opinion.",
-        "Good topic. You can describe taste, place, and why you like it.",
-        "Nice. Let us turn that into a natural sentence."
+        "Food is always a good topic.",
+        "Nice.",
+        "That sounds good."
       ],
       "follow_ups": [
         "What food do you like most?",
-        "Do you prefer cooking at home or eating out?",
-        "What is a food from your country that people should try?"
-      ],
-      "include_practice_fields": true
+        "Do you cook often?",
+        "What should I try?"
+      ]
     },
     {
       "id": "work_study",
       "match": "contains",
       "keywords": ["work", "job", "study", "school", "university", "meeting", "class", "homework"],
-      "titles": ["Work and study are useful topics", "That is practical English"],
       "replies": [
-        "That is useful English. You can practise explaining what happened and what you need.",
-        "Good practical topic. Let us keep the sentence clear and simple.",
-        "This is a good place to practise everyday work or study English."
+        "That sounds useful.",
+        "Okay, work English is practical.",
+        "Good topic."
       ],
       "follow_ups": [
-        "What do you need English for at work or school?",
-        "What was easy or difficult today?",
-        "Can you explain your job or study in one simple sentence?"
-      ],
-      "include_practice_fields": true
+        "What do you do?",
+        "Was it busy today?",
+        "What is difficult to explain in English?"
+      ]
     },
     {
       "id": "daily_life",
       "match": "contains",
       "keywords": ["today", "my day", "morning", "afternoon", "evening", "weekend", "yesterday"],
-      "titles": ["Tell me about your day", "Daily life is good practice"],
       "replies": [
-        "Daily life is perfect practice. It gives you simple real things to say.",
-        "Good topic. You can say what happened, how you felt, and what you did next.",
-        "That works well for conversation practice. Let us keep it natural."
+        "Tell me more.",
+        "Nice.",
+        "That sounds like a normal day."
       ],
       "follow_ups": [
-        "What was the best part of your day?",
-        "What was one small thing you did?",
-        "Was today busy, quiet, easy, or difficult?"
-      ],
-      "include_practice_fields": true
+        "What was the best part?",
+        "Was it busy or quiet?",
+        "What happened next?"
+      ]
     },
     {
       "id": "likes",
       "match": "contains",
       "keywords": ["do you like", "what do you like", "favorite", "favourite"],
-      "titles": ["Good question", "I like simple things"],
       "replies": [
-        "I like simple conversations where people feel safe to try.",
-        "I like when someone sends one small sentence and then makes it a little better.",
-        "I like useful words, calm practice, and questions that keep people talking."
+        "I like simple conversations.",
+        "I like when people try, even with small sentences.",
+        "I like easy questions."
       ],
       "follow_ups": [
         "What do you like?",
-        "What is one thing you really enjoy?",
-        "Can you tell me your favourite food, place, or hobby?"
+        "What is your favourite food?",
+        "What is your favourite place?"
       ]
     },
     {
       "id": "where_from",
       "match": "contains",
       "keywords": ["where are you from", "where do you live", "are you from"],
-      "titles": ["I live here"],
       "replies": [
-        "I live in this Discord server. My job is to help people practise English in small, friendly steps.",
-        "I am from the server, basically. I am here whenever you want a small English conversation."
+        "I live here in the server.",
+        "I'm from this Discord server.",
+        "I live wherever the chat is."
       ],
       "follow_ups": [
         "Where are you from?",
         "What is your city like?",
-        "What do people usually like about your country?"
+        "Do you like living there?"
       ]
     },
     {
       "id": "time",
       "match": "contains",
       "keywords": ["what time", "current time", "time is it"],
-      "titles": ["Time check"],
       "replies": [
-        "It is about {time_amsterdam} in Amsterdam for me."
+        "It is about {time_amsterdam} in Amsterdam."
       ],
       "follow_ups": [
-        "What time is it where you are?",
-        "Is it morning, afternoon, or evening for you?"
+        "What time is it for you?",
+        "Is it late where you are?"
       ]
     },
     {
       "id": "weather",
       "match": "contains",
       "keywords": ["weather", "rain", "sunny", "cold", "hot"],
-      "titles": ["Weather talk"],
       "replies": [
-        "I cannot check live weather from this chat, but weather is a useful conversation topic.",
-        "Weather is easy English practice because you can describe what you see and how it feels."
+        "I can't check live weather here.",
+        "Weather talk is useful.",
+        "Good small-talk topic."
       ],
       "follow_ups": [
-        "What is the weather like where you are?",
-        "Do you prefer sunny weather or cold weather?",
-        "How does the weather affect your mood?"
+        "What is the weather like there?",
+        "Do you like that weather?",
+        "Is it hot or cold today?"
       ]
     },
     {
       "id": "thanks",
       "match": "contains",
       "keywords": ["thanks", "thank you", "thx"],
-      "titles": ["You are welcome", "Of course"],
       "replies": [
-        "You are welcome. Keep going, one small message at a time.",
-        "Of course. Small practice still counts.",
-        "Anytime. Want another simple question?"
+        "You're welcome.",
+        "Of course.",
+        "Anytime."
       ],
       "follow_ups": [
-        "What do you want to practise next?",
-        "Do you want an easy question?",
-        "Want to try one more sentence?"
+        "Want another question?",
+        "Want to keep going?",
+        "What should we talk about next?"
       ]
     }
   ]
