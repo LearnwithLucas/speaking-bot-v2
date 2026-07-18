@@ -35,6 +35,8 @@ DURATION_OPTIONS: tuple[tuple[int, str, str], ...] = (
 DEFAULT_DURATION_SECONDS = 30 * 60
 MAX_WEEKLY_SPEAKERS = 20
 WEEKLY_SPEAKERS_REFRESH_SECONDS = 15 * 60
+WEEKLY_SPEAKERS_FOOTER_EN = "active this week:en:v2"
+WEEKLY_SPEAKERS_FOOTER_NL = "actief deze week:nl:v2"
 
 
 def _duration_label(seconds: int, *, is_nl: bool = False) -> str:
@@ -142,48 +144,57 @@ def build_weekly_speakers_embed(
     is_nl: bool = False,
 ) -> discord.Embed:
     if is_nl:
+        embed = discord.Embed(
+            title="Actief deze week",
+            color=discord.Color.green(),
+        )
         if speaker_names:
-            description = (
+            embed.description = (
                 "Deze mensen zijn sinds maandag in voice geweest. "
-                "Zeg gerust hoi als je een rustige spreekpartner zoekt.\n\n"
-                + "\n".join(f"- {name}" for name in speaker_names)
+                "Zeg gerust hoi als je een rustige spreekpartner zoekt."
             )
-            if hidden_count:
-                description += f"\n- en {hidden_count} meer"
+            _add_speaker_columns(embed, speaker_names)
         else:
-            description = (
+            embed.description = (
                 "Nog niemand is deze week in voice geweest. "
                 "Zodra iemand oefent, verschijnt die persoon hier."
             )
-        embed = discord.Embed(
-            title="Actief deze week",
-            description=description,
-            color=discord.Color.green(),
-        )
-        embed.set_footer(text="actief deze week:nl:v1")
-        return embed
-
-    if speaker_names:
-        description = (
-            "These people have joined voice since Monday. "
-            "Say hi if you want a low-pressure speaking partner.\n\n"
-            + "\n".join(f"- {name}" for name in speaker_names)
-        )
         if hidden_count:
-            description += f"\n- and {hidden_count} more"
-    else:
-        description = (
-            "Nobody has joined voice yet this week. "
-            "When someone practices, they will appear here."
-        )
+            embed.add_field(name="Meer", value=f"en {hidden_count} meer", inline=False)
+        embed.set_footer(text=WEEKLY_SPEAKERS_FOOTER_NL)
+        return embed
 
     embed = discord.Embed(
         title="Active this week",
-        description=description,
         color=discord.Color.green(),
     )
-    embed.set_footer(text="active this week:en:v1")
+    if speaker_names:
+        embed.description = (
+            "These people have joined voice since Monday. "
+            "Say hi if you want a low-pressure speaking partner."
+        )
+        _add_speaker_columns(embed, speaker_names)
+    else:
+        embed.description = (
+            "Nobody has joined voice yet this week. "
+            "When someone practices, they will appear here."
+        )
+    if hidden_count:
+        embed.add_field(name="More", value=f"and {hidden_count} more", inline=False)
+    embed.set_footer(text=WEEKLY_SPEAKERS_FOOTER_EN)
     return embed
+
+
+def _add_speaker_columns(embed: discord.Embed, speaker_names: list[str]) -> None:
+    column_count = 3 if len(speaker_names) >= 9 else 2
+    column_size = max(1, (len(speaker_names) + column_count - 1) // column_count)
+    for index in range(0, len(speaker_names), column_size):
+        column = speaker_names[index:index + column_size]
+        embed.add_field(
+            name="\u200b",
+            value="\n".join(f"- {name}" for name in column),
+            inline=True,
+        )
 
 
 # =====================
@@ -337,6 +348,10 @@ class PartnerFinder:
         self._available_en: dict[int, float] = {}
         self._available_nl: dict[int, float] = {}
         self._weekly_speakers_task: asyncio.Task | None = None
+        self._weekly_speakers_locks: dict[bool, asyncio.Lock] = {
+            False: asyncio.Lock(),
+            True: asyncio.Lock(),
+        }
         self._start_weekly_speakers_refresh()
 
     def _start_weekly_speakers_refresh(self) -> None:
@@ -576,7 +591,7 @@ class PartnerFinder:
 
             if member is None or member.bot:
                 continue
-            names.append(member.mention)
+            names.append(discord.utils.escape_markdown(member.display_name))
             if len(names) >= MAX_WEEKLY_SPEAKERS:
                 break
 
@@ -598,22 +613,71 @@ class PartnerFinder:
         if channel is None:
             return
 
-        embed = await self._build_weekly_speakers_embed(guild_id=guild_id, is_nl=is_nl)
-        existing_id_raw = await self.repo.kv_get(guild_id, kv_key)
-        if existing_id_raw:
+        lock = self._weekly_speakers_locks[is_nl]
+        async with lock:
+            embed = await self._build_weekly_speakers_embed(guild_id=guild_id, is_nl=is_nl)
+            existing_id_raw = await self.repo.kv_get(guild_id, kv_key)
+            if existing_id_raw:
+                try:
+                    msg = await channel.fetch_message(int(existing_id_raw))
+                    await msg.edit(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                    await self._delete_duplicate_weekly_speakers_messages(
+                        channel,
+                        keep_message_id=msg.id,
+                        is_nl=is_nl,
+                    )
+                    return
+                except Exception:
+                    log.warning("PartnerFinder: could not edit weekly speakers message, recreating is_nl=%s", is_nl)
+
             try:
-                msg = await channel.fetch_message(int(existing_id_raw))
-                await msg.edit(embed=embed, allowed_mentions=discord.AllowedMentions.none())
-                return
+                sent = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                await self.repo.kv_set(guild_id, kv_key, str(sent.id))
+                await self._delete_duplicate_weekly_speakers_messages(
+                    channel,
+                    keep_message_id=sent.id,
+                    is_nl=is_nl,
+                )
+                log.info("PartnerFinder: posted weekly speakers message %s is_nl=%s", sent.id, is_nl)
             except Exception:
-                log.warning("PartnerFinder: could not edit weekly speakers message, recreating is_nl=%s", is_nl)
+                log.exception("PartnerFinder: failed to post weekly speakers message is_nl=%s", is_nl)
+
+    async def _delete_duplicate_weekly_speakers_messages(
+        self,
+        channel: discord.TextChannel,
+        *,
+        keep_message_id: int,
+        is_nl: bool,
+    ) -> None:
+        expected_footers = {
+            WEEKLY_SPEAKERS_FOOTER_NL if is_nl else WEEKLY_SPEAKERS_FOOTER_EN,
+            "actief deze week:nl:v1" if is_nl else "active this week:en:v1",
+        }
 
         try:
-            sent = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
-            await self.repo.kv_set(guild_id, kv_key, str(sent.id))
-            log.info("PartnerFinder: posted weekly speakers message %s is_nl=%s", sent.id, is_nl)
+            bot_user = self.bot.user
+            if bot_user is None:
+                return
+
+            async for message in channel.history(limit=25):
+                if message.id == keep_message_id:
+                    continue
+                if message.author.id != bot_user.id:
+                    continue
+                if not message.embeds:
+                    continue
+                footer = message.embeds[0].footer.text
+                if footer not in expected_footers:
+                    continue
+                try:
+                    await message.delete()
+                    log.info("PartnerFinder: deleted duplicate weekly speakers message %s", message.id)
+                except discord.Forbidden:
+                    log.info("PartnerFinder: missing permission to delete duplicate weekly speakers message %s", message.id)
+                except Exception:
+                    log.exception("PartnerFinder: failed to delete duplicate weekly speakers message %s", message.id)
         except Exception:
-            log.exception("PartnerFinder: failed to post weekly speakers message is_nl=%s", is_nl)
+            log.exception("PartnerFinder: failed to scan for duplicate weekly speakers messages")
 
     async def _update_hub_embed(self, *, is_nl: bool) -> None:
         self._clean_expired(is_nl)
