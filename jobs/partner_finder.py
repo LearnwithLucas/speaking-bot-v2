@@ -2,8 +2,10 @@ from __future__ import annotations
 
 # jobs/partner_finder.py
 import asyncio
+import datetime as dt
 import logging
 import time
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import discord
 
@@ -19,6 +21,8 @@ OPEN_CONVERSATION_CHANNEL_ID = 1456551629301219420  # 🌍 | Open Conversation
 
 KV_EN_HUB_MSG_ID = "partner_hub_message_id"
 KV_NL_HUB_MSG_ID = "partner_hub_nl_message_id"
+KV_EN_WEEKLY_SPEAKERS_MSG_ID = "partner_weekly_speakers_message_id"
+KV_NL_WEEKLY_SPEAKERS_MSG_ID = "partner_weekly_speakers_nl_message_id"
 
 DURATION_OPTIONS: tuple[tuple[int, str, str], ...] = (
     (15 * 60, "15 min", "15 min"),
@@ -29,6 +33,8 @@ DURATION_OPTIONS: tuple[tuple[int, str, str], ...] = (
     (3 * 60 * 60, "3 hours", "3 uur"),
 )
 DEFAULT_DURATION_SECONDS = 30 * 60
+MAX_WEEKLY_SPEAKERS = 20
+WEEKLY_SPEAKERS_REFRESH_SECONDS = 15 * 60
 
 
 def _duration_label(seconds: int, *, is_nl: bool = False) -> str:
@@ -46,6 +52,21 @@ def _duration_label(seconds: int, *, is_nl: bool = False) -> str:
 
 def _open_conversation_link(guild_id: int) -> str:
     return f"https://discord.com/channels/{guild_id}/{OPEN_CONVERSATION_CHANNEL_ID}"
+
+
+def _amsterdam_week_start_epoch() -> int:
+    try:
+        tz = ZoneInfo("Europe/Amsterdam")
+        now = dt.datetime.now(tz=tz)
+    except ZoneInfoNotFoundError:
+        now = dt.datetime.now()
+    week_start = (now - dt.timedelta(days=now.weekday())).replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+    return int(week_start.timestamp())
 
 
 def _conversation_starters(*, is_nl: bool) -> str:
@@ -111,6 +132,57 @@ def build_nl_embed(available_count: int = 0) -> discord.Embed:
         ),
     )
     embed.set_footer(text="hub:nl:partner:v3")
+    return embed
+
+
+def build_weekly_speakers_embed(
+    speaker_names: list[str],
+    *,
+    hidden_count: int = 0,
+    is_nl: bool = False,
+) -> discord.Embed:
+    if is_nl:
+        if speaker_names:
+            description = (
+                "Deze mensen zijn sinds maandag in voice geweest. "
+                "Zeg gerust hoi als je een rustige spreekpartner zoekt.\n\n"
+                + "\n".join(f"- {name}" for name in speaker_names)
+            )
+            if hidden_count:
+                description += f"\n- en {hidden_count} meer"
+        else:
+            description = (
+                "Nog niemand is deze week in voice geweest. "
+                "Zodra iemand oefent, verschijnt die persoon hier."
+            )
+        embed = discord.Embed(
+            title="Actief deze week",
+            description=description,
+            color=discord.Color.green(),
+        )
+        embed.set_footer(text="actief deze week:nl:v1")
+        return embed
+
+    if speaker_names:
+        description = (
+            "These people have joined voice since Monday. "
+            "Say hi if you want a low-pressure speaking partner.\n\n"
+            + "\n".join(f"- {name}" for name in speaker_names)
+        )
+        if hidden_count:
+            description += f"\n- and {hidden_count} more"
+    else:
+        description = (
+            "Nobody has joined voice yet this week. "
+            "When someone practices, they will appear here."
+        )
+
+    embed = discord.Embed(
+        title="Active this week",
+        description=description,
+        color=discord.Color.green(),
+    )
+    embed.set_footer(text="active this week:en:v1")
     return embed
 
 
@@ -264,6 +336,25 @@ class PartnerFinder:
         # user_id -> expires_at (epoch)
         self._available_en: dict[int, float] = {}
         self._available_nl: dict[int, float] = {}
+        self._weekly_speakers_task: asyncio.Task | None = None
+        self._start_weekly_speakers_refresh()
+
+    def _start_weekly_speakers_refresh(self) -> None:
+        try:
+            self._weekly_speakers_task = asyncio.create_task(self._weekly_speakers_refresh_loop())
+        except RuntimeError:
+            self._weekly_speakers_task = None
+
+    async def _weekly_speakers_refresh_loop(self) -> None:
+        await self.bot.wait_until_ready()
+        while not self.bot.is_closed():
+            try:
+                await self._publish_weekly_speakers_message(is_nl=False)
+                if self.dutch_guild_id:
+                    await self._publish_weekly_speakers_message(is_nl=True)
+            except Exception:
+                log.exception("PartnerFinder: weekly speakers refresh failed")
+            await asyncio.sleep(WEEKLY_SPEAKERS_REFRESH_SECONDS)
 
     def _pool(self, is_nl: bool) -> dict[int, float]:
         return self._available_nl if is_nl else self._available_en
@@ -425,24 +516,116 @@ class PartnerFinder:
 
     # ---- Hub embeds ----
 
+    async def _fetch_partner_channel(self, *, is_nl: bool) -> discord.TextChannel | None:
+        channel_id = NL_LOOKING_CHANNEL_ID if is_nl else EN_LOOKING_CHANNEL_ID
+        channel = self.bot.get_channel(channel_id)
+        if channel is None:
+            try:
+                channel = await self.bot.fetch_channel(channel_id)
+            except Exception:
+                log.warning("PartnerFinder: could not fetch channel %s", channel_id)
+                return None
+
+        if not isinstance(channel, discord.TextChannel):
+            return None
+        return channel
+
+    async def _weekly_speaker_ids(self, guild_id: int) -> list[int]:
+        now_epoch = int(time.time())
+        since_epoch = _amsterdam_week_start_epoch()
+        cur = await self.repo.conn.execute(
+            """
+            SELECT user_id
+            FROM voice_sessions
+            WHERE guild_id = ?
+              AND started_at <= ?
+              AND COALESCE(ended_at, ?) >= ?
+            GROUP BY user_id
+            ORDER BY MAX(COALESCE(ended_at, ?)) DESC
+            LIMIT ?
+            """,
+            (
+                guild_id,
+                now_epoch,
+                now_epoch,
+                since_epoch,
+                now_epoch,
+                MAX_WEEKLY_SPEAKERS + 1,
+            ),
+        )
+        rows = await cur.fetchall()
+        return [int(row[0]) for row in rows]
+
+    async def _weekly_speaker_names(
+        self,
+        *,
+        guild_id: int,
+        is_nl: bool,
+    ) -> tuple[list[str], int]:
+        guild = self.bot.get_guild(guild_id)
+        user_ids = await self._weekly_speaker_ids(guild_id)
+        names: list[str] = []
+
+        for user_id in user_ids:
+            member = None
+            try:
+                if guild is not None:
+                    member = guild.get_member(user_id) or await guild.fetch_member(user_id)
+            except Exception:
+                log.info("PartnerFinder: could not fetch weekly speaker user=%s is_nl=%s", user_id, is_nl)
+
+            if member is None or member.bot:
+                continue
+            names.append(member.mention)
+            if len(names) >= MAX_WEEKLY_SPEAKERS:
+                break
+
+        hidden_count = max(0, len(user_ids) - len(names))
+        return names, hidden_count
+
+    async def _build_weekly_speakers_embed(self, *, guild_id: int, is_nl: bool) -> discord.Embed:
+        names, hidden_count = await self._weekly_speaker_names(guild_id=guild_id, is_nl=is_nl)
+        return build_weekly_speakers_embed(names, hidden_count=hidden_count, is_nl=is_nl)
+
+    async def _publish_weekly_speakers_message(self, *, is_nl: bool) -> None:
+        guild_id = self.dutch_guild_id if is_nl else self.guild_id
+        kv_key = KV_NL_WEEKLY_SPEAKERS_MSG_ID if is_nl else KV_EN_WEEKLY_SPEAKERS_MSG_ID
+
+        if guild_id is None:
+            return
+
+        channel = await self._fetch_partner_channel(is_nl=is_nl)
+        if channel is None:
+            return
+
+        embed = await self._build_weekly_speakers_embed(guild_id=guild_id, is_nl=is_nl)
+        existing_id_raw = await self.repo.kv_get(guild_id, kv_key)
+        if existing_id_raw:
+            try:
+                msg = await channel.fetch_message(int(existing_id_raw))
+                await msg.edit(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                return
+            except Exception:
+                log.warning("PartnerFinder: could not edit weekly speakers message, recreating is_nl=%s", is_nl)
+
+        try:
+            sent = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            await self.repo.kv_set(guild_id, kv_key, str(sent.id))
+            log.info("PartnerFinder: posted weekly speakers message %s is_nl=%s", sent.id, is_nl)
+        except Exception:
+            log.exception("PartnerFinder: failed to post weekly speakers message is_nl=%s", is_nl)
+
     async def _update_hub_embed(self, *, is_nl: bool) -> None:
         self._clean_expired(is_nl)
         count = len(self._pool(is_nl))
-        channel_id = NL_LOOKING_CHANNEL_ID if is_nl else EN_LOOKING_CHANNEL_ID
         kv_key = KV_NL_HUB_MSG_ID if is_nl else KV_EN_HUB_MSG_ID
         guild_id = self.dutch_guild_id if is_nl else self.guild_id
 
         if guild_id is None:
             return
 
-        channel = self.bot.get_channel(channel_id)
+        channel = await self._fetch_partner_channel(is_nl=is_nl)
         if channel is None:
-            try:
-                channel = await self.bot.fetch_channel(channel_id)
-            except Exception:
-                return
-
-        if not isinstance(channel, discord.TextChannel):
             return
 
         existing_id_raw = await self.repo.kv_get(guild_id, kv_key)
@@ -455,29 +638,24 @@ class PartnerFinder:
         try:
             msg = await channel.fetch_message(int(existing_id_raw))
             await msg.edit(embed=embed, view=view)
+            await self._publish_weekly_speakers_message(is_nl=is_nl)
         except Exception:
             log.warning("PartnerFinder: could not update hub embed is_nl=%s", is_nl)
 
     async def publish_hub(self, *, is_nl: bool = False) -> None:
-        channel_id = NL_LOOKING_CHANNEL_ID if is_nl else EN_LOOKING_CHANNEL_ID
         kv_key = KV_NL_HUB_MSG_ID if is_nl else KV_EN_HUB_MSG_ID
         guild_id = self.dutch_guild_id if is_nl else self.guild_id
 
         if guild_id is None:
             return
 
-        channel = self.bot.get_channel(channel_id)
+        channel = await self._fetch_partner_channel(is_nl=is_nl)
         if channel is None:
-            try:
-                channel = await self.bot.fetch_channel(channel_id)
-            except Exception:
-                log.warning("PartnerFinder: could not fetch channel %s", channel_id)
-                return
-
-        if not isinstance(channel, discord.TextChannel):
             return
 
-        embed = build_nl_embed(0) if is_nl else build_en_embed(0)
+        self._clean_expired(is_nl)
+        count = len(self._pool(is_nl))
+        embed = build_nl_embed(count) if is_nl else build_en_embed(count)
         view = PartnerHubViewNL(finder=self) if is_nl else PartnerHubView(finder=self)
 
         existing_id_raw = await self.repo.kv_get(guild_id, kv_key)
@@ -485,6 +663,7 @@ class PartnerFinder:
             try:
                 msg = await channel.fetch_message(int(existing_id_raw))
                 await msg.edit(embed=embed, view=view)
+                await self._publish_weekly_speakers_message(is_nl=is_nl)
                 log.info("PartnerFinder: updated hub message %s is_nl=%s", existing_id_raw, is_nl)
                 return
             except Exception:
@@ -493,11 +672,12 @@ class PartnerFinder:
         try:
             sent = await channel.send(embed=embed, view=view)
             await self.repo.kv_set(guild_id, kv_key, str(sent.id))
+            await self._publish_weekly_speakers_message(is_nl=is_nl)
             log.info("PartnerFinder: posted hub message %s is_nl=%s", sent.id, is_nl)
             try:
                 await sent.pin()
             except discord.Forbidden:
-                log.warning("PartnerFinder: missing pin permission channel=%s", channel_id)
+                log.warning("PartnerFinder: missing pin permission channel=%s", channel.id)
             except Exception:
                 log.warning("PartnerFinder: could not pin hub message")
         except Exception:
