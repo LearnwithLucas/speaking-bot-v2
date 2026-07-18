@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import logging
 import random
 import re
 import string
 import time
+from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import discord
 from discord import app_commands
@@ -17,6 +20,7 @@ log = logging.getLogger("commands.chat_jerry")
 CHAT_WITH_JERRY_CHANNEL_ID = 1523060567621763163
 KV_CHAT_JERRY_HUB_MSG = "chat_jerry_hub_message_id_v1"
 KV_CHAT_JERRY_DAILY_DATE = "chat_jerry_daily_check_in_date_v2"
+REPLY_RULES_PATH = Path(__file__).with_name("chat_jerry_replies.json")
 
 QUESTION_SETS = [
     {
@@ -110,6 +114,27 @@ CHECK_IN_DESCRIPTIONS = (
     "This already works as conversation practice. Here is a more natural version you can try next.",
     "Good message. Let us make it sound a bit more natural and keep the conversation moving.",
 )
+
+DEFAULT_REPLY_RULES: dict[str, Any] = {
+    "fallback_suggestions": [
+        "your day",
+        "travel",
+        "food",
+        "work",
+        "something you want to practise in English",
+    ],
+    "intents": [
+        {
+            "id": "greeting",
+            "match": "greeting",
+            "keywords": ["hey", "hi", "hello"],
+            "titles": ["Hey"],
+            "replies": ["Hey {name}. How are you today?"],
+            "follow_ups": ["You can answer with: I am good because..."],
+        }
+    ],
+}
+_REPLY_RULES_CACHE: dict[str, Any] | None = None
 
 
 def _pick_question(seed: int | None = None) -> dict[str, str]:
@@ -224,6 +249,124 @@ def _reply_seed(text: str, display_name: str) -> int:
     return sum(ord(ch) for ch in f"{display_name}:{text}")
 
 
+def _reply_rules() -> dict[str, Any]:
+    global _REPLY_RULES_CACHE
+    if _REPLY_RULES_CACHE is not None:
+        return _REPLY_RULES_CACHE
+
+    try:
+        with REPLY_RULES_PATH.open("r", encoding="utf-8") as fp:
+            rules = json.load(fp)
+        if not isinstance(rules, dict) or not isinstance(rules.get("intents"), list):
+            raise ValueError("chat_jerry_replies.json must contain an intents list")
+        _REPLY_RULES_CACHE = rules
+    except Exception:
+        log.exception("ChatJerry: could not load reply rules from %s", REPLY_RULES_PATH)
+        _REPLY_RULES_CACHE = DEFAULT_REPLY_RULES
+    return _REPLY_RULES_CACHE
+
+
+def _choose(items: Any, *, text: str, display_name: str) -> str:
+    if isinstance(items, str):
+        return items
+    if not isinstance(items, list) or not items:
+        return ""
+    return str(items[_reply_seed(text, display_name) % len(items)])
+
+
+def _render_template(template: str, *, display_name: str) -> str:
+    try:
+        time_amsterdam = dt.datetime.now(ZoneInfo("Europe/Amsterdam")).strftime("%H:%M")
+    except Exception:
+        time_amsterdam = dt.datetime.now().strftime("%H:%M")
+    try:
+        return template.format(
+            name=discord.utils.escape_markdown(display_name),
+            time_amsterdam=time_amsterdam,
+        )
+    except Exception:
+        return template
+
+
+def _keyword_in_text(keyword: str, *, lower: str, cleaned: str) -> bool:
+    keyword = keyword.lower().strip()
+    if not keyword:
+        return False
+    if " " in keyword or "'" in keyword:
+        return keyword in lower
+    return bool(re.search(rf"\b{re.escape(keyword)}\b", cleaned))
+
+
+def _rule_matches(rule: dict[str, Any], text: str) -> bool:
+    lower = text.lower().strip()
+    cleaned = _clean_for_greeting(text)
+    keywords = [str(k) for k in rule.get("keywords", [])]
+    match_type = str(rule.get("match", "contains"))
+
+    if match_type == "greeting":
+        return _is_greeting(text)
+    if match_type == "exact":
+        return cleaned in {keyword.lower().strip() for keyword in keywords}
+    return any(_keyword_in_text(keyword, lower=lower, cleaned=cleaned) for keyword in keywords)
+
+
+def _matched_reply_rule(text: str) -> dict[str, Any] | None:
+    for rule in _reply_rules().get("intents", []):
+        if isinstance(rule, dict) and _rule_matches(rule, text):
+            return rule
+    return None
+
+
+def _fallback_suggestions(text: str, display_name: str) -> list[str]:
+    suggestions = _reply_rules().get("fallback_suggestions", [])
+    if not isinstance(suggestions, list) or not suggestions:
+        suggestions = DEFAULT_REPLY_RULES["fallback_suggestions"]
+
+    seed = _reply_seed(text, display_name)
+    ordered = [str(item) for item in suggestions if str(item).strip()]
+    if not ordered:
+        return ["your day", "travel", "food"]
+    start = seed % len(ordered)
+    rotated = ordered[start:] + ordered[:start]
+    return rotated[:3]
+
+
+def _reply_embed_from_rule(rule: dict[str, Any], text: str, display_name: str) -> discord.Embed:
+    title = _render_template(_choose(rule.get("titles", "Jerry says"), text=text, display_name=display_name), display_name=display_name)
+    reply = _render_template(_choose(rule.get("replies", ""), text=text, display_name=display_name), display_name=display_name)
+    follow_up = _render_template(_choose(rule.get("follow_ups", ""), text=text, display_name=display_name), display_name=display_name)
+
+    lower = text.lower()
+    if rule.get("id") == "travel" and ("evil tour" in lower or "evil tower" in lower):
+        reply += "\n\nSmall correction: people usually say **the Eiffel Tower**."
+
+    embed = discord.Embed(title=title or "Jerry says", description=reply or "I am here. Tell me one small thing.")
+    if follow_up:
+        embed.add_field(name="Jerry asks", value=follow_up, inline=False)
+    if rule.get("include_practice_fields"):
+        _add_check_in_fields(embed, text)
+    embed.set_footer(text="Reply naturally. One sentence is enough.")
+    return embed
+
+
+def _fallback_reply_embed(text: str, display_name: str) -> discord.Embed:
+    suggestions = _fallback_suggestions(text, display_name)
+    embed = discord.Embed(
+        title="I am not sure yet",
+        description=(
+            "I did not fully understand that, but we can still keep the conversation going.\n\n"
+            f"Maybe ask about **{suggestions[0]}**, **{suggestions[1]}**, or **{suggestions[2]}**."
+        ),
+    )
+    embed.add_field(
+        name="Try this",
+        value="`Can you ask me a simple question?`\n`I want to talk about my day.`\n`Help me make this sentence better.`",
+        inline=False,
+    )
+    embed.set_footer(text="Jerry understands simple keywords best.")
+    return embed
+
+
 def _check_in_title(text: str, display_name: str) -> str:
     if _is_travel_text(text):
         return "That sounds like a real travel goal"
@@ -250,18 +393,19 @@ def build_hub_embed() -> discord.Embed:
         title="Chat with Jerry",
         description=(
             "A calm place to practise tiny English conversations.\n\n"
-            "Every day Jerry posts a **Daily English Check-in**. Reply with one sentence, and Jerry will help you "
-            "continue with a smoother version, a follow-up question, and one useful phrase.\n\n"
-            "If you are new, just type `hi`, `hey`, or `hello`. This is practice, not a test."
+            "Say `hi`, ask a simple question, or send one short sentence. Jerry will answer, ask something back, "
+            "or help you make the sentence smoother.\n\n"
+            "Every day Jerry also posts a **Daily English Check-in** if you want an easy starting point."
         ),
     )
     embed.add_field(
         name="Good ways to start",
         value=(
+            "`hey`\n"
+            "`how are you?`\n"
+            "`give me a question`\n"
             "`Today I feel... because...`\n"
-            "`One thing I did today was...`\n"
-            "`I want to explain... better.`\n"
-            "`Hi, I want to practise speaking.`"
+            "`I want to talk about travel.`"
         ),
         inline=False,
     )
@@ -290,6 +434,10 @@ def build_prompt_embed(prompt: dict[str, str], *, title: str = "Daily English Ch
 def _reply_embed_for_text(text: str, display_name: str) -> discord.Embed:
     lower = text.lower().strip()
     words = _word_count(text)
+    rule = _matched_reply_rule(text)
+
+    if rule is not None:
+        return _reply_embed_from_rule(rule, text, display_name)
 
     if any(word in lower for word in NERVOUS_WORDS):
         title = "That feeling is normal"
@@ -322,23 +470,11 @@ def _reply_embed_for_text(text: str, display_name: str) -> discord.Embed:
         desc = "Keep going. One small message is still real practice."
         embed = discord.Embed(title=title, description=desc)
     elif "?" in text:
-        title = "Good question"
-        desc = (
-            "I can help with basic speaking practice here. For a quick answer, keep your question short. "
-            "If it is about grammar or vocabulary, try `/d` or Ask Jerry too."
-        )
-        embed = discord.Embed(title=title, description=desc)
-        _add_check_in_fields(embed, text)
+        embed = _fallback_reply_embed(text, display_name)
     elif words <= 3:
-        title = "Good start"
-        desc = "Now make it one step bigger. Add **because** and one reason."
-        embed = discord.Embed(title=title, description=desc)
-        _add_check_in_fields(embed, text)
+        embed = _fallback_reply_embed(text, display_name)
     else:
-        title = _check_in_title(text, display_name)
-        desc = _check_in_description(text, display_name)
-        embed = discord.Embed(title=title, description=desc)
-        _add_check_in_fields(embed, text)
+        embed = _fallback_reply_embed(text, display_name)
 
     embed.set_footer(text="Use the buttons for a next step.")
     return embed
