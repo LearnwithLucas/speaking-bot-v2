@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import random
+import re
 import string
 import time
 from typing import Any
@@ -74,6 +75,41 @@ GREETING_WORDS = {"hi", "hello", "hey", "good morning", "good afternoon", "good 
 THANKS_WORDS = {"thanks", "thank you", "thx"}
 FEELING_WORDS = {"feel", "feeling", "happy", "sad", "tired", "okay", "fine", "good", "bad", "busy", "calm"}
 PRACTICE_WORDS = {"practice", "practise", "improve", "better", "learn", "speak", "speaking", "english"}
+TRAVEL_WORDS = {"visit", "travel", "trip", "country", "city", "france", "paris", "eiffel"}
+
+PLACE_FIXES = {
+    "france": "France",
+    "paris": "Paris",
+    "london": "London",
+    "japan": "Japan",
+    "korea": "Korea",
+    "spain": "Spain",
+    "italy": "Italy",
+    "the netherlands": "the Netherlands",
+    "netherlands": "Netherlands",
+}
+
+PHRASE_FIXES = {
+    "evil tour": "Eiffel Tower",
+    "evil tower": "Eiffel Tower",
+    "eiffel tower": "Eiffel Tower",
+    "eifel tower": "Eiffel Tower",
+    "effiel tower": "Eiffel Tower",
+}
+
+CHECK_IN_TITLES = (
+    "That is a good start",
+    "Nice idea",
+    "Good, keep going",
+    "I understand you",
+    "That sounds interesting",
+)
+
+CHECK_IN_DESCRIPTIONS = (
+    "I can hear your idea clearly. I will make it a little smoother, then you can add one more detail.",
+    "This already works as conversation practice. Here is a more natural version you can try next.",
+    "Good message. Let us make it sound a bit more natural and keep the conversation moving.",
+)
 
 
 def _pick_question(seed: int | None = None) -> dict[str, str]:
@@ -104,13 +140,36 @@ def _is_greeting(text: str) -> bool:
 
 
 def _clean_sentence(text: str) -> str:
-    sentence = " ".join(text.strip().split())
+    sentence = _normalize_text(text)
     if not sentence:
         return ""
     sentence = sentence[0].upper() + sentence[1:]
     if sentence[-1] not in ".!?":
         sentence += "."
     return sentence
+
+
+def _replace_case_insensitive(text: str, old: str, new: str) -> str:
+    return re.sub(re.escape(old), new, text, flags=re.IGNORECASE)
+
+
+def _normalize_text(text: str) -> str:
+    normalized = " ".join(text.strip().split())
+    normalized = re.sub(r"\s+([,.!?])", r"\1", normalized)
+    normalized = re.sub(r"\b[Bb]ecause\b", "because", normalized)
+    normalized = re.sub(r"\bi\b", "I", normalized)
+
+    for old, new in PHRASE_FIXES.items():
+        normalized = _replace_case_insensitive(normalized, old, new)
+    for old, new in PLACE_FIXES.items():
+        normalized = re.sub(rf"\b{re.escape(old)}\b", new, normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r"\b(see|visit) Eiffel Tower\b", r"\1 the Eiffel Tower", normalized)
+    return normalized
+
+
+def _is_travel_text(text: str) -> bool:
+    lower = text.lower()
+    return any(word in lower for word in TRAVEL_WORDS)
 
 
 def _smoother_version(text: str) -> str:
@@ -129,19 +188,23 @@ def _smoother_version(text: str) -> str:
 
 def _follow_up_question(text: str) -> str:
     lower = text.lower()
+    if "france" in lower or "eiffel" in lower or "evil tour" in lower or "evil tower" in lower:
+        return "Would you like to visit Paris first, or see another place in France too?"
+    if any(word in lower for word in TRAVEL_WORDS):
+        return "What would you like to do there first?"
     if any(word in lower for word in FEELING_WORDS):
         return "What made you feel that way?"
     if any(word in lower for word in PRACTICE_WORDS):
         return "Where do you want to use this English first?"
     if "today" in lower or "morning" in lower or "evening" in lower:
         return "What was the best or most difficult part?"
-    if "visit" in lower or "travel" in lower or "place" in lower:
-        return "What would you like to do there first?"
     return "Can you add one small detail?"
 
 
 def _useful_phrase(text: str) -> str:
     lower = text.lower()
+    if any(word in lower for word in TRAVEL_WORDS):
+        return "A useful phrase: `I would love to see ___ because ___.`"
     if any(word in lower for word in FEELING_WORDS):
         return "A useful phrase: `I feel ___ because ___.`"
     if any(word in lower for word in PRACTICE_WORDS):
@@ -152,9 +215,34 @@ def _useful_phrase(text: str) -> str:
 
 
 def _add_check_in_fields(embed: discord.Embed, text: str) -> None:
-    embed.add_field(name="Try this version", value=f"`{_smoother_version(text)}`", inline=False)
-    embed.add_field(name="Follow-up", value=_follow_up_question(text), inline=False)
-    embed.add_field(name="Useful phrase", value=_useful_phrase(text), inline=False)
+    embed.add_field(name="A smoother way", value=f"`{_smoother_version(text)}`", inline=False)
+    embed.add_field(name="Keep talking", value=_follow_up_question(text), inline=False)
+    embed.add_field(name="Helpful phrase", value=_useful_phrase(text), inline=False)
+
+
+def _reply_seed(text: str, display_name: str) -> int:
+    return sum(ord(ch) for ch in f"{display_name}:{text}")
+
+
+def _check_in_title(text: str, display_name: str) -> str:
+    if _is_travel_text(text):
+        return "That sounds like a real travel goal"
+    return CHECK_IN_TITLES[_reply_seed(text, display_name) % len(CHECK_IN_TITLES)]
+
+
+def _check_in_description(text: str, display_name: str) -> str:
+    lower = text.lower()
+    if "france" in lower or "eiffel" in lower or "evil tour" in lower or "evil tower" in lower:
+        return (
+            "I get what you mean. Small correction: people usually say **the Eiffel Tower**. "
+            "Your idea is clear, so now we can make it sound more natural."
+        )
+    if _is_travel_text(text):
+        return (
+            "Travel is a nice conversation topic because you can add places, food, plans, and reasons. "
+            "Here is a smoother version."
+        )
+    return CHECK_IN_DESCRIPTIONS[_reply_seed(text, display_name) % len(CHECK_IN_DESCRIPTIONS)]
 
 
 def build_hub_embed() -> discord.Embed:
@@ -247,10 +335,8 @@ def _reply_embed_for_text(text: str, display_name: str) -> discord.Embed:
         embed = discord.Embed(title=title, description=desc)
         _add_check_in_fields(embed, text)
     else:
-        title = "Nice check-in"
-        desc = (
-            "You gave me a real sentence to work with. Here is a simple way to keep the conversation going."
-        )
+        title = _check_in_title(text, display_name)
+        desc = _check_in_description(text, display_name)
         embed = discord.Embed(title=title, description=desc)
         _add_check_in_fields(embed, text)
 
