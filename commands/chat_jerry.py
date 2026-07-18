@@ -248,7 +248,7 @@ class ChatJerryPublisher:
         content = (
             "Chat with Jerry\n\n"
             'Send a normal message like "hey", "how are you?", or "give me a question". '
-            "Jerry replies once, like a simple chat."
+            "Jerry replies once to each message, like a simple chat."
         )
         existing_id_raw = await self._repo.kv_get(guild_id, KV_CHAT_JERRY_HUB_MSG)
         if existing_id_raw:
@@ -280,7 +280,6 @@ class ChatJerryCog(commands.Cog):
         self.bot = bot
         self.repo = repo
         self.publisher = publisher
-        self._last_reply_at: dict[int, float] = {}
 
     async def handle_message(self, message: discord.Message) -> None:
         if message.author.bot or message.channel.id != CHAT_WITH_JERRY_CHANNEL_ID:
@@ -291,10 +290,6 @@ class ChatJerryCog(commands.Cog):
             return
 
         now = time.time()
-        last = self._last_reply_at.get(message.author.id, 0.0)
-        if now - last < 8:
-            return
-        self._last_reply_at[message.author.id] = now
 
         try:
             if message.guild:
