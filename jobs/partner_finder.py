@@ -23,6 +23,8 @@ KV_EN_HUB_MSG_ID = "partner_hub_message_id"
 KV_NL_HUB_MSG_ID = "partner_hub_nl_message_id"
 KV_EN_WEEKLY_SPEAKERS_MSG_ID = "partner_weekly_speakers_message_id"
 KV_NL_WEEKLY_SPEAKERS_MSG_ID = "partner_weekly_speakers_nl_message_id"
+KV_EN_WEEKLY_WELL_DONE_DATE = "partner_weekly_well_done_date"
+KV_NL_WEEKLY_WELL_DONE_DATE = "partner_weekly_well_done_nl_date"
 
 DURATION_OPTIONS: tuple[tuple[int, str, str], ...] = (
     (15 * 60, "15 min", "15 min"),
@@ -35,6 +37,7 @@ DURATION_OPTIONS: tuple[tuple[int, str, str], ...] = (
 DEFAULT_DURATION_SECONDS = 30 * 60
 MAX_WEEKLY_SPEAKERS = 20
 WEEKLY_SPEAKERS_REFRESH_SECONDS = 15 * 60
+WEEKLY_WELL_DONE_POST_HOUR = 18
 WEEKLY_SPEAKERS_FOOTER_EN = "active this week:en:v2"
 WEEKLY_SPEAKERS_FOOTER_NL = "actief deze week:nl:v2"
 
@@ -69,6 +72,14 @@ def _amsterdam_week_start_epoch() -> int:
         microsecond=0,
     )
     return int(week_start.timestamp())
+
+
+def _amsterdam_now() -> dt.datetime:
+    try:
+        tz = ZoneInfo("Europe/Amsterdam")
+        return dt.datetime.now(tz=tz)
+    except ZoneInfoNotFoundError:
+        return dt.datetime.now()
 
 
 def _conversation_starters(*, is_nl: bool) -> str:
@@ -364,8 +375,10 @@ class PartnerFinder:
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             try:
+                await self._maybe_post_weekly_well_done(is_nl=False)
                 await self._publish_weekly_speakers_message(is_nl=False)
                 if self.dutch_guild_id:
+                    await self._maybe_post_weekly_well_done(is_nl=True)
                     await self._publish_weekly_speakers_message(is_nl=True)
             except Exception:
                 log.exception("PartnerFinder: weekly speakers refresh failed")
@@ -598,6 +611,33 @@ class PartnerFinder:
         hidden_count = max(0, len(user_ids) - len(names))
         return names, hidden_count
 
+    async def _weekly_speaker_mentions(
+        self,
+        *,
+        guild_id: int,
+        is_nl: bool,
+    ) -> tuple[list[str], int]:
+        guild = self.bot.get_guild(guild_id)
+        user_ids = await self._weekly_speaker_ids(guild_id)
+        mentions: list[str] = []
+
+        for user_id in user_ids:
+            member = None
+            try:
+                if guild is not None:
+                    member = guild.get_member(user_id) or await guild.fetch_member(user_id)
+            except Exception:
+                log.info("PartnerFinder: could not fetch weekly well-done user=%s is_nl=%s", user_id, is_nl)
+
+            if member is None or member.bot:
+                continue
+            mentions.append(member.mention)
+            if len(mentions) >= MAX_WEEKLY_SPEAKERS:
+                break
+
+        hidden_count = max(0, len(user_ids) - len(mentions))
+        return mentions, hidden_count
+
     async def _build_weekly_speakers_embed(self, *, guild_id: int, is_nl: bool) -> discord.Embed:
         names, hidden_count = await self._weekly_speaker_names(guild_id=guild_id, is_nl=is_nl)
         return build_weekly_speakers_embed(names, hidden_count=hidden_count, is_nl=is_nl)
@@ -641,6 +681,58 @@ class PartnerFinder:
                 log.info("PartnerFinder: posted weekly speakers message %s is_nl=%s", sent.id, is_nl)
             except Exception:
                 log.exception("PartnerFinder: failed to post weekly speakers message is_nl=%s", is_nl)
+
+    async def _maybe_post_weekly_well_done(self, *, is_nl: bool) -> None:
+        guild_id = self.dutch_guild_id if is_nl else self.guild_id
+        kv_key = KV_NL_WEEKLY_WELL_DONE_DATE if is_nl else KV_EN_WEEKLY_WELL_DONE_DATE
+
+        if guild_id is None:
+            return
+
+        now = _amsterdam_now()
+        if now.weekday() != 6 or now.hour < WEEKLY_WELL_DONE_POST_HOUR:
+            return
+
+        day_key = now.date().isoformat()
+        if await self.repo.kv_get(guild_id, kv_key) == day_key:
+            return
+
+        mentions, hidden_count = await self._weekly_speaker_mentions(guild_id=guild_id, is_nl=is_nl)
+        await self.repo.kv_set(guild_id, kv_key, day_key)
+        if not mentions:
+            return
+
+        channel = await self._fetch_partner_channel(is_nl=is_nl)
+        if channel is None:
+            return
+
+        if is_nl:
+            content = (
+                "Zondag compliment voor iedereen die deze week in voice heeft geoefend, "
+                "voordat de lijst maandag opnieuw begint:\n"
+                f"{' '.join(mentions)}\n\n"
+                "Goed gedaan. Geen scorebord, gewoon mooi dat jullie zijn komen oefenen."
+            )
+            if hidden_count:
+                content += f"\nEn nog {hidden_count} anderen hebben ook geoefend."
+        else:
+            content = (
+                "Sunday well done to everyone who practiced in voice this week, "
+                "before the list starts fresh on Monday:\n"
+                f"{' '.join(mentions)}\n\n"
+                "Well done. No leaderboard, just glad you showed up to practice."
+            )
+            if hidden_count:
+                content += f"\nAnd {hidden_count} more people practiced too."
+
+        try:
+            await channel.send(
+                content,
+                allowed_mentions=discord.AllowedMentions(users=True),
+            )
+            log.info("PartnerFinder: posted Sunday well-done message is_nl=%s", is_nl)
+        except Exception:
+            log.exception("PartnerFinder: failed to post Sunday well-done message is_nl=%s", is_nl)
 
     async def _delete_duplicate_weekly_speakers_messages(
         self,
