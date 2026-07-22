@@ -10,7 +10,11 @@ import discord
 
 from commands.admin_refresh import ADMIN_LOGS_CHANNEL_ID, ADMIN_TESTING_CHANNEL_ID
 from commands.ask_jerry import ASK_JERRY_CHANNEL_ID, NL_ASK_JERRY_CHANNEL_ID
-from commands.chat_jerry import CHAT_WITH_JERRY_CHANNEL_ID
+from commands.chat_jerry import (
+    CHAT_WITH_JERRY_CHANNEL_ID,
+    EN_DAILY_CHAT_CHANNEL_ID,
+    NL_DAILY_CHAT_CHANNEL_ID,
+)
 from commands.dictionary import EN_VOCAB_CHANNEL_ID
 from commands.testimonials import EN_SUCCESS_CHANNEL_ID, NL_SUCCESS_CHANNEL_ID
 from jobs import private_lessons as lesson_config
@@ -32,6 +36,8 @@ TEXT_CHANNELS: tuple[tuple[str, int, bool], ...] = (
     ("English Ask Jerry", ASK_JERRY_CHANNEL_ID, True),
     ("Dutch Ask Jerry", NL_ASK_JERRY_CHANNEL_ID, True),
     ("Chat with Jerry", CHAT_WITH_JERRY_CHANNEL_ID, True),
+    ("English daily chat question", EN_DAILY_CHAT_CHANNEL_ID, False),
+    ("Dutch daily chat question", NL_DAILY_CHAT_CHANNEL_ID, False),
     ("English partner finder", EN_LOOKING_CHANNEL_ID, True),
     ("Dutch partner finder", NL_LOOKING_CHANNEL_ID, True),
     ("English testimonials", EN_SUCCESS_CHANNEL_ID, True),

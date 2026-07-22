@@ -19,8 +19,11 @@ from discord.ext import commands
 log = logging.getLogger("commands.chat_jerry")
 
 CHAT_WITH_JERRY_CHANNEL_ID = 1523060567621763163
+EN_DAILY_CHAT_CHANNEL_ID = 1181652390835916814
+NL_DAILY_CHAT_CHANNEL_ID = 1336419902155919410
 KV_CHAT_JERRY_HUB_MSG = "chat_jerry_hub_message_id_v1"
-KV_CHAT_JERRY_DAILY_DATE = "chat_jerry_daily_check_in_date_v2"
+KV_CHAT_JERRY_DAILY_EN_DATE = "chat_jerry_daily_check_in_en_date_v1"
+KV_CHAT_JERRY_DAILY_NL_DATE = "chat_jerry_daily_check_in_nl_date_v1"
 REPLY_RULES_PATH = Path(__file__).with_name("chat_jerry_replies.json")
 
 MIN_TYPING_DELAY_SECONDS = 1.0
@@ -38,6 +41,60 @@ QUESTION_SETS = [
     "Where would you like to travel?",
     "What do you want to get better at?",
     "What was the best part of your day?",
+]
+
+EN_DAILY_QUESTIONS: list[str] = [
+    "What is one small thing you want to practise saying today?",
+    "What was a good moment from yesterday?",
+    "What is something you are looking forward to this week?",
+    "What is one habit that helps you learn a language?",
+    "What is something you can explain in two simple sentences?",
+    "What is one thing you found difficult recently, and how did you handle it?",
+    "What advice would you give to someone who is nervous about speaking?",
+    "What is one sentence you use often in daily life?",
+    "What is something you learned this week?",
+    "What is a place you know well, and why do you like it?",
+    "What is one question you can ask someone to start a conversation?",
+    "What is something you would like to do more often?",
+    "What is one thing you are proud of?",
+    "What is a small goal you can finish today?",
+    "What is something you usually do in the morning?",
+    "What is a word or phrase you want to use more confidently?",
+    "What is something that makes a conversation easier for you?",
+    "What is one mistake you made that taught you something useful?",
+    "What is something you can describe without translating first?",
+    "What is one friendly follow-up question you can ask after someone answers?",
+    "What is a simple opinion you can explain with one reason?",
+    "What is something you do when you do not know the right word?",
+    "What is a topic you can talk about for one minute?",
+    "What is one thing you want to ask the community today?",
+]
+
+NL_DAILY_QUESTIONS: list[str] = [
+    "Wat is een klein ding dat je vandaag wilt oefenen met zeggen?",
+    "Wat was een goed moment van gisteren?",
+    "Waar kijk je deze week naar uit?",
+    "Welke gewoonte helpt jou om een taal te leren?",
+    "Wat kun je uitleggen in twee simpele zinnen?",
+    "Wat vond je de laatste tijd moeilijk, en hoe ging je ermee om?",
+    "Welk advies zou je geven aan iemand die zenuwachtig is om te spreken?",
+    "Welke zin gebruik je vaak in het dagelijks leven?",
+    "Wat heb je deze week geleerd?",
+    "Welke plek ken je goed, en waarom vind je die plek fijn?",
+    "Welke vraag kun je stellen om een gesprek te beginnen?",
+    "Wat zou je vaker willen doen?",
+    "Waar ben je trots op?",
+    "Welk klein doel kun je vandaag afmaken?",
+    "Wat doe je meestal in de ochtend?",
+    "Welk woord of welke zin wil je met meer vertrouwen gebruiken?",
+    "Wat maakt een gesprek makkelijker voor jou?",
+    "Welke fout heeft jou iets nuttigs geleerd?",
+    "Wat kun je beschrijven zonder eerst te vertalen?",
+    "Welke vriendelijke vervolgvraag kun je stellen nadat iemand antwoord geeft?",
+    "Welke simpele mening kun je uitleggen met een reden?",
+    "Wat doe je als je het juiste woord niet weet?",
+    "Over welk onderwerp kun je een minuut praten?",
+    "Wat wil je vandaag aan de community vragen?",
 ]
 
 DEFAULT_REPLY_RULES: dict[str, Any] = {
@@ -59,6 +116,12 @@ def _pick_question(seed: int | None = None) -> str:
     if seed is None:
         return random.choice(QUESTION_SETS)
     return QUESTION_SETS[seed % len(QUESTION_SETS)]
+
+
+def _daily_question_for_date(date_key: str, *, is_nl: bool = False) -> str:
+    seed = sum(ord(ch) for ch in date_key)
+    questions = NL_DAILY_QUESTIONS if is_nl else EN_DAILY_QUESTIONS
+    return questions[seed % len(questions)]
 
 
 def _clean_text(text: str) -> str:
@@ -234,15 +297,22 @@ class ChatJerryPublisher:
         self._bot = bot
         self._repo = repo
 
-    async def publish(self, guild_id: int) -> None:
-        channel = self._bot.get_channel(CHAT_WITH_JERRY_CHANNEL_ID)
+    async def _get_text_channel(self, channel_id: int) -> discord.TextChannel | None:
+        channel = self._bot.get_channel(channel_id)
         if channel is None:
             try:
-                channel = await self._bot.fetch_channel(CHAT_WITH_JERRY_CHANNEL_ID)
+                channel = await self._bot.fetch_channel(channel_id)
             except Exception:
-                log.warning("ChatJerry: could not fetch channel %s", CHAT_WITH_JERRY_CHANNEL_ID)
-                return
+                log.warning("ChatJerry: could not fetch channel %s", channel_id)
+                return None
         if not isinstance(channel, discord.TextChannel):
+            log.warning("ChatJerry: channel %s is not a text channel", channel_id)
+            return None
+        return channel
+
+    async def publish(self, guild_id: int) -> None:
+        channel = await self._get_text_channel(CHAT_WITH_JERRY_CHANNEL_ID)
+        if channel is None:
             return
 
         content = (
@@ -271,8 +341,60 @@ class ChatJerryPublisher:
         except Exception:
             log.exception("ChatJerry: failed to post hub")
 
-    async def publish_daily_question(self, guild_id: int, *, force: bool = False) -> None:
-        return
+    async def publish_daily_question(
+        self,
+        guild_id: int,
+        *,
+        force: bool = False,
+        is_nl: bool = False,
+        date_key: str | None = None,
+    ) -> None:
+        if date_key is None:
+            try:
+                now = dt.datetime.now(ZoneInfo("Europe/Amsterdam"))
+            except Exception:
+                now = dt.datetime.now()
+            date_key = now.date().isoformat()
+
+        channel_id = NL_DAILY_CHAT_CHANNEL_ID if is_nl else EN_DAILY_CHAT_CHANNEL_ID
+        kv_key = KV_CHAT_JERRY_DAILY_NL_DATE if is_nl else KV_CHAT_JERRY_DAILY_EN_DATE
+
+        if not force:
+            last_posted = await self._repo.kv_get(guild_id, kv_key)
+            if last_posted == date_key:
+                return
+
+        channel = await self._get_text_channel(channel_id)
+        if channel is None:
+            return
+
+        question = _daily_question_for_date(date_key, is_nl=is_nl)
+        if is_nl:
+            content = (
+                "Goedemorgen. Dagelijkse vraag:\n\n"
+                f"**{question}**\n\n"
+                "Antwoord met een of twee zinnen. Fouten zijn welkom."
+            )
+        else:
+            content = (
+                "Good morning. Daily question:\n\n"
+                f"**{question}**\n\n"
+                "Reply with one or two sentences. Mistakes are welcome."
+            )
+
+        try:
+            await channel.send(content, allowed_mentions=discord.AllowedMentions.none())
+            if not force:
+                await self._repo.kv_set(guild_id, kv_key, date_key)
+            log.info(
+                "ChatJerry: posted daily question guild=%s channel=%s date=%s force=%s",
+                guild_id,
+                channel_id,
+                date_key,
+                force,
+            )
+        except Exception:
+            log.exception("ChatJerry: failed to post daily question channel=%s", channel_id)
 
 
 class ChatJerryCog(commands.Cog):

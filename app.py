@@ -20,17 +20,19 @@ from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
 from commands.chat_jerry import setup as setup_chat_jerry, ChatJerryHubView
-from commands.admin_refresh import setup as setup_admin_refresh
+from commands.admin_refresh import ADMIN_TESTING_CHANNEL_ID, setup as setup_admin_refresh
 from commands.admin_health import setup as setup_admin_health
 from commands.community_guide import setup as setup_community_guide
 from commands.jokes import setup as setup_jokes
 from jobs.word_of_the_day import WordOfTheDayJob
+from jobs.daily_questions import DailyQuestionJob
 from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
 from jobs.testimonial_outreach import TestimonialOutreachJob
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons_summer import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
 log = logging.getLogger("app")
+EN_GUILD_ID = 1181652389732831323
 NL_GUILD_ID = 1336419808811679754  # Dutch guild fallback
 
 
@@ -71,6 +73,7 @@ class SpeakingBot(commands.Bot):
         self._partner_finder: PartnerFinder | None = None
         self._ask_jerry_publisher = None
         self._chat_jerry_publisher = None
+        self._daily_question_job: DailyQuestionJob | None = None
         self._wotd_job: WordOfTheDayJob | None = None
         self._testimonial_publisher = None
         self._testimonial_outreach: TestimonialOutreachJob | None = None
@@ -162,6 +165,41 @@ class SpeakingBot(commands.Bot):
                 "Word of the day is being posted now.", ephemeral=True
             )
             await self._wotd_job.post_en_now()
+
+        @self.tree.command(
+            name="dailyquestionnow",
+            description="Post today's daily chat question in both community chat channels",
+        )
+        async def cmd_dailyquestionnow(interaction: discord.Interaction) -> None:
+            if int(getattr(interaction, "channel_id", 0) or 0) != ADMIN_TESTING_CHANNEL_ID:
+                await interaction.response.send_message(
+                    f"Use this in <#{ADMIN_TESTING_CHANNEL_ID}> so admin actions stay in one place.",
+                    ephemeral=True,
+                )
+                return
+
+            if self._chat_jerry_publisher is None:
+                await interaction.response.send_message(
+                    "Chat Jerry is not ready yet. Try again in a moment.",
+                    ephemeral=True,
+                )
+                return
+
+            await interaction.response.defer(ephemeral=True)
+            await self._chat_jerry_publisher.publish_daily_question(
+                EN_GUILD_ID,
+                force=True,
+                is_nl=False,
+            )
+            await self._chat_jerry_publisher.publish_daily_question(
+                self.dutch_guild_id or NL_GUILD_ID,
+                force=True,
+                is_nl=True,
+            )
+            await interaction.followup.send(
+                "Posted a daily question in both community chat channels.",
+                ephemeral=True,
+            )
 
         @self.tree.command(
             name="herplaats",
@@ -299,13 +337,22 @@ class SpeakingBot(commands.Bot):
                 except Exception:
                     log.exception("AskJerry: failed to publish NL hub")
 
-        # Chat with Jerry hub and daily starter
+        # Chat with Jerry hub
         if self._chat_jerry_publisher:
             try:
                 await self._chat_jerry_publisher.publish(self.guild_id)
-                await self._chat_jerry_publisher.publish_daily_question(self.guild_id)
             except Exception:
                 log.exception("ChatJerry: failed to publish EN chat hub")
+
+        # Daily chat question
+        if self._chat_jerry_publisher and not self._daily_question_job:
+            self._daily_question_job = DailyQuestionJob(
+                bot=self,
+                publisher=self._chat_jerry_publisher,
+                en_guild_id=EN_GUILD_ID,
+                nl_guild_id=self.dutch_guild_id or NL_GUILD_ID,
+            )
+            log.info("DailyQuestionJob started.")
 
         # Session reminders
         # Testimonial hubs
