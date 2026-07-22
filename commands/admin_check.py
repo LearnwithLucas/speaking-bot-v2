@@ -20,6 +20,7 @@ from commands.testimonials import EN_SUCCESS_CHANNEL_ID, NL_SUCCESS_CHANNEL_ID
 from jobs import private_lessons as lesson_config
 from jobs.nudges import NL_ANNOUNCEMENTS_CHANNEL_ID
 from jobs.partner_finder import EN_LOOKING_CHANNEL_ID, NL_LOOKING_CHANNEL_ID
+from jobs.partner_finder import I_WANT_TO_SPEAK_ROLE_ID
 from jobs.word_of_the_day import EN_WOTD_CHANNEL_ID, NL_WOTD_CHANNEL_ID
 
 log = logging.getLogger(__name__)
@@ -73,6 +74,31 @@ def _intent_lines(bot: discord.Client) -> list[str]:
         f"{'OK' if intents.members else 'WARN'} members intent requested",
         f"{'OK' if intents.voice_states else 'WARN'} voice state intent requested",
     ]
+
+
+def _speaking_role_status(bot: Any) -> str:
+    guild_id = getattr(bot, "guild_id", None)
+    guild = bot.get_guild(guild_id) if guild_id is not None else None
+    if guild is None:
+        return f"WARN English guild unavailable, cannot inspect role `{I_WANT_TO_SPEAK_ROLE_ID}`"
+
+    role = guild.get_role(I_WANT_TO_SPEAK_ROLE_ID)
+    if role is None:
+        return f"FAIL role `{I_WANT_TO_SPEAK_ROLE_ID}` not found"
+
+    me = guild.me
+    if me is None:
+        return "WARN cannot inspect bot member role permissions"
+    if not me.guild_permissions.manage_roles:
+        return "FAIL bot is missing Manage Roles permission"
+    if role >= me.top_role:
+        return "FAIL bot top role must be above the I want to speak role"
+    if not role.mentionable and not me.guild_permissions.mention_everyone:
+        return (
+            f"WARN role found and manageable: `{role.name}`, "
+            "but role mentions may not notify unless the role is mentionable."
+        )
+    return f"OK role found and manageable: `{role.name}`"
 
 
 def _missing_permissions(channel: discord.TextChannel | discord.Thread, bot: discord.Client, *, needs_manage: bool) -> list[str]:
@@ -183,6 +209,7 @@ async def setup(bot: Any) -> None:
         )
         embed.add_field(name="Database", value=f"{db_level} {db_message}", inline=False)
         embed.add_field(name="Requested Intents", value="\n".join(_intent_lines(bot)), inline=False)
+        embed.add_field(name="I Want To Speak Role", value=_speaking_role_status(bot), inline=False)
         embed.add_field(
             name="Guilds",
             value=(

@@ -21,6 +21,8 @@ OPEN_CONVERSATION_CHANNEL_ID = 1456551629301219420  # 🌍 | Open Conversation
 
 KV_EN_HUB_MSG_ID = "partner_hub_message_id"
 KV_NL_HUB_MSG_ID = "partner_hub_nl_message_id"
+I_WANT_TO_SPEAK_ROLE_ID = 1529421061727322172
+KV_EN_HUB_WEEKLY_REPOST_DATE = "partner_hub_weekly_repost_date_v1"
 KV_EN_WEEKLY_SPEAKERS_MSG_ID = "partner_weekly_speakers_message_id"
 KV_NL_WEEKLY_SPEAKERS_MSG_ID = "partner_weekly_speakers_nl_message_id"
 KV_EN_WEEKLY_WELL_DONE_DATE = "partner_weekly_well_done_date"
@@ -38,6 +40,7 @@ DEFAULT_DURATION_SECONDS = 30 * 60
 MAX_WEEKLY_SPEAKERS = 20
 WEEKLY_SPEAKERS_REFRESH_SECONDS = 15 * 60
 WEEKLY_WELL_DONE_POST_HOUR = 18
+MONDAY_HUB_REPOST_HOUR = 9
 WEEKLY_SPEAKERS_FOOTER_EN = "active this week:en:v2"
 WEEKLY_SPEAKERS_FOOTER_NL = "actief deze week:nl:v2"
 
@@ -100,6 +103,21 @@ def _conversation_starters(*, is_nl: bool) -> str:
     )
 
 
+def _hub_content(*, is_nl: bool, weekly_ping: bool = False) -> str | None:
+    if is_nl:
+        return None
+    role_mention = f"<@&{I_WANT_TO_SPEAK_ROLE_ID}>"
+    if weekly_ping:
+        return (
+            f"{role_mention} New week, new speaking practice.\n"
+            "Click **I want to speak** if you want to stay on the active speaker ping list."
+        )
+    return (
+        "Want to be pinged when people are looking for a chat? Click **I want to speak**.\n"
+        f"Members can mention {role_mention} when they are ready to talk."
+    )
+
+
 # =====================
 # HUB EMBEDS
 # =====================
@@ -118,6 +136,7 @@ def build_en_embed(available_count: int = 0) -> discord.Embed:
             "Choose how long you are available to practice.\n"
             "If someone else is free at the same time, you both get a DM with the Open Conversation channel.\n"
             "You can also plan a rough time for later.\n"
+            "Use **I want to speak** to join or leave the active speaker ping role.\n"
             "You can refresh or change your time whenever you want.\n\n"
             f"**Right now:** {status}"
         ),
@@ -245,6 +264,14 @@ class PartnerHubView(discord.ui.View):
             ephemeral=True,
         )
 
+    async def _toggle_speaking_role(self, interaction: discord.Interaction) -> None:
+        if self._finder is None:
+            await interaction.response.send_message(
+                "Not ready yet. Try again in a moment.", ephemeral=True
+            )
+            return
+        await self._finder.toggle_speaking_role(interaction)
+
     @discord.ui.button(label="15 min", style=discord.ButtonStyle.secondary, custom_id="partner:free:en:15m:v3", row=0)
     async def free_15(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._mark(interaction, duration_seconds=15 * 60)
@@ -272,6 +299,10 @@ class PartnerHubView(discord.ui.View):
     @discord.ui.button(label="Plan for later", style=discord.ButtonStyle.primary, custom_id="partner:plan:en:v1", row=2)
     async def plan_later(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._plan_later(interaction, is_nl=False)
+
+    @discord.ui.button(label="I want to speak", style=discord.ButtonStyle.primary, custom_id="partner:speak_role:en:v1", row=2)
+    async def want_to_speak(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self._toggle_speaking_role(interaction)
 
 
 class PartnerHubViewNL(discord.ui.View):
@@ -375,6 +406,7 @@ class PartnerFinder:
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             try:
+                await self._maybe_repost_monday_hub()
                 await self._maybe_post_weekly_well_done(is_nl=False)
                 await self._publish_weekly_speakers_message(is_nl=False)
                 if self.dutch_guild_id:
@@ -465,6 +497,65 @@ class PartnerFinder:
             )
 
         asyncio.create_task(self._expire_after(uid, duration_seconds, expires_at=expires_at, is_nl=is_nl))
+
+    async def toggle_speaking_role(self, interaction: discord.Interaction) -> None:
+        if interaction.guild is None:
+            await interaction.response.send_message(
+                "This only works inside the server.", ephemeral=True
+            )
+            return
+        if interaction.guild.id != self.guild_id:
+            await interaction.response.send_message(
+                "This role is only configured for the English community.",
+                ephemeral=True,
+            )
+            return
+        if not isinstance(interaction.user, discord.Member):
+            await interaction.response.send_message(
+                "I could not read your server membership. Try again in a moment.",
+                ephemeral=True,
+            )
+            return
+
+        role = interaction.guild.get_role(I_WANT_TO_SPEAK_ROLE_ID)
+        if role is None:
+            await interaction.response.send_message(
+                "I could not find the **I want to speak** role. Please tell Lucas to check the role ID.",
+                ephemeral=True,
+            )
+            return
+
+        try:
+            if role in interaction.user.roles:
+                await interaction.user.remove_roles(
+                    role,
+                    reason="SpeakingBot: user opted out of I want to speak role",
+                )
+                await interaction.response.send_message(
+                    "Removed **I want to speak**. You will not be pinged for casual chat requests.",
+                    ephemeral=True,
+                )
+            else:
+                await interaction.user.add_roles(
+                    role,
+                    reason="SpeakingBot: user opted into I want to speak role",
+                )
+                await interaction.response.send_message(
+                    "Added **I want to speak**. People can tag this role when they want a chat.",
+                    ephemeral=True,
+                )
+        except discord.Forbidden:
+            log.warning("PartnerFinder: missing permission to manage role %s", I_WANT_TO_SPEAK_ROLE_ID)
+            await interaction.response.send_message(
+                "I do not have permission to manage that role yet. Please check Manage Roles and role hierarchy.",
+                ephemeral=True,
+            )
+        except Exception:
+            log.exception("PartnerFinder: failed to toggle speaking role for user=%s", interaction.user.id)
+            await interaction.response.send_message(
+                "Something went wrong while updating your role. Try again in a moment.",
+                ephemeral=True,
+            )
 
     async def _expire_after(self, user_id: int, seconds: float, *, expires_at: float, is_nl: bool) -> None:
         await asyncio.sleep(seconds)
@@ -771,6 +862,55 @@ class PartnerFinder:
         except Exception:
             log.exception("PartnerFinder: failed to scan for duplicate weekly speakers messages")
 
+    async def _delete_old_hub_message(
+        self,
+        channel: discord.TextChannel,
+        *,
+        message_id: int,
+    ) -> None:
+        try:
+            msg = await channel.fetch_message(message_id)
+        except Exception:
+            return
+
+        try:
+            await msg.unpin(reason="SpeakingBot: replaced weekly partner hub")
+        except discord.NotFound:
+            pass
+        except discord.Forbidden:
+            log.info("PartnerFinder: missing permission to unpin old hub message %s", message_id)
+        except Exception:
+            pass
+
+        try:
+            await msg.delete()
+            log.info("PartnerFinder: deleted old hub message %s", message_id)
+        except discord.Forbidden:
+            log.info("PartnerFinder: missing permission to delete old hub message %s", message_id)
+            try:
+                await msg.edit(view=None)
+            except Exception:
+                log.exception("PartnerFinder: could not clear old hub view %s", message_id)
+        except Exception:
+            log.exception("PartnerFinder: failed to delete old hub message %s", message_id)
+
+    async def _maybe_repost_monday_hub(self) -> None:
+        now = _amsterdam_now()
+        if now.weekday() != 0 or now.hour < MONDAY_HUB_REPOST_HOUR:
+            return
+
+        date_key = now.date().isoformat()
+        if await self.repo.kv_get(self.guild_id, KV_EN_HUB_WEEKLY_REPOST_DATE) == date_key:
+            return
+
+        posted = await self.publish_hub(
+            is_nl=False,
+            force_new=True,
+            weekly_ping=True,
+        )
+        if posted:
+            await self.repo.kv_set(self.guild_id, KV_EN_HUB_WEEKLY_REPOST_DATE, date_key)
+
     async def _update_hub_embed(self, *, is_nl: bool) -> None:
         self._clean_expired(is_nl)
         count = len(self._pool(is_nl))
@@ -790,43 +930,71 @@ class PartnerFinder:
 
         embed = build_nl_embed(count) if is_nl else build_en_embed(count)
         view = PartnerHubViewNL(finder=self) if is_nl else PartnerHubView(finder=self)
+        content = _hub_content(is_nl=is_nl)
 
         try:
             msg = await channel.fetch_message(int(existing_id_raw))
-            await msg.edit(embed=embed, view=view)
+            await msg.edit(
+                content=content,
+                embed=embed,
+                view=view,
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
             await self._publish_weekly_speakers_message(is_nl=is_nl)
         except Exception:
             log.warning("PartnerFinder: could not update hub embed is_nl=%s", is_nl)
 
-    async def publish_hub(self, *, is_nl: bool = False) -> None:
+    async def publish_hub(
+        self,
+        *,
+        is_nl: bool = False,
+        force_new: bool = False,
+        weekly_ping: bool = False,
+    ) -> bool:
         kv_key = KV_NL_HUB_MSG_ID if is_nl else KV_EN_HUB_MSG_ID
         guild_id = self.dutch_guild_id if is_nl else self.guild_id
 
         if guild_id is None:
-            return
+            return False
 
         channel = await self._fetch_partner_channel(is_nl=is_nl)
         if channel is None:
-            return
+            return False
 
         self._clean_expired(is_nl)
         count = len(self._pool(is_nl))
         embed = build_nl_embed(count) if is_nl else build_en_embed(count)
         view = PartnerHubViewNL(finder=self) if is_nl else PartnerHubView(finder=self)
+        content = _hub_content(is_nl=is_nl, weekly_ping=weekly_ping)
+        allowed_mentions = (
+            discord.AllowedMentions(roles=True)
+            if weekly_ping and not is_nl
+            else discord.AllowedMentions.none()
+        )
 
         existing_id_raw = await self.repo.kv_get(guild_id, kv_key)
-        if existing_id_raw:
+        if existing_id_raw and not force_new:
             try:
                 msg = await channel.fetch_message(int(existing_id_raw))
-                await msg.edit(embed=embed, view=view)
+                await msg.edit(
+                    content=content,
+                    embed=embed,
+                    view=view,
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
                 await self._publish_weekly_speakers_message(is_nl=is_nl)
                 log.info("PartnerFinder: updated hub message %s is_nl=%s", existing_id_raw, is_nl)
-                return
+                return True
             except Exception:
                 log.warning("PartnerFinder: could not edit hub message, recreating is_nl=%s", is_nl)
 
         try:
-            sent = await channel.send(embed=embed, view=view)
+            sent = await channel.send(
+                content=content,
+                embed=embed,
+                view=view,
+                allowed_mentions=allowed_mentions,
+            )
             await self.repo.kv_set(guild_id, kv_key, str(sent.id))
             await self._publish_weekly_speakers_message(is_nl=is_nl)
             log.info("PartnerFinder: posted hub message %s is_nl=%s", sent.id, is_nl)
@@ -836,5 +1004,12 @@ class PartnerFinder:
                 log.warning("PartnerFinder: missing pin permission channel=%s", channel.id)
             except Exception:
                 log.warning("PartnerFinder: could not pin hub message")
+            if force_new and existing_id_raw:
+                try:
+                    await self._delete_old_hub_message(channel, message_id=int(existing_id_raw))
+                except ValueError:
+                    pass
+            return True
         except Exception:
             log.exception("PartnerFinder: failed to post hub message is_nl=%s", is_nl)
+            return False

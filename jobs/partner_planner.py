@@ -12,6 +12,7 @@ log = logging.getLogger("jobs.partner_planner")
 EN_LOOKING_CHANNEL_ID = 1435902125652578434
 NL_LOOKING_CHANNEL_ID = 1484566832982654996
 OPEN_CONVERSATION_CHANNEL_ID = 1456551629301219420
+I_WANT_TO_SPEAK_ROLE_ID = 1529421061727322172
 
 
 @dataclass(frozen=True)
@@ -179,6 +180,12 @@ class PartnerPlanTimeView(discord.ui.View):
             color=discord.Color.blurple(),
         )
         embed.set_footer(text="This post disappears after the planned time." if not self.is_nl else "Dit bericht verdwijnt na het geplande moment.")
+        content = None if self.is_nl else f"<@&{I_WANT_TO_SPEAK_ROLE_ID}>"
+        allowed_mentions = (
+            discord.AllowedMentions(roles=True)
+            if not self.is_nl
+            else discord.AllowedMentions.none()
+        )
 
         view = PlannedPracticeView(
             requester_id=interaction.user.id,
@@ -190,7 +197,12 @@ class PartnerPlanTimeView(discord.ui.View):
 
         try:
             await interaction.response.defer(ephemeral=True)
-            message = await channel.send(embed=embed, view=view)
+            message = await channel.send(
+                content=content,
+                embed=embed,
+                view=view,
+                allowed_mentions=allowed_mentions,
+            )
             asyncio.create_task(_delete_later(message, self.day.expires_after_seconds))
             await interaction.edit_original_response(
                 content=(
