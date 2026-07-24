@@ -19,7 +19,7 @@ def build_suggestion_box_embed() -> discord.Embed:
         title="Suggestion box",
         description=(
             "Have an idea for the community, the bot, lessons, channels, or events?\n\n"
-            "Press the button below and send it privately to the team."
+            "Choose whether to send it with your name or anonymously."
         ),
         color=discord.Color.blurple(),
     )
@@ -37,14 +37,16 @@ class SuggestionModal(discord.ui.Modal, title="Send a suggestion"):
         required=True,
     )
 
-    def __init__(self, *, publisher: "SuggestionBoxPublisher") -> None:
+    def __init__(self, *, publisher: "SuggestionBoxPublisher", anonymous: bool) -> None:
         super().__init__()
         self._publisher = publisher
+        self._anonymous = anonymous
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         await self._publisher.submit_suggestion(
             interaction=interaction,
             suggestion=str(self.suggestion.value).strip(),
+            anonymous=self._anonymous,
         )
 
 
@@ -54,7 +56,7 @@ class SuggestionBoxView(discord.ui.View):
         self._publisher = publisher
 
     @discord.ui.button(
-        label="Send a suggestion",
+        label="Send with my name",
         style=discord.ButtonStyle.primary,
         custom_id="suggestion_box:send:v1",
     )
@@ -70,7 +72,30 @@ class SuggestionBoxView(discord.ui.View):
             )
             return
 
-        await interaction.response.send_modal(SuggestionModal(publisher=self._publisher))
+        await interaction.response.send_modal(
+            SuggestionModal(publisher=self._publisher, anonymous=False)
+        )
+
+    @discord.ui.button(
+        label="Send anonymously",
+        style=discord.ButtonStyle.secondary,
+        custom_id="suggestion_box:send_anonymous:v1",
+    )
+    async def send_anonymous_suggestion(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        if self._publisher is None:
+            await interaction.response.send_message(
+                "Suggestion box is not ready yet. Try again in a moment.",
+                ephemeral=True,
+            )
+            return
+
+        await interaction.response.send_modal(
+            SuggestionModal(publisher=self._publisher, anonymous=True)
+        )
 
 
 class SuggestionBoxPublisher:
@@ -137,6 +162,7 @@ class SuggestionBoxPublisher:
         *,
         interaction: discord.Interaction,
         suggestion: str,
+        anonymous: bool = False,
     ) -> None:
         if not suggestion:
             await interaction.response.send_message(
@@ -155,16 +181,19 @@ class SuggestionBoxPublisher:
 
         user = interaction.user
         embed = discord.Embed(
-            title="New community suggestion",
+            title="New anonymous community suggestion" if anonymous else "New community suggestion",
             description=suggestion,
             color=discord.Color.green(),
             timestamp=dt.datetime.now(dt.timezone.utc),
         )
-        embed.add_field(
-            name="From",
-            value=f"{user.mention}\n`{user.id}`",
-            inline=False,
-        )
+        if anonymous:
+            embed.add_field(name="From", value="Anonymous", inline=False)
+        else:
+            embed.add_field(
+                name="From",
+                value=f"{user.mention}\n`{user.id}`",
+                inline=False,
+            )
         if interaction.guild is not None:
             embed.add_field(
                 name="Server",
@@ -183,12 +212,22 @@ class SuggestionBoxPublisher:
                 allowed_mentions=discord.AllowedMentions.none(),
             )
             await interaction.response.send_message(
-                "Thanks. Your suggestion was sent privately to the admins.",
+                (
+                    "Thanks. Your anonymous suggestion was sent privately to the admins."
+                    if anonymous
+                    else "Thanks. Your suggestion was sent privately to the admins."
+                ),
                 ephemeral=True,
             )
-            log.info("SuggestionBox: submitted suggestion user=%s", user.id)
+            if anonymous:
+                log.info("SuggestionBox: submitted anonymous suggestion")
+            else:
+                log.info("SuggestionBox: submitted suggestion user=%s", user.id)
         except Exception:
-            log.exception("SuggestionBox: failed to submit suggestion user=%s", user.id)
+            if anonymous:
+                log.exception("SuggestionBox: failed to submit anonymous suggestion")
+            else:
+                log.exception("SuggestionBox: failed to submit suggestion user=%s", user.id)
             await interaction.response.send_message(
                 "Something went wrong while sending your suggestion. Try again in a moment.",
                 ephemeral=True,
