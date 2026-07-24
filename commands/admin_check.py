@@ -16,6 +16,7 @@ from commands.chat_jerry import (
     NL_DAILY_CHAT_CHANNEL_ID,
 )
 from commands.dictionary import EN_VOCAB_CHANNEL_ID
+from commands.suggestions import ADMIN_SUGGESTIONS_CHANNEL_ID, SUGGESTION_BOX_CHANNEL_ID
 from commands.testimonials import EN_SUCCESS_CHANNEL_ID, NL_SUCCESS_CHANNEL_ID
 from jobs import private_lessons as lesson_config
 from jobs.nudges import NL_ANNOUNCEMENTS_CHANNEL_ID
@@ -39,6 +40,8 @@ TEXT_CHANNELS: tuple[tuple[str, int, bool], ...] = (
     ("Chat with Jerry", CHAT_WITH_JERRY_CHANNEL_ID, True),
     ("English daily chat question", EN_DAILY_CHAT_CHANNEL_ID, False),
     ("Dutch daily chat question", NL_DAILY_CHAT_CHANNEL_ID, False),
+    ("Suggestion box", SUGGESTION_BOX_CHANNEL_ID, True),
+    ("Admin suggestions", ADMIN_SUGGESTIONS_CHANNEL_ID, False),
     ("English partner finder", EN_LOOKING_CHANNEL_ID, True),
     ("Dutch partner finder", NL_LOOKING_CHANNEL_ID, True),
     ("English testimonials", EN_SUCCESS_CHANNEL_ID, True),

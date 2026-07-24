@@ -20,6 +20,7 @@ from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
 from commands.chat_jerry import setup as setup_chat_jerry, ChatJerryHubView
+from commands.suggestions import setup as setup_suggestions
 from commands.admin_refresh import ADMIN_TESTING_CHANNEL_ID, setup as setup_admin_refresh
 from commands.admin_health import setup as setup_admin_health
 from commands.community_guide import setup as setup_community_guide
@@ -73,6 +74,7 @@ class SpeakingBot(commands.Bot):
         self._partner_finder: PartnerFinder | None = None
         self._ask_jerry_publisher = None
         self._chat_jerry_publisher = None
+        self._suggestion_publisher = None
         self._daily_question_job: DailyQuestionJob | None = None
         self._wotd_job: WordOfTheDayJob | None = None
         self._testimonial_publisher = None
@@ -97,6 +99,13 @@ class SpeakingBot(commands.Bot):
 
         # Load Chat with Jerry cog
         self._chat_jerry_publisher = await setup_chat_jerry(
+            self,
+            self.repo,
+            guild_id=self.guild_id,
+        )
+
+        # Load suggestion box
+        self._suggestion_publisher = await setup_suggestions(
             self,
             self.repo,
             guild_id=self.guild_id,
@@ -343,6 +352,13 @@ class SpeakingBot(commands.Bot):
                 await self._chat_jerry_publisher.publish(self.guild_id)
             except Exception:
                 log.exception("ChatJerry: failed to publish EN chat hub")
+
+        # Suggestion box
+        if self._suggestion_publisher:
+            try:
+                await self._suggestion_publisher.publish(self.guild_id)
+            except Exception:
+                log.exception("SuggestionBox: failed to publish hub")
 
         # Daily chat question
         if self._chat_jerry_publisher and not self._daily_question_job:

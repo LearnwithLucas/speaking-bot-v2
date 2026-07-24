@@ -8,6 +8,11 @@ import discord
 from commands.ask_jerry_summer import apply_ask_jerry_summer_copy
 from commands.chat_jerry import CHAT_WITH_JERRY_CHANNEL_ID, KV_CHAT_JERRY_HUB_MSG, ChatJerryPublisher
 from commands.dictionary import VocabPublisher
+from commands.suggestions import (
+    KV_SUGGESTION_BOX_MSG,
+    SUGGESTION_BOX_CHANNEL_ID,
+    SuggestionBoxPublisher,
+)
 from jobs import private_lessons as lesson_config
 from jobs.private_lessons_summer import PrivateLessonsPublisher
 
@@ -191,6 +196,21 @@ async def setup(bot: Any) -> None:
                 work=chat_jerry.publish(bot.guild_id),
                 channel_id=CHAT_WITH_JERRY_CHANNEL_ID,
                 kv_key=KV_CHAT_JERRY_HUB_MSG,
+            ),
+            refreshed=refreshed,
+            failed=failed,
+        )
+
+        suggestion_box = getattr(bot, "_suggestion_publisher", None)
+        if suggestion_box is None:
+            suggestion_box = SuggestionBoxPublisher(bot=bot, repo=bot.repo)
+        await _run_step(
+            label="Suggestion box",
+            work=_publish_and_verify_message(
+                bot=bot,
+                work=suggestion_box.publish(bot.guild_id),
+                channel_id=SUGGESTION_BOX_CHANNEL_ID,
+                kv_key=KV_SUGGESTION_BOX_MSG,
             ),
             refreshed=refreshed,
             failed=failed,
