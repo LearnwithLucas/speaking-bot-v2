@@ -110,11 +110,11 @@ def _hub_content(*, is_nl: bool, weekly_ping: bool = False) -> str | None:
     if weekly_ping:
         return (
             f"{role_mention} New week, new speaking practice.\n"
-            "Click **I want to speak** if you want to stay on the active speaker ping list."
+            "Click **Ping me for voice chats** if you want people to notify you when they are looking for a speaking partner."
         )
     return (
-        "Want to be pinged when people are looking for a chat? Click **I want to speak**.\n"
-        f"Members can mention {role_mention} when they are ready to talk."
+        f"Want notifications when someone asks, \"Is anybody up for a chat?\"\n"
+        f"Click **Ping me for voice chats** to join or leave {role_mention}."
     )
 
 
@@ -136,7 +136,7 @@ def build_en_embed(available_count: int = 0) -> discord.Embed:
             "Choose how long you are available to practice.\n"
             "If someone else is free at the same time, you both get a DM with the Open Conversation channel.\n"
             "You can also plan a rough time for later.\n"
-            "Use **I want to speak** to join or leave the active speaker ping role.\n"
+            "Use **Ping me for voice chats** to get the notification role people can tag when they want to talk.\n"
             "You can refresh or change your time whenever you want.\n\n"
             f"**Right now:** {status}"
         ),
@@ -300,7 +300,7 @@ class PartnerHubView(discord.ui.View):
     async def plan_later(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._plan_later(interaction, is_nl=False)
 
-    @discord.ui.button(label="I want to speak", style=discord.ButtonStyle.primary, custom_id="partner:speak_role:en:v1", row=2)
+    @discord.ui.button(label="Ping me for voice chats", style=discord.ButtonStyle.primary, custom_id="partner:speak_role:en:v1", row=2)
     async def want_to_speak(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._toggle_speaking_role(interaction)
 
@@ -520,7 +520,7 @@ class PartnerFinder:
         role = interaction.guild.get_role(I_WANT_TO_SPEAK_ROLE_ID)
         if role is None:
             await interaction.response.send_message(
-                "I could not find the **I want to speak** role. Please tell Lucas to check the role ID.",
+                "I could not find the voice chat ping role. Please tell Lucas to check the role ID.",
                 ephemeral=True,
             )
             return
@@ -529,19 +529,19 @@ class PartnerFinder:
             if role in interaction.user.roles:
                 await interaction.user.remove_roles(
                     role,
-                    reason="SpeakingBot: user opted out of I want to speak role",
+                    reason="SpeakingBot: user opted out of voice chat ping role",
                 )
                 await interaction.response.send_message(
-                    "Removed **I want to speak**. You will not be pinged for casual chat requests.",
+                    "Removed the voice chat ping role. You will not be tagged when people ask for a speaking partner.",
                     ephemeral=True,
                 )
             else:
                 await interaction.user.add_roles(
                     role,
-                    reason="SpeakingBot: user opted into I want to speak role",
+                    reason="SpeakingBot: user opted into voice chat ping role",
                 )
                 await interaction.response.send_message(
-                    "Added **I want to speak**. People can tag this role when they want a chat.",
+                    "Added the voice chat ping role. People can tag you when they are looking for a speaking partner.",
                     ephemeral=True,
                 )
         except discord.Forbidden:

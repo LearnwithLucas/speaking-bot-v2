@@ -95,7 +95,7 @@ def _speaking_role_status(bot: Any) -> str:
     if not me.guild_permissions.manage_roles:
         return "FAIL bot is missing Manage Roles permission"
     if role >= me.top_role:
-        return "FAIL bot top role must be above the I want to speak role"
+        return "FAIL bot top role must be above the voice chat ping role"
     if not role.mentionable and not me.guild_permissions.mention_everyone:
         return (
             f"WARN role found and manageable: `{role.name}`, "
@@ -212,7 +212,7 @@ async def setup(bot: Any) -> None:
         )
         embed.add_field(name="Database", value=f"{db_level} {db_message}", inline=False)
         embed.add_field(name="Requested Intents", value="\n".join(_intent_lines(bot)), inline=False)
-        embed.add_field(name="I Want To Speak Role", value=_speaking_role_status(bot), inline=False)
+        embed.add_field(name="Voice Chat Ping Role", value=_speaking_role_status(bot), inline=False)
         embed.add_field(
             name="Guilds",
             value=(
