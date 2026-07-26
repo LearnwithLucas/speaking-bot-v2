@@ -20,6 +20,7 @@ from discord.ext import commands
 log = logging.getLogger("commands.chat_jerry")
 
 CHAT_WITH_JERRY_CHANNEL_ID = 1523060567621763163
+ADMIN_LOGS_CHANNEL_ID = 1340397297053339719
 EN_DAILY_CHAT_CHANNEL_ID = 1181652390835916814
 NL_DAILY_CHAT_CHANNEL_ID = 1336419902155919410
 KV_CHAT_JERRY_HUB_MSG = "chat_jerry_hub_message_id_v1"
@@ -37,6 +38,9 @@ THANKS_WORDS = {"thanks", "thank you", "thx"}
 MIN_KEYWORD_RULE_SCORE = 1
 CONTEXT_TTL_SECONDS = 20 * 60
 CONTEXT_MAX_MESSAGES = 6
+MEMORY_RECALL_AFTER_SECONDS = 60 * 60
+VOICE_BRIDGE_WINDOW_SECONDS = 7 * 24 * 60 * 60
+ACTIVE_VOICE_SECONDS = 45 * 60
 
 TOPIC_PACKS: dict[str, dict[str, list[str]]] = {
     "daily_life": {
@@ -231,6 +235,18 @@ TOPIC_PACKS: dict[str, dict[str, list[str]]] = {
     },
 }
 CONTEXTUAL_TOPIC_IDS = set(TOPIC_PACKS) - {"default"}
+TOPIC_LABELS = {
+    "daily_life": "daily life",
+    "work_study": "work or study",
+    "food": "food",
+    "travel": "travel",
+    "hobbies": "hobbies",
+    "movies_music": "movies or music",
+    "family_friends": "family or friends",
+    "goals_learning": "goals and learning",
+    "weather": "the weather",
+}
+LEVEL_ORDER = {"starter", "easy", "growing", "strong"}
 
 QUESTION_SETS = [
     "How are you today?",
@@ -477,6 +493,95 @@ def _estimate_level(text: str) -> str:
     return "growing"
 
 
+def _preferred_level(memory: dict[str, Any] | None) -> str | None:
+    if not memory:
+        return None
+    level = memory.get("preferred_level")
+    if isinstance(level, str) and level in LEVEL_ORDER:
+        return level
+    return None
+
+
+def _adapt_level_for_memory(level: str, memory: dict[str, Any] | None) -> str:
+    preferred = _preferred_level(memory)
+    if preferred == "easy" and level in {"starter", "easy", "growing"}:
+        return "easy"
+    if preferred == "starter" and level in {"starter", "easy"}:
+        return "starter"
+    return level
+
+
+def _memory_topic_id(memory: dict[str, Any] | None) -> str | None:
+    if not memory:
+        return None
+    topic_id = memory.get("last_topic_id")
+    if isinstance(topic_id, str) and topic_id in CONTEXTUAL_TOPIC_IDS:
+        return topic_id
+    return None
+
+
+def _memory_context(memory: dict[str, Any] | None, *, now: float) -> list[dict[str, Any]]:
+    topic_id = _memory_topic_id(memory)
+    if not topic_id:
+        return []
+    last_message_at = memory.get("last_message_at") if memory else None
+    try:
+        ts = float(last_message_at or now)
+    except Exception:
+        ts = now
+    return [
+        {
+            "ts": ts,
+            "topic_id": topic_id,
+            "level": _preferred_level(memory) or "easy",
+            "from_memory": True,
+        }
+    ]
+
+
+def _memory_recall_line(
+    memory: dict[str, Any] | None,
+    *,
+    topic_id: str,
+    now: float,
+    had_recent_context: bool,
+) -> str:
+    if had_recent_context or topic_id not in CONTEXTUAL_TOPIC_IDS:
+        return ""
+    memory_topic_id = _memory_topic_id(memory)
+    if memory_topic_id != topic_id:
+        return ""
+    try:
+        last_message_at = int(memory.get("last_message_at") or 0) if memory else 0
+        message_count = int(memory.get("message_count") or 0) if memory else 0
+    except Exception:
+        return ""
+    if message_count < 2 or last_message_at <= 0:
+        return ""
+    if now - last_message_at < MEMORY_RECALL_AFTER_SECONDS:
+        return ""
+    label = TOPIC_LABELS.get(topic_id, topic_id.replace("_", " "))
+    return f"Last time, we talked about {label}."
+
+
+def _voice_bridge_line(
+    *,
+    voice_seconds: int,
+    topic_id: str,
+    had_recent_context: bool,
+) -> str:
+    if had_recent_context:
+        return ""
+    practice_topics = {"english_practice", "goals_learning", "nervous_shy", "help", "topic_request"}
+    if topic_id not in practice_topics:
+        return ""
+    if voice_seconds >= ACTIVE_VOICE_SECONDS:
+        return "You have been active in voice recently, so you can try a slightly longer answer."
+    if voice_seconds <= 0 and topic_id in {"english_practice", "nervous_shy"}:
+        return "If speaking feels hard, start with one short sentence here first."
+    return ""
+
+
 def _topic_pack(topic_id: str | None) -> dict[str, list[str]]:
     if topic_id and topic_id in TOPIC_PACKS:
         return TOPIC_PACKS[topic_id]
@@ -500,6 +605,14 @@ def _choose_from_pack(
         _choose(items, text=text, display_name=display_name),
         display_name=display_name,
     )
+
+
+def _different_topic_id(current_topic_id: str, *, user_id: int, seed_text: str) -> str:
+    topics = sorted(topic_id for topic_id in CONTEXTUAL_TOPIC_IDS if topic_id != current_topic_id)
+    if not topics:
+        return "default"
+    seed = sum(ord(ch) for ch in f"{user_id}:{seed_text}:different-topic")
+    return topics[seed % len(topics)]
 
 
 def _recent_topic_id(recent: list[dict[str, Any]] | None) -> str | None:
@@ -610,14 +723,18 @@ def _reply_payload_for_text(
     display_name: str,
     *,
     recent: list[dict[str, Any]] | None = None,
+    memory: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     lower = text.lower().strip()
     rule = _matched_reply_rule(text)
+    source = "rule" if rule is not None else "fallback"
     recent_topic_id = _recent_topic_id(recent)
     if rule is None and recent_topic_id in CONTEXTUAL_TOPIC_IDS:
         rule = _rule_by_id(recent_topic_id)
+        if rule is not None:
+            source = "memory"
 
-    level = _estimate_level(text)
+    level = _adapt_level_for_memory(_estimate_level(text), memory)
     if rule is not None:
         topic_id = str(rule.get("id", ""))
     elif recent_topic_id in CONTEXTUAL_TOPIC_IDS:
@@ -636,24 +753,28 @@ def _reply_payload_for_text(
             ),
             "topic_id": topic_id,
             "level": level,
+            "source": source,
         }
     if any(word in lower for word in NERVOUS_WORDS):
         return {
             "content": "That feeling is normal. Start tiny: one sentence is enough.",
             "topic_id": "nervous_shy",
             "level": level,
+            "source": "keyword",
         }
     if any(word in lower for word in HELP_WORDS):
         return {
             "content": "Tell me one small idea, and I will help you make it clearer.",
             "topic_id": "help",
             "level": level,
+            "source": "keyword",
         }
     if any(word in lower for word in THANKS_WORDS):
         return {
             "content": "You are welcome. Want to keep going?",
             "topic_id": "thanks",
             "level": level,
+            "source": "keyword",
         }
     return {
         "content": _format_reply(
@@ -664,6 +785,7 @@ def _reply_payload_for_text(
         ),
         "topic_id": topic_id or "default",
         "level": level,
+        "source": source,
     }
 
 
@@ -704,16 +826,45 @@ class ChatJerryReplyView(discord.ui.View):
     def __init__(
         self,
         *,
+        repo: Any,
+        guild_id: int | None,
         topic_id: str | None,
         level: str,
         seed_text: str,
         display_name: str,
     ) -> None:
         super().__init__(timeout=10 * 60)
+        self.repo = repo
+        self.guild_id = guild_id
         self.topic_id = topic_id or "default"
         self.level = level
         self.seed_text = seed_text
         self.display_name = display_name
+
+    async def _record_feedback(
+        self,
+        interaction: discord.Interaction,
+        *,
+        action: str,
+        topic_id: str | None = None,
+        level: str | None = None,
+    ) -> None:
+        if self.guild_id is None:
+            return
+        try:
+            await self.repo.chat_jerry_memory_record_feedback(
+                self.guild_id,
+                interaction.user.id,
+                action=action,
+                topic_id=topic_id if topic_id in CONTEXTUAL_TOPIC_IDS else None,
+                level=level,
+            )
+        except Exception:
+            log.exception(
+                "ChatJerry: failed to record feedback action=%s user=%s",
+                action,
+                interaction.user.id,
+            )
 
     async def _send_pack_item(
         self,
@@ -723,18 +874,20 @@ class ChatJerryReplyView(discord.ui.View):
         prefix: str = "",
         ephemeral: bool = False,
         level: str | None = None,
+        topic_id: str | None = None,
     ) -> None:
+        selected_topic_id = topic_id or self.topic_id
         value = _choose_from_pack(
-            self.topic_id,
+            selected_topic_id,
             key,
-            text=f"{interaction.user.id}:{self.seed_text}:{key}",
+            text=f"{interaction.user.id}:{self.seed_text}:{selected_topic_id}:{key}",
             display_name=getattr(interaction.user, "display_name", self.display_name),
             level=level or self.level,
         )
         content = f"{prefix}{value}" if prefix else value
         await interaction.response.send_message(content, ephemeral=ephemeral)
 
-    @discord.ui.button(label="Another question", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="Another question", style=discord.ButtonStyle.primary, row=0)
     async def another_question(
         self,
         interaction: discord.Interaction,
@@ -742,12 +895,45 @@ class ChatJerryReplyView(discord.ui.View):
     ) -> None:
         await self._send_pack_item(interaction, key="questions")
 
-    @discord.ui.button(label="Make it easier", style=discord.ButtonStyle.secondary)
+    @discord.ui.button(label="More like this", style=discord.ButtonStyle.secondary, row=0)
+    async def more_like_this(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        await self._record_feedback(interaction, action="more_like_this", topic_id=self.topic_id)
+        await self._send_pack_item(
+            interaction,
+            key="questions",
+            prefix="Same topic: ",
+        )
+
+    @discord.ui.button(label="Different topic", style=discord.ButtonStyle.secondary, row=0)
+    async def different_topic(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        topic_id = _different_topic_id(
+            self.topic_id,
+            user_id=interaction.user.id,
+            seed_text=self.seed_text,
+        )
+        await self._record_feedback(interaction, action="different_topic")
+        await self._send_pack_item(
+            interaction,
+            key="questions",
+            prefix="Different topic: ",
+            topic_id=topic_id,
+        )
+
+    @discord.ui.button(label="Make it easier", style=discord.ButtonStyle.secondary, row=1)
     async def make_easier(
         self,
         interaction: discord.Interaction,
         button: discord.ui.Button,
     ) -> None:
+        await self._record_feedback(interaction, action="too_hard", topic_id=self.topic_id, level="easy")
         await self._send_pack_item(
             interaction,
             key="questions",
@@ -755,7 +941,7 @@ class ChatJerryReplyView(discord.ui.View):
             level="easy",
         )
 
-    @discord.ui.button(label="Useful words", style=discord.ButtonStyle.secondary)
+    @discord.ui.button(label="Useful words", style=discord.ButtonStyle.secondary, row=1)
     async def useful_words(
         self,
         interaction: discord.Interaction,
@@ -765,7 +951,7 @@ class ChatJerryReplyView(discord.ui.View):
         content = "Useful words: " + ", ".join(words[:5])
         await interaction.response.send_message(content, ephemeral=True)
 
-    @discord.ui.button(label="Example answer", style=discord.ButtonStyle.secondary)
+    @discord.ui.button(label="Example answer", style=discord.ButtonStyle.secondary, row=1)
     async def example_answer(
         self,
         interaction: discord.Interaction,
@@ -925,6 +1111,41 @@ class ChatJerryCog(commands.Cog):
             }
         )
 
+    async def _send_quality_log(
+        self,
+        *,
+        message: discord.Message,
+        topic_id: str,
+        level: str,
+    ) -> None:
+        if message.guild is None:
+            return
+
+        channel = self.bot.get_channel(ADMIN_LOGS_CHANNEL_ID)
+        if channel is None:
+            try:
+                channel = await self.bot.fetch_channel(ADMIN_LOGS_CHANNEL_ID)
+            except Exception:
+                log.warning("ChatJerry: could not fetch admin log channel %s", ADMIN_LOGS_CHANNEL_ID)
+                return
+        if not isinstance(channel, discord.TextChannel):
+            return
+
+        cleaned = " ".join((message.content or "").split())
+        if len(cleaned) > 240:
+            cleaned = cleaned[:237] + "..."
+        cleaned = discord.utils.escape_markdown(cleaned)
+        content = (
+            "Chat Jerry fallback\n"
+            f"Guild: `{message.guild.id}` Channel: <#{message.channel.id}> User: `{message.author.id}`\n"
+            f"Topic: `{topic_id}` Level: `{level}`\n"
+            f"Message: {cleaned}"
+        )
+        try:
+            await channel.send(content, allowed_mentions=discord.AllowedMentions.none())
+        except Exception:
+            log.exception("ChatJerry: failed to send quality log")
+
     async def handle_message(self, message: discord.Message) -> None:
         if message.author.bot or message.channel.id != CHAT_WITH_JERRY_CHANNEL_ID:
             return
@@ -941,21 +1162,69 @@ class ChatJerryCog(commands.Cog):
         except Exception:
             log.exception("ChatJerry: failed to record message usage")
 
-        recent = self._recent_context(message.author.id)
+        memory: dict[str, Any] | None = None
+        voice_seconds = 0
+        if message.guild:
+            try:
+                memory = await self.repo.chat_jerry_memory_get(message.guild.id, message.author.id)
+            except Exception:
+                log.exception("ChatJerry: failed to load memory user=%s", message.author.id)
+            try:
+                voice_seconds = await self.repo.user_voice_seconds_since(
+                    message.guild.id,
+                    message.author.id,
+                    int(now) - VOICE_BRIDGE_WINDOW_SECONDS,
+                )
+            except Exception:
+                log.exception("ChatJerry: failed to load voice bridge user=%s", message.author.id)
+
+        live_recent = self._recent_context(message.author.id)
+        recent = live_recent or _memory_context(memory, now=now)
         payload = _reply_payload_for_text(
             text,
             message.author.display_name,
             recent=recent,
+            memory=memory,
         )
         reply = str(payload.get("content", "")).strip()
         topic_id = str(payload.get("topic_id", "default") or "default")
         level = str(payload.get("level", "easy") or "easy")
+        source = str(payload.get("source", "fallback") or "fallback")
+        recall_line = _memory_recall_line(
+            memory,
+            topic_id=topic_id,
+            now=now,
+            had_recent_context=bool(live_recent),
+        )
+        if recall_line:
+            reply = f"{recall_line} {reply}".strip()
+        voice_line = _voice_bridge_line(
+            voice_seconds=voice_seconds,
+            topic_id=topic_id,
+            had_recent_context=bool(live_recent),
+        )
+        if voice_line:
+            reply = f"{voice_line} {reply}".strip()
         self._remember_context(
             user_id=message.author.id,
             text=text,
             topic_id=topic_id,
             level=level,
         )
+        if message.guild:
+            try:
+                await self.repo.chat_jerry_memory_record_message(
+                    message.guild.id,
+                    message.author.id,
+                    topic_id=topic_id if topic_id in CONTEXTUAL_TOPIC_IDS else None,
+                    level=level,
+                    at=int(now),
+                )
+            except Exception:
+                log.exception("ChatJerry: failed to save memory user=%s", message.author.id)
+
+        if source == "fallback":
+            await self._send_quality_log(message=message, topic_id=topic_id, level=level)
 
         try:
             async with message.channel.typing():
@@ -964,6 +1233,8 @@ class ChatJerryCog(commands.Cog):
                 reply,
                 mention_author=False,
                 view=ChatJerryReplyView(
+                    repo=self.repo,
+                    guild_id=message.guild.id if message.guild else None,
                     topic_id=topic_id,
                     level=level,
                     seed_text=text,

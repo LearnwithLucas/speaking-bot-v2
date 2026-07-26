@@ -94,4 +94,24 @@ CREATE TABLE IF NOT EXISTS command_usage (
 
 CREATE INDEX IF NOT EXISTS idx_command_usage_time
   ON command_usage (guild_id, command_name, used_at);
+
+-- Chat Jerry memory: aggregate preferences only, no raw chat text.
+CREATE TABLE IF NOT EXISTS chat_jerry_memory (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  last_topic_id TEXT,
+  preferred_level TEXT,
+  message_count INTEGER NOT NULL DEFAULT 0,
+  easy_clicks INTEGER NOT NULL DEFAULT 0,
+  more_like_clicks INTEGER NOT NULL DEFAULT 0,
+  different_topic_clicks INTEGER NOT NULL DEFAULT 0,
+  topic_counts_json TEXT NOT NULL DEFAULT '{}',
+  level_counts_json TEXT NOT NULL DEFAULT '{}',
+  last_message_at INTEGER,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_jerry_memory_recent
+  ON chat_jerry_memory (guild_id, last_message_at);
 """

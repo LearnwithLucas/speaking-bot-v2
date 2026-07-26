@@ -1,4 +1,5 @@
 import aiosqlite
+import json
 import time
 import sqlite3
 from typing import Optional, List, Tuple, Dict, Any
@@ -289,6 +290,224 @@ class Repo:
             "partner_profiles_updated": int(partner_profiles_updated or 0),
             "commands": [(str(name), int(uses or 0), int(unique or 0)) for name, uses, unique in command_rows],
         }
+
+    # -------------------------
+    # Chat Jerry memory
+    # -------------------------
+    def _safe_json_dict(self, value: Any) -> dict[str, int]:
+        if not isinstance(value, str) or not value.strip():
+            return {}
+        try:
+            parsed = json.loads(value)
+        except Exception:
+            return {}
+        if not isinstance(parsed, dict):
+            return {}
+
+        result: dict[str, int] = {}
+        for key, count in parsed.items():
+            try:
+                result[str(key)] = max(0, int(count))
+            except Exception:
+                continue
+        return result
+
+    def _preferred_level_from_counts(self, counts: dict[str, int]) -> str | None:
+        ordered_levels = ("starter", "easy", "growing", "strong")
+        best_level: str | None = None
+        best_count = 0
+        for level in ordered_levels:
+            count = int(counts.get(level, 0))
+            if count > best_count:
+                best_level = level
+                best_count = count
+        return best_level
+
+    async def chat_jerry_memory_get(self, guild_id: int, user_id: int) -> dict[str, Any] | None:
+        cur = await self.conn.execute(
+            """
+            SELECT
+                last_topic_id,
+                preferred_level,
+                message_count,
+                easy_clicks,
+                more_like_clicks,
+                different_topic_clicks,
+                topic_counts_json,
+                level_counts_json,
+                last_message_at,
+                updated_at
+            FROM chat_jerry_memory
+            WHERE guild_id=? AND user_id=?
+            """,
+            (guild_id, user_id),
+        )
+        row = await cur.fetchone()
+        if not row:
+            return None
+        return {
+            "last_topic_id": row[0],
+            "preferred_level": row[1],
+            "message_count": int(row[2] or 0),
+            "easy_clicks": int(row[3] or 0),
+            "more_like_clicks": int(row[4] or 0),
+            "different_topic_clicks": int(row[5] or 0),
+            "topic_counts": self._safe_json_dict(row[6]),
+            "level_counts": self._safe_json_dict(row[7]),
+            "last_message_at": row[8],
+            "updated_at": int(row[9] or 0),
+        }
+
+    async def chat_jerry_memory_record_message(
+        self,
+        guild_id: int,
+        user_id: int,
+        *,
+        topic_id: str | None,
+        level: str | None,
+        at: int | None = None,
+    ) -> None:
+        if at is None:
+            at = int(time.time())
+
+        current = await self.chat_jerry_memory_get(guild_id, user_id)
+        topic_counts = dict(current.get("topic_counts", {})) if current else {}
+        level_counts = dict(current.get("level_counts", {})) if current else {}
+        message_count = int(current.get("message_count", 0)) + 1 if current else 1
+        last_topic_id = str(current.get("last_topic_id") or "") if current else ""
+
+        if topic_id:
+            clean_topic = str(topic_id)
+            topic_counts[clean_topic] = int(topic_counts.get(clean_topic, 0)) + 1
+            last_topic_id = clean_topic
+
+        if level:
+            clean_level = str(level)
+            level_counts[clean_level] = int(level_counts.get(clean_level, 0)) + 1
+
+        preferred_level = self._preferred_level_from_counts(level_counts)
+
+        await self.conn.execute(
+            """
+            INSERT INTO chat_jerry_memory (
+                guild_id,
+                user_id,
+                last_topic_id,
+                preferred_level,
+                message_count,
+                topic_counts_json,
+                level_counts_json,
+                last_message_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(guild_id, user_id)
+            DO UPDATE SET
+                last_topic_id=excluded.last_topic_id,
+                preferred_level=excluded.preferred_level,
+                message_count=excluded.message_count,
+                topic_counts_json=excluded.topic_counts_json,
+                level_counts_json=excluded.level_counts_json,
+                last_message_at=excluded.last_message_at,
+                updated_at=excluded.updated_at
+            """,
+            (
+                guild_id,
+                user_id,
+                last_topic_id or None,
+                preferred_level,
+                message_count,
+                json.dumps(topic_counts, sort_keys=True),
+                json.dumps(level_counts, sort_keys=True),
+                at,
+                at,
+            ),
+        )
+        await self.conn.commit()
+
+    async def chat_jerry_memory_record_feedback(
+        self,
+        guild_id: int,
+        user_id: int,
+        *,
+        action: str,
+        topic_id: str | None = None,
+        level: str | None = None,
+        at: int | None = None,
+    ) -> None:
+        if at is None:
+            at = int(time.time())
+
+        current = await self.chat_jerry_memory_get(guild_id, user_id)
+        topic_counts = dict(current.get("topic_counts", {})) if current else {}
+        level_counts = dict(current.get("level_counts", {})) if current else {}
+        message_count = int(current.get("message_count", 0)) if current else 0
+        easy_clicks = int(current.get("easy_clicks", 0)) if current else 0
+        more_like_clicks = int(current.get("more_like_clicks", 0)) if current else 0
+        different_topic_clicks = int(current.get("different_topic_clicks", 0)) if current else 0
+        last_topic_id = str(current.get("last_topic_id") or "") if current else ""
+        preferred_level = str(current.get("preferred_level") or "") if current else ""
+
+        if action == "too_hard":
+            easy_clicks += 1
+            preferred_level = "easy"
+            level_counts["easy"] = int(level_counts.get("easy", 0)) + 1
+        elif action == "more_like_this":
+            more_like_clicks += 1
+            if topic_id:
+                clean_topic = str(topic_id)
+                topic_counts[clean_topic] = int(topic_counts.get(clean_topic, 0)) + 2
+                last_topic_id = clean_topic
+        elif action == "different_topic":
+            different_topic_clicks += 1
+        elif level:
+            clean_level = str(level)
+            level_counts[clean_level] = int(level_counts.get(clean_level, 0)) + 1
+            preferred_level = self._preferred_level_from_counts(level_counts) or preferred_level
+
+        await self.conn.execute(
+            """
+            INSERT INTO chat_jerry_memory (
+                guild_id,
+                user_id,
+                last_topic_id,
+                preferred_level,
+                message_count,
+                easy_clicks,
+                more_like_clicks,
+                different_topic_clicks,
+                topic_counts_json,
+                level_counts_json,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(guild_id, user_id)
+            DO UPDATE SET
+                last_topic_id=excluded.last_topic_id,
+                preferred_level=excluded.preferred_level,
+                message_count=excluded.message_count,
+                easy_clicks=excluded.easy_clicks,
+                more_like_clicks=excluded.more_like_clicks,
+                different_topic_clicks=excluded.different_topic_clicks,
+                topic_counts_json=excluded.topic_counts_json,
+                level_counts_json=excluded.level_counts_json,
+                updated_at=excluded.updated_at
+            """,
+            (
+                guild_id,
+                user_id,
+                last_topic_id or None,
+                preferred_level or None,
+                message_count,
+                easy_clicks,
+                more_like_clicks,
+                different_topic_clicks,
+                json.dumps(topic_counts, sort_keys=True),
+                json.dumps(level_counts, sort_keys=True),
+                at,
+            ),
+        )
+        await self.conn.commit()
 
     # -------------------------
     # KV
