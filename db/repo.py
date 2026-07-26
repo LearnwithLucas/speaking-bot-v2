@@ -509,6 +509,14 @@ class Repo:
         )
         await self.conn.commit()
 
+    async def chat_jerry_memory_delete(self, guild_id: int, user_id: int) -> bool:
+        cur = await self.conn.execute(
+            "DELETE FROM chat_jerry_memory WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        await self.conn.commit()
+        return cur.rowcount > 0
+
     # -------------------------
     # KV
     # -------------------------

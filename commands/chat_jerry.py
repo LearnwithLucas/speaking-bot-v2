@@ -26,6 +26,8 @@ NL_DAILY_CHAT_CHANNEL_ID = 1336419902155919410
 KV_CHAT_JERRY_HUB_MSG = "chat_jerry_hub_message_id_v1"
 KV_CHAT_JERRY_DAILY_EN_DATE = "chat_jerry_daily_check_in_en_date_v1"
 KV_CHAT_JERRY_DAILY_NL_DATE = "chat_jerry_daily_check_in_nl_date_v1"
+KV_CHAT_JERRY_DAILY_EN_TOPIC = "chat_jerry_daily_check_in_en_topic_v1"
+KV_CHAT_JERRY_DAILY_NL_TOPIC = "chat_jerry_daily_check_in_nl_topic_v1"
 REPLY_RULES_PATH = Path(__file__).with_name("chat_jerry_replies.json")
 
 MIN_TYPING_DELAY_SECONDS = 1.0
@@ -247,6 +249,16 @@ TOPIC_LABELS = {
     "weather": "the weather",
 }
 LEVEL_ORDER = {"starter", "easy", "growing", "strong"}
+RELATED_TOPIC_MAP = {
+    "english_practice": "goals_learning",
+    "correction_request": "goals_learning",
+    "interview_exam": "work_study",
+    "health": "daily_life",
+    "money_shopping": "daily_life",
+    "opinions": "goals_learning",
+    "short_answer": "daily_life",
+    "topic_request": "goals_learning",
+}
 
 QUESTION_SETS = [
     "How are you today?",
@@ -336,6 +348,57 @@ def _daily_question_for_date(date_key: str, *, is_nl: bool = False) -> str:
     seed = sum(ord(ch) for ch in date_key)
     questions = NL_DAILY_QUESTIONS if is_nl else EN_DAILY_QUESTIONS
     return questions[seed % len(questions)]
+
+
+def _contextual_topic_id(topic_id: str | None) -> str | None:
+    if not topic_id:
+        return None
+    if topic_id in CONTEXTUAL_TOPIC_IDS:
+        return topic_id
+    mapped = RELATED_TOPIC_MAP.get(topic_id)
+    if mapped in CONTEXTUAL_TOPIC_IDS:
+        return mapped
+    return None
+
+
+def _topic_id_for_text(text: str) -> str | None:
+    rule = _matched_reply_rule(text)
+    if rule is None:
+        return None
+    return _contextual_topic_id(str(rule.get("id", "")))
+
+
+def _topic_id_for_daily_question(question: str) -> str:
+    lower = question.lower()
+    if any(word in lower for word in ("place", "travel", "country", "plek", "reizen", "land")):
+        return "travel"
+    if any(word in lower for word in ("morning", "yesterday", "today", "daily life", "ochtend", "gisteren", "vandaag")):
+        return "daily_life"
+    if any(word in lower for word in ("work", "school", "job", "werk", "baan")):
+        return "work_study"
+    if any(word in lower for word in ("food", "meal", "eat", "eten", "maaltijd")):
+        return "food"
+    if any(word in lower for word in ("friend", "family", "community", "vriend", "familie", "gemeenschap")):
+        return "family_friends"
+    inferred = _topic_id_for_text(question)
+    return inferred or "goals_learning"
+
+
+def _daily_question_meta(date_key: str, *, is_nl: bool) -> dict[str, str]:
+    question = _daily_question_for_date(date_key, is_nl=is_nl)
+    return {
+        "date": date_key,
+        "question": question,
+        "topic_id": _topic_id_for_daily_question(question),
+    }
+
+
+def _today_amsterdam_date_key() -> str:
+    try:
+        now = dt.datetime.now(ZoneInfo("Europe/Amsterdam"))
+    except Exception:
+        now = dt.datetime.now()
+    return now.date().isoformat()
 
 
 def _clean_text(text: str) -> str:
@@ -1031,6 +1094,7 @@ class ChatJerryPublisher:
 
         channel_id = NL_DAILY_CHAT_CHANNEL_ID if is_nl else EN_DAILY_CHAT_CHANNEL_ID
         kv_key = KV_CHAT_JERRY_DAILY_NL_DATE if is_nl else KV_CHAT_JERRY_DAILY_EN_DATE
+        topic_kv_key = KV_CHAT_JERRY_DAILY_NL_TOPIC if is_nl else KV_CHAT_JERRY_DAILY_EN_TOPIC
 
         if not force:
             last_posted = await self._repo.kv_get(guild_id, kv_key)
@@ -1041,7 +1105,8 @@ class ChatJerryPublisher:
         if channel is None:
             return
 
-        question = _daily_question_for_date(date_key, is_nl=is_nl)
+        daily_meta = _daily_question_meta(date_key, is_nl=is_nl)
+        question = daily_meta["question"]
         if is_nl:
             content = (
                 "Goedemorgen. Dagelijkse vraag:\n\n"
@@ -1057,6 +1122,7 @@ class ChatJerryPublisher:
 
         try:
             await channel.send(content, allowed_mentions=discord.AllowedMentions.none())
+            await self._repo.kv_set(guild_id, topic_kv_key, json.dumps(daily_meta, sort_keys=True))
             if not force:
                 await self._repo.kv_set(guild_id, kv_key, date_key)
             log.info(
@@ -1146,8 +1212,83 @@ class ChatJerryCog(commands.Cog):
         except Exception:
             log.exception("ChatJerry: failed to send quality log")
 
+    async def _daily_meta_for_channel(self, message: discord.Message) -> dict[str, str]:
+        is_nl = message.channel.id == NL_DAILY_CHAT_CHANNEL_ID
+        date_key = _today_amsterdam_date_key()
+        fallback = _daily_question_meta(date_key, is_nl=is_nl)
+        if message.guild is None:
+            return fallback
+
+        kv_key = KV_CHAT_JERRY_DAILY_NL_TOPIC if is_nl else KV_CHAT_JERRY_DAILY_EN_TOPIC
+        try:
+            raw = await self.repo.kv_get(message.guild.id, kv_key)
+        except Exception:
+            log.exception("ChatJerry: failed to load daily question topic")
+            return fallback
+        if not raw:
+            return fallback
+
+        try:
+            meta = json.loads(raw)
+        except Exception:
+            return fallback
+        if not isinstance(meta, dict) or meta.get("date") != date_key:
+            return fallback
+
+        topic_id = _contextual_topic_id(str(meta.get("topic_id", ""))) or fallback["topic_id"]
+        question = str(meta.get("question") or fallback["question"])
+        return {"date": date_key, "question": question, "topic_id": topic_id}
+
+    async def _handle_daily_chat_message(self, message: discord.Message) -> None:
+        if message.guild is None:
+            return
+
+        text = (message.content or "").strip()
+        if not text or text.startswith("/"):
+            return
+
+        now = int(time.time())
+        daily_meta = await self._daily_meta_for_channel(message)
+        topic_id = _topic_id_for_text(text) or daily_meta["topic_id"]
+        level = _estimate_level(text)
+
+        try:
+            await self.repo.command_usage_record(
+                message.guild.id,
+                message.author.id,
+                "daily_question_reply",
+                now,
+            )
+        except Exception:
+            log.exception("ChatJerry: failed to record daily question reply usage")
+
+        try:
+            await self.repo.chat_jerry_memory_record_message(
+                message.guild.id,
+                message.author.id,
+                topic_id=topic_id,
+                level=level,
+                at=now,
+            )
+            log.info(
+                "ChatJerry: learned from daily reply guild=%s user=%s topic=%s level=%s",
+                message.guild.id,
+                message.author.id,
+                topic_id,
+                level,
+            )
+        except Exception:
+            log.exception("ChatJerry: failed to save daily reply memory user=%s", message.author.id)
+
     async def handle_message(self, message: discord.Message) -> None:
-        if message.author.bot or message.channel.id != CHAT_WITH_JERRY_CHANNEL_ID:
+        if message.author.bot:
+            return
+
+        if message.channel.id in {EN_DAILY_CHAT_CHANNEL_ID, NL_DAILY_CHAT_CHANNEL_ID}:
+            await self._handle_daily_chat_message(message)
+            return
+
+        if message.channel.id != CHAT_WITH_JERRY_CHANNEL_ID:
             return
 
         text = (message.content or "").strip()
@@ -1254,6 +1395,32 @@ class ChatJerryCog(commands.Cog):
             return
         prompt = _pick_question(interaction.user.id + int(time.time()))
         await interaction.response.send_message(prompt)
+
+    @app_commands.command(name="jerryforgetme", description="Delete Jerry's saved topic memory for you.")
+    async def jerryforgetme(self, interaction: discord.Interaction) -> None:
+        if interaction.guild_id is None:
+            await interaction.response.send_message(
+                "I can only delete server memory from inside the server.",
+                ephemeral=True,
+            )
+            return
+
+        try:
+            deleted = await self.repo.chat_jerry_memory_delete(interaction.guild_id, interaction.user.id)
+            self._recent_by_user.pop(interaction.user.id, None)
+        except Exception:
+            log.exception("ChatJerry: failed to delete memory user=%s", interaction.user.id)
+            await interaction.response.send_message(
+                "I could not delete your Jerry memory right now. Please try again later.",
+                ephemeral=True,
+            )
+            return
+
+        if deleted:
+            content = "Done. Jerry forgot your saved topic memory in this server."
+        else:
+            content = "Jerry did not have saved topic memory for you in this server."
+        await interaction.response.send_message(content, ephemeral=True)
 
 
 async def setup(bot: commands.Bot, repo: Any, *, guild_id: int) -> ChatJerryPublisher:
