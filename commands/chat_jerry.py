@@ -33,6 +33,7 @@ GREETING_WORDS = {"hi", "hello", "hey", "good morning", "good afternoon", "good 
 NERVOUS_WORDS = {"nervous", "scared", "shy", "afraid", "embarrassed", "anxious", "stress", "worried"}
 HELP_WORDS = {"help", "stuck", "confused", "hard", "difficult", "don't know", "dont know"}
 THANKS_WORDS = {"thanks", "thank you", "thx"}
+MIN_KEYWORD_RULE_SCORE = 1
 
 QUESTION_SETS = [
     "How are you today?",
@@ -190,23 +191,52 @@ def _keyword_in_text(keyword: str, *, lower: str, cleaned: str) -> bool:
     return bool(re.search(rf"\b{re.escape(keyword)}\b", cleaned))
 
 
-def _rule_matches(rule: dict[str, Any], text: str) -> bool:
+def _keyword_score(keyword: str, *, lower: str, cleaned: str) -> int:
+    keyword = keyword.lower().strip()
+    if not keyword:
+        return 0
+    if " " in keyword or "'" in keyword:
+        return 4 if keyword in lower else 0
+    return 2 if re.search(rf"\b{re.escape(keyword)}\b", cleaned) else 0
+
+
+def _rule_score(rule: dict[str, Any], text: str) -> int:
     lower = text.lower().strip()
     cleaned = _clean_text(text)
     keywords = [str(k) for k in rule.get("keywords", [])]
+    topics = [str(k) for k in rule.get("topics", [])]
     match_type = str(rule.get("match", "contains"))
 
     if match_type == "greeting":
-        return _is_greeting(text)
+        return 100 if _is_greeting(text) else 0
     if match_type == "exact":
-        return cleaned in {keyword.lower().strip() for keyword in keywords}
-    return any(_keyword_in_text(keyword, lower=lower, cleaned=cleaned) for keyword in keywords)
+        return 100 if cleaned in {keyword.lower().strip() for keyword in keywords} else 0
+
+    score = sum(_keyword_score(keyword, lower=lower, cleaned=cleaned) for keyword in keywords)
+    score += sum(_keyword_score(topic, lower=lower, cleaned=cleaned) for topic in topics)
+
+    if score <= 0:
+        return 0
+
+    try:
+        priority = int(rule.get("priority", 0))
+    except Exception:
+        priority = 0
+    return score + priority
 
 
 def _matched_reply_rule(text: str) -> dict[str, Any] | None:
+    best_rule: dict[str, Any] | None = None
+    best_score = 0
     for rule in _reply_rules().get("intents", []):
-        if isinstance(rule, dict) and _rule_matches(rule, text):
-            return rule
+        if not isinstance(rule, dict):
+            continue
+        score = _rule_score(rule, text)
+        if score > best_score:
+            best_rule = rule
+            best_score = score
+    if best_score >= MIN_KEYWORD_RULE_SCORE:
+        return best_rule
     return None
 
 
@@ -243,6 +273,20 @@ def _plain_reply_from_rule(rule: dict[str, Any], text: str, display_name: str) -
 
 
 def _fallback_plain_reply(text: str, display_name: str) -> str:
+    rules = _reply_rules()
+    fallback_replies = rules.get("fallback_replies", [])
+    fallback_follow_ups = rules.get("fallback_follow_ups", [])
+    if isinstance(fallback_replies, list) and fallback_replies:
+        reply = _render_template(
+            _choose(fallback_replies, text=text, display_name=display_name),
+            display_name=display_name,
+        )
+        follow_up = _render_template(
+            _choose(fallback_follow_ups, text=text, display_name=display_name),
+            display_name=display_name,
+        )
+        return " ".join(part for part in (reply, follow_up) if part)
+
     suggestions = _fallback_suggestions(text, display_name)
     topic = suggestions[0] if suggestions else "your day"
     return f"I'm not sure what to say to that yet. Try asking about {topic}."
