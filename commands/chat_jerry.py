@@ -8,6 +8,7 @@ import random
 import re
 import string
 import time
+from collections import deque
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -34,6 +35,202 @@ NERVOUS_WORDS = {"nervous", "scared", "shy", "afraid", "embarrassed", "anxious",
 HELP_WORDS = {"help", "stuck", "confused", "hard", "difficult", "don't know", "dont know"}
 THANKS_WORDS = {"thanks", "thank you", "thx"}
 MIN_KEYWORD_RULE_SCORE = 1
+CONTEXT_TTL_SECONDS = 20 * 60
+CONTEXT_MAX_MESSAGES = 6
+
+TOPIC_PACKS: dict[str, dict[str, list[str]]] = {
+    "daily_life": {
+        "questions": [
+            "What was the best part of your day?",
+            "What did you do first today?",
+            "Was your day busy or quiet?",
+            "What will you do later?",
+        ],
+        "easy_questions": [
+            "What did you do today?",
+            "Was today good?",
+            "What will you do later?",
+        ],
+        "words": ["busy", "quiet", "later", "first", "after that"],
+        "examples": [
+            "Today was busy, but I finished my work.",
+            "I stayed home and relaxed.",
+            "This morning I went shopping.",
+        ],
+    },
+    "work_study": {
+        "questions": [
+            "What was difficult at work or school today?",
+            "What do you need to explain in English?",
+            "Was your meeting or class easy to follow?",
+            "What is one useful sentence for your work?",
+        ],
+        "easy_questions": [
+            "Do you work or study?",
+            "Was it busy today?",
+            "What is your job or class?",
+        ],
+        "words": ["deadline", "meeting", "task", "explain", "busy"],
+        "examples": [
+            "I had a busy meeting today.",
+            "I need to explain my project clearly.",
+            "My homework was difficult but useful.",
+        ],
+    },
+    "food": {
+        "questions": [
+            "What food do you like most?",
+            "Do you prefer cooking at home or eating out?",
+            "What meal did you eat today?",
+            "Is there a food you want to try?",
+        ],
+        "easy_questions": [
+            "What food do you like?",
+            "Did you eat breakfast?",
+            "Do you cook?",
+        ],
+        "words": ["spicy", "sweet", "salty", "fresh", "homemade"],
+        "examples": [
+            "I like spicy food because it has a strong taste.",
+            "I cooked rice and chicken for dinner.",
+            "My favourite drink is coffee.",
+        ],
+    },
+    "travel": {
+        "questions": [
+            "Where would you like to travel next?",
+            "What would you do first in that place?",
+            "Do you prefer cities, beaches, or nature?",
+            "Who would you travel with?",
+        ],
+        "easy_questions": [
+            "Where do you want to go?",
+            "Do you like travel?",
+            "City or beach?",
+        ],
+        "words": ["trip", "flight", "hotel", "visit", "recommend"],
+        "examples": [
+            "I would like to visit Japan because the food looks amazing.",
+            "I prefer quiet places near nature.",
+            "First, I would walk around the city.",
+        ],
+    },
+    "hobbies": {
+        "questions": [
+            "What do you like doing in your free time?",
+            "How often do you do that hobby?",
+            "Did you start recently or a long time ago?",
+            "What makes that hobby fun?",
+        ],
+        "easy_questions": [
+            "What is your hobby?",
+            "Do you like games or sports?",
+            "Is it fun?",
+        ],
+        "words": ["free time", "relaxing", "creative", "improve", "often"],
+        "examples": [
+            "In my free time, I like reading books.",
+            "I go to the gym because it gives me energy.",
+            "I started this hobby last year.",
+        ],
+    },
+    "movies_music": {
+        "questions": [
+            "What did you watch or listen to recently?",
+            "Would you recommend it?",
+            "What kind of movies or music do you usually like?",
+            "Can you explain the story or song simply?",
+        ],
+        "easy_questions": [
+            "Do you like music?",
+            "What did you watch?",
+            "Was it good?",
+        ],
+        "words": ["recommend", "episode", "actor", "singer", "story"],
+        "examples": [
+            "I watched a series on Netflix yesterday.",
+            "I like calm music when I work.",
+            "The movie was funny but a little long.",
+        ],
+    },
+    "family_friends": {
+        "questions": [
+            "Who did you talk to recently?",
+            "What do you usually do together?",
+            "How would you describe that person?",
+            "Do you see your family or friends often?",
+        ],
+        "easy_questions": [
+            "Do you have siblings?",
+            "Who is your friend?",
+            "Do you see them often?",
+        ],
+        "words": ["kind", "supportive", "funny", "close", "often"],
+        "examples": [
+            "My friend is funny and easy to talk to.",
+            "I visited my family last weekend.",
+            "My brother helps me when I am busy.",
+        ],
+    },
+    "goals_learning": {
+        "questions": [
+            "What is one small goal for this week?",
+            "Why is that goal important to you?",
+            "What makes learning English difficult right now?",
+            "How can you practise today?",
+        ],
+        "easy_questions": [
+            "What do you want to learn?",
+            "What is your goal?",
+            "Can you practise today?",
+        ],
+        "words": ["goal", "habit", "progress", "improve", "small step"],
+        "examples": [
+            "My goal is to speak more confidently.",
+            "I want to practise for ten minutes every day.",
+            "A small step is better than doing nothing.",
+        ],
+    },
+    "weather": {
+        "questions": [
+            "What is the weather like where you are?",
+            "Do you like that kind of weather?",
+            "Does the weather change your mood?",
+            "What season do you like most?",
+        ],
+        "easy_questions": [
+            "Is it hot or cold?",
+            "Is it raining?",
+            "Do you like the weather?",
+        ],
+        "words": ["sunny", "cloudy", "windy", "warm", "cold"],
+        "examples": [
+            "It is cloudy today, but it is not cold.",
+            "I like sunny weather because I can walk outside.",
+            "Rainy days make me feel sleepy.",
+        ],
+    },
+    "default": {
+        "questions": [
+            "Can you tell me one more detail?",
+            "Why is that important to you?",
+            "How did you feel about it?",
+            "What happened next?",
+        ],
+        "easy_questions": [
+            "Can you say more?",
+            "Was it good?",
+            "What happened?",
+        ],
+        "words": ["because", "usually", "sometimes", "today", "next"],
+        "examples": [
+            "I think it is useful because I can practise real English.",
+            "Today I want to speak a little more.",
+            "I am not sure, but I want to try.",
+        ],
+    },
+}
+CONTEXTUAL_TOPIC_IDS = set(TOPIC_PACKS) - {"default"}
 
 QUESTION_SETS = [
     "How are you today?",
@@ -240,6 +437,122 @@ def _matched_reply_rule(text: str) -> dict[str, Any] | None:
     return None
 
 
+def _rule_by_id(rule_id: str | None) -> dict[str, Any] | None:
+    if not rule_id:
+        return None
+    for rule in _reply_rules().get("intents", []):
+        if isinstance(rule, dict) and rule.get("id") == rule_id:
+            return rule
+    return None
+
+
+def _estimate_level(text: str) -> str:
+    cleaned = _clean_text(text)
+    words = cleaned.split()
+    if not words:
+        return "easy"
+
+    word_count = len(words)
+    long_words = sum(1 for word in words if len(word) >= 8)
+    connectors = {
+        "because",
+        "although",
+        "however",
+        "while",
+        "before",
+        "after",
+        "usually",
+        "sometimes",
+        "probably",
+        "actually",
+    }
+    connector_count = sum(1 for word in words if word in connectors)
+
+    if word_count <= 4:
+        return "starter"
+    if word_count <= 10 and connector_count == 0 and long_words <= 1:
+        return "easy"
+    if word_count >= 18 or connector_count >= 2 or long_words >= 3:
+        return "strong"
+    return "growing"
+
+
+def _topic_pack(topic_id: str | None) -> dict[str, list[str]]:
+    if topic_id and topic_id in TOPIC_PACKS:
+        return TOPIC_PACKS[topic_id]
+    return TOPIC_PACKS["default"]
+
+
+def _choose_from_pack(
+    topic_id: str | None,
+    key: str,
+    *,
+    text: str,
+    display_name: str,
+    level: str,
+) -> str:
+    pack = _topic_pack(topic_id)
+    if key == "questions" and level in {"starter", "easy"}:
+        items = pack.get("easy_questions") or pack.get("questions", [])
+    else:
+        items = pack.get(key, [])
+    return _render_template(
+        _choose(items, text=text, display_name=display_name),
+        display_name=display_name,
+    )
+
+
+def _recent_topic_id(recent: list[dict[str, Any]] | None) -> str | None:
+    if not recent:
+        return None
+    for item in reversed(recent):
+        topic_id = item.get("topic_id")
+        if isinstance(topic_id, str) and topic_id:
+            return topic_id
+    return None
+
+
+def _context_hint(recent: list[dict[str, Any]] | None, topic_id: str | None) -> str:
+    if not recent or not topic_id:
+        return ""
+    last_topic = _recent_topic_id(recent)
+    if last_topic != topic_id:
+        return ""
+    if len(recent) < 2:
+        return ""
+    return "Still on this topic."
+
+
+def _level_hint(level: str) -> str:
+    if level == "starter":
+        return "Try one full sentence."
+    if level == "easy":
+        return "You can keep it simple."
+    if level == "strong":
+        return "Nice detail."
+    return ""
+
+
+def _format_reply(
+    *,
+    base_reply: str,
+    topic_id: str | None,
+    level: str,
+    recent: list[dict[str, Any]] | None,
+) -> str:
+    parts = [base_reply]
+    hint = _context_hint(recent, topic_id)
+    if hint:
+        parts.append(hint)
+    if topic_id in {"greeting", "thanks", "goodbye", "topic_request"}:
+        level_hint = ""
+    else:
+        level_hint = _level_hint(level)
+    if level_hint:
+        parts.append(level_hint)
+    return " ".join(part for part in parts if part).strip()
+
+
 def _fallback_suggestions(text: str, display_name: str) -> list[str]:
     suggestions = _reply_rules().get("fallback_suggestions", [])
     if not isinstance(suggestions, list) or not suggestions:
@@ -292,19 +605,70 @@ def _fallback_plain_reply(text: str, display_name: str) -> str:
     return f"I'm not sure what to say to that yet. Try asking about {topic}."
 
 
-def _plain_reply_for_text(text: str, display_name: str) -> str:
+def _reply_payload_for_text(
+    text: str,
+    display_name: str,
+    *,
+    recent: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     lower = text.lower().strip()
     rule = _matched_reply_rule(text)
+    recent_topic_id = _recent_topic_id(recent)
+    if rule is None and recent_topic_id in CONTEXTUAL_TOPIC_IDS:
+        rule = _rule_by_id(recent_topic_id)
+
+    level = _estimate_level(text)
+    if rule is not None:
+        topic_id = str(rule.get("id", ""))
+    elif recent_topic_id in CONTEXTUAL_TOPIC_IDS:
+        topic_id = recent_topic_id
+    else:
+        topic_id = None
 
     if rule is not None:
-        return _plain_reply_from_rule(rule, text, display_name)
+        reply = _plain_reply_from_rule(rule, text, display_name)
+        return {
+            "content": _format_reply(
+                base_reply=reply,
+                topic_id=topic_id,
+                level=level,
+                recent=recent,
+            ),
+            "topic_id": topic_id,
+            "level": level,
+        }
     if any(word in lower for word in NERVOUS_WORDS):
-        return "That feeling is normal. Start tiny: one sentence is enough."
+        return {
+            "content": "That feeling is normal. Start tiny: one sentence is enough.",
+            "topic_id": "nervous_shy",
+            "level": level,
+        }
     if any(word in lower for word in HELP_WORDS):
-        return "Tell me one small idea, and I will help you make it clearer."
+        return {
+            "content": "Tell me one small idea, and I will help you make it clearer.",
+            "topic_id": "help",
+            "level": level,
+        }
     if any(word in lower for word in THANKS_WORDS):
-        return "You're welcome. Want to keep going?"
-    return _fallback_plain_reply(text, display_name)
+        return {
+            "content": "You are welcome. Want to keep going?",
+            "topic_id": "thanks",
+            "level": level,
+        }
+    return {
+        "content": _format_reply(
+            base_reply=_fallback_plain_reply(text, display_name),
+            topic_id=topic_id,
+            level=level,
+            recent=recent,
+        ),
+        "topic_id": topic_id or "default",
+        "level": level,
+    }
+
+
+def _plain_reply_for_text(text: str, display_name: str) -> str:
+    return str(_reply_payload_for_text(text, display_name).get("content", ""))
 
 
 def _typing_delay_seconds(text: str) -> float:
@@ -332,6 +696,85 @@ class ChatJerryHubView(discord.ui.View):
     async def nervous(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_message(
             'Start smaller: "Today I feel..." or "I want to practise..." One sentence is enough.',
+            ephemeral=True,
+        )
+
+
+class ChatJerryReplyView(discord.ui.View):
+    def __init__(
+        self,
+        *,
+        topic_id: str | None,
+        level: str,
+        seed_text: str,
+        display_name: str,
+    ) -> None:
+        super().__init__(timeout=10 * 60)
+        self.topic_id = topic_id or "default"
+        self.level = level
+        self.seed_text = seed_text
+        self.display_name = display_name
+
+    async def _send_pack_item(
+        self,
+        interaction: discord.Interaction,
+        *,
+        key: str,
+        prefix: str = "",
+        ephemeral: bool = False,
+        level: str | None = None,
+    ) -> None:
+        value = _choose_from_pack(
+            self.topic_id,
+            key,
+            text=f"{interaction.user.id}:{self.seed_text}:{key}",
+            display_name=getattr(interaction.user, "display_name", self.display_name),
+            level=level or self.level,
+        )
+        content = f"{prefix}{value}" if prefix else value
+        await interaction.response.send_message(content, ephemeral=ephemeral)
+
+    @discord.ui.button(label="Another question", style=discord.ButtonStyle.primary)
+    async def another_question(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        await self._send_pack_item(interaction, key="questions")
+
+    @discord.ui.button(label="Make it easier", style=discord.ButtonStyle.secondary)
+    async def make_easier(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        await self._send_pack_item(
+            interaction,
+            key="questions",
+            prefix="Easy question: ",
+            level="easy",
+        )
+
+    @discord.ui.button(label="Useful words", style=discord.ButtonStyle.secondary)
+    async def useful_words(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        words = _topic_pack(self.topic_id).get("words", TOPIC_PACKS["default"]["words"])
+        content = "Useful words: " + ", ".join(words[:5])
+        await interaction.response.send_message(content, ephemeral=True)
+
+    @discord.ui.button(label="Example answer", style=discord.ButtonStyle.secondary)
+    async def example_answer(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        await self._send_pack_item(
+            interaction,
+            key="examples",
+            prefix="Example: ",
             ephemeral=True,
         )
 
@@ -446,6 +889,41 @@ class ChatJerryCog(commands.Cog):
         self.bot = bot
         self.repo = repo
         self.publisher = publisher
+        self._recent_by_user: dict[int, deque[dict[str, Any]]] = {}
+
+    def _recent_context(self, user_id: int) -> list[dict[str, Any]]:
+        now = time.time()
+        recent = self._recent_by_user.get(user_id)
+        if recent is None:
+            return []
+
+        while recent and now - float(recent[0].get("ts", 0)) > CONTEXT_TTL_SECONDS:
+            recent.popleft()
+        if not recent:
+            self._recent_by_user.pop(user_id, None)
+            return []
+        return list(recent)
+
+    def _remember_context(
+        self,
+        *,
+        user_id: int,
+        text: str,
+        topic_id: str | None,
+        level: str,
+    ) -> None:
+        recent = self._recent_by_user.setdefault(
+            user_id,
+            deque(maxlen=CONTEXT_MAX_MESSAGES),
+        )
+        recent.append(
+            {
+                "ts": time.time(),
+                "text": text,
+                "topic_id": topic_id or "default",
+                "level": level,
+            }
+        )
 
     async def handle_message(self, message: discord.Message) -> None:
         if message.author.bot or message.channel.id != CHAT_WITH_JERRY_CHANNEL_ID:
@@ -463,11 +941,35 @@ class ChatJerryCog(commands.Cog):
         except Exception:
             log.exception("ChatJerry: failed to record message usage")
 
-        reply = _plain_reply_for_text(text, message.author.display_name)
+        recent = self._recent_context(message.author.id)
+        payload = _reply_payload_for_text(
+            text,
+            message.author.display_name,
+            recent=recent,
+        )
+        reply = str(payload.get("content", "")).strip()
+        topic_id = str(payload.get("topic_id", "default") or "default")
+        level = str(payload.get("level", "easy") or "easy")
+        self._remember_context(
+            user_id=message.author.id,
+            text=text,
+            topic_id=topic_id,
+            level=level,
+        )
+
         try:
             async with message.channel.typing():
                 await asyncio.sleep(_typing_delay_seconds(text))
-            await message.reply(reply, mention_author=False)
+            await message.reply(
+                reply,
+                mention_author=False,
+                view=ChatJerryReplyView(
+                    topic_id=topic_id,
+                    level=level,
+                    seed_text=text,
+                    display_name=message.author.display_name,
+                ),
+            )
         except Exception:
             log.exception("ChatJerry: failed to reply to message")
 
