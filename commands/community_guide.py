@@ -23,8 +23,8 @@ from jobs.private_lessons import (
 
 log = logging.getLogger(__name__)
 
-FREE_EN_GUIDES_URL = "https://learnwithlucas.com/nederlandse-leermaterialen/"
-FREE_NL_GUIDES_URL = "https://learnwithlucas.com/nederlandse-leermaterialen/"
+FREE_EN_GUIDES_URL = "https://learnwithlucas.com/en/courses/english-level-check/"
+FREE_NL_GUIDES_URL = "https://learnwithlucas.com/nl/courses/"
 GUIDE_CHOICES = {"shy", "partner", "lessons", "words", "ask"}
 
 

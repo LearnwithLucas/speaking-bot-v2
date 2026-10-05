@@ -13,11 +13,17 @@ KV_ASK_JERRY_MSG_ID = "ask_jerry_hub_message_id"
 NL_ASK_JERRY_CHANNEL_ID = 1486110860786270438  # 🦆┃vraag-het-jerry
 KV_NL_ASK_JERRY_MSG_ID = "ask_jerry_nl_hub_message_id"
 
-EN_COMMUNITY_INVITE = "https://discord.gg/uhz4DZMPYv"
-EN_SUPPORTED_SPEAKING_URL = "https://learnwithlucas.com/supported-speaking/"
-EN_PRIVATE_LESSONS_URL = "https://learnwithlucas.com/private-lessons"
-EN_FREE_GUIDES_URL = "https://learnwithlucas.com/nederlandse-leermaterialen/"
-EN_FREE_BOOK_URL = "https://learnwithlucas.com/gratis-maandelijks-boek/"
+EN_COMMUNITY_INVITE = "https://discord.gg/XHtNPNu8pU"
+EN_SUPPORTED_SPEAKING_URL = "https://learnwithlucas.com/en/supported-speaking/"
+EN_PRIVATE_LESSONS_URL = "https://learnwithlucas.com/en/private-lessons/"
+EN_COMMUNITY_URL = "https://learnwithlucas.com/en/community/"
+EN_LEVEL_CHECK_URL = "https://learnwithlucas.com/en/courses/english-level-check/"
+EN_COURSES_URL = "https://learnwithlucas.com/en/courses/"
+NL_COMMUNITY_URL = "https://learnwithlucas.com/nl/spreekgroep/"
+NL_COURSES_URL = "https://learnwithlucas.com/nl/courses/"
+NL_FREE_EXAMS_URL = "https://learnwithlucas.com/nl/courses/"
+NL_SUPPORTED_SPEAKING_URL = "https://learnwithlucas.com/nl/ondersteund-spreken/"
+NL_PRIVATE_LESSONS_URL = "https://learnwithlucas.com/nl/priveles-nederlands/"
 TIKTOK_URL = "https://www.tiktok.com/@learnwithlucas"
 YOUTUBE_EN_URL = "https://www.youtube.com/@LearnEnglishWithLucas"
 
@@ -45,9 +51,9 @@ FAQ: dict[str, dict] = {
             (
                 "How much does it cost?",
                 "Supported Speaking costs **€7.99 per month**, **€39.95 for 6 months** (1 month free), or **€79.90 per year** (2 months free).\n\n"
-                "For comparison: a private lesson with Lucas costs €22 for 30 minutes. "
+                "For comparison: a private lesson with Lucas costs €24 for 30 minutes. "
                 "This is weekly practice for less than one coffee a week.\n\n"
-                "100% refund within 24 hours if it is not what you expected. No questions asked.\n\n"
+                "14 day money back if it is not what you expected. No questions asked.\n\n"
                 f"[Start today]({EN_SUPPORTED_SPEAKING_URL})"
             ),
             (
@@ -62,23 +68,21 @@ FAQ: dict[str, dict] = {
             ),
             (
                 "Is there a live session?",
-                "The free live lessons run on Monday, Wednesday, Thursday, Friday and Saturday. "
-                "Those are open to everyone — no membership needed.\n\n"
-                "Supported Speaking gives you the extended practice guides to prepare and follow up. "
-                "The live sessions themselves are free and always will be."
+                "The Supported Speaking live group meets every Saturday at 14:30 CEST on Discord, "
+                "with at most 20 learners.\n\n"
+                "The free community is separate and stays open on Discord, WhatsApp and Telegram."
             ),
             (
                 "Can I cancel anytime?",
                 "Yes. Cancel anytime, no questions asked.\n\n"
-                "There is also a 100% refund within 24 hours of joining if it turns out it is not what you expected. "
-                "No forms, no waiting.\n\n"
+                "There is also a 14 day money back period if it turns out it is not what you expected.\n\n"
                 f"[Join here]({EN_SUPPORTED_SPEAKING_URL})"
             ),
             (
                 "What level do I need?",
                 "Supported Speaking works best if you are at B1 or B2 level. "
                 "That means you understand English reasonably well but freeze or hesitate when it is time to speak.\n\n"
-                "If you are a complete beginner, start with the free live lessons first and join when you feel ready."
+                "If you are a complete beginner, start with the free community first and join when you feel ready."
             ),
             (
                 "How is it different from the free guides?",
@@ -112,12 +116,9 @@ FAQ: dict[str, dict] = {
             ),
             (
                 "How much do private lessons cost?",
-                "**Trial session** — 30 minutes — €22 (one time)\n"
-                "**Speaking Builder** — 4 x 60 minutes — €159 (save 10%)\n"
-                "**Confidence Intensive** — 10 x 60 minutes — €349 (save 20%)\n\n"
-                "**Exam prep:**\n"
-                "Exam Prep Builder — 4 x 60 minutes — €179\n"
-                "Exam Prep Intensive — 10 x 60 minutes — €379\n\n"
+                "**Trial session** — 30 minutes — €24 (one time)\n"
+                "**Speaking Builder** — 4 x 60 minutes — €189\n"
+                "**Confidence Intensive** — 10 x 60 minutes — €389\n\n"
                 "Not sure which fits? Start with the trial. "
                 f"[View all packages]({EN_PRIVATE_LESSONS_URL})"
             ),
@@ -148,7 +149,7 @@ FAQ: dict[str, dict] = {
             (
                 "Is there space right now?",
                 "Private lessons are kept limited so they stay calm and focused.\n\n"
-                "If there is no space right now, you are always welcome in the free live lessons "
+                "If there is no space right now, you are always welcome in the free community "
                 "and the speaking community here.\n\n"
                 f"Check current availability at {EN_PRIVATE_LESSONS_URL}"
             ),
@@ -182,7 +183,7 @@ FAQ: dict[str, dict] = {
                 "Most people wait until they feel ready. That feeling does not come on its own. "
                 "It comes from speaking enough times that it starts to feel normal.\n\n"
                 "The practical answer: speak a little every day in a low-pressure setting. "
-                "This server, the voice channels, the live lessons. "
+                "This server, the voice channels, the daily chat and the free community. "
                 "Not to perform. Just to get used to the sound of your own voice in English."
             ),
             (
@@ -205,7 +206,7 @@ FAQ: dict[str, dict] = {
                 "A little every day beats a long session once a week.\n\n"
                 "15 minutes of real speaking practice daily will move you forward faster than "
                 "two hours on a Saturday. The consistency is what builds the habit.\n\n"
-                "Use the voice channels. Join the live lessons. Press the partner button when you are free. "
+                "Use the voice channels, the daily chat, and the partner button when you are free. "
                 "Small steps add up."
             ),
             (
@@ -232,10 +233,10 @@ FAQ: dict[str, dict] = {
         "emoji": "🏠",
         "questions": [
             (
-                "When are the free live lessons?",
-                "Free live lessons run on Monday, Wednesday, Thursday, Friday and Saturday.\n\n"
-                "Just show up. You can listen, say one sentence, or have a full conversation. "
-                "Whatever feels right that day. No preparation needed."
+                "Where is the free community?",
+                f"Start here: {EN_COMMUNITY_URL}\n\n"
+                "You can practise on Discord, WhatsApp or Telegram. Read along first, "
+                "say one sentence, or have a full conversation when you are ready."
             ),
             (
                 "How do I find a speaking partner?",
@@ -271,8 +272,9 @@ FAQ: dict[str, dict] = {
             ),
             (
                 "Where can I find free learning materials?",
-                f"Free practice guides: {EN_FREE_GUIDES_URL}\n"
-                f"Free monthly story: {EN_FREE_BOOK_URL}\n"
+                f"Free English level check: {EN_LEVEL_CHECK_URL}\n"
+                f"Free community: {EN_COMMUNITY_URL}\n"
+                f"All English courses: {EN_COURSES_URL}\n"
                 f"TikTok lessons: {TIKTOK_URL}\n"
                 f"YouTube: {YOUTUBE_EN_URL}\n\n"
                 "Everything on those pages is free. No sign-up needed for most of it."
@@ -444,20 +446,21 @@ NL_FAQ: dict[str, dict] = {
                 "Elke maand ook een verhaal met audio.\n\n"
                 "Geen cursus. Geen vast schema dat je moet volgen. "
                 "Wekelijks live spreken in een rustige sfeer, op jouw eigen tempo.\n\n"
-                f"Meer info: https://learnwithlucas.com/ondersteund-spreken/"
+                f"Meer info: {NL_SUPPORTED_SPEAKING_URL}"
             ),
             (
                 "Hoeveel kost het?",
-                "Ondersteund Spreken kost **€11,99 per maand**, **€59,95 voor 6 maanden** (1 maand gratis) of **€119,90 per jaar** (2 maanden gratis).\n\n"
+                "Ondersteund Spreken kost **€11,99 per maand** voor Standaard, **€19,99 per maand** voor Premium, "
+                "of vanaf **€119,90 per jaar**.\n\n"
                 "Ter vergelijking: een privéles met Lucas kost €28 voor 30 minuten. "
                 "Dit is elke week live oefenen voor minder dan twee kopjes koffie per maand.\n\n"
-                "100% terugbetaling binnen 24 uur als het toch niet is wat je verwachtte. Geen vragen gesteld.\n\n"
-                "Begin vandaag: https://learnwithlucas.com/ondersteund-spreken/"
+                "14 dagen geld-terug-garantie als het toch niet is wat je verwachtte. Geen vragen gesteld.\n\n"
+                f"Begin vandaag: {NL_SUPPORTED_SPEAKING_URL}"
             ),
             (
                 "Wat krijg ik elke week?",
                 "Elke week:\n"
-                "• Maandag of woensdag 19:00 CET: live sessie in een kleine groep op jouw niveau\n"
+                "• Maandag 20:00 of woensdag 19:00: live sessie via WhatsApp, op jouw niveau\n"
                 "• Vrijdag: de uitgebreide leden oefengids met foutherkenning en extra oefenzinnen\n"
                 "• Zondag: het spreekonderwerp voor de sessie van maandag of woensdag\n\n"
                 "Elke maand ook een compleet B1-verhaal met audio. "
@@ -465,7 +468,7 @@ NL_FAQ: dict[str, dict] = {
             ),
             (
                 "Hoe werkt de live sessie?",
-                "Elke maandag en woensdag om 19:00 CET, één uur.\n\n"
+                "Elke maandag om 20:00 en woensdag om 19:00, live via WhatsApp.\n\n"
                 "• 0:00 tot 0:15 — introductie, iedereen samen\n"
                 "• 0:15 tot 0:45 — breakout rooms op niveau (A2, B1 of B2), Lucas bezoekt elke kamer\n"
                 "• 0:45 tot 1:00 — afsluiting, veelgemaakte fouten besproken\n\n"
@@ -475,9 +478,8 @@ NL_FAQ: dict[str, dict] = {
             (
                 "Kan ik op elk moment opzeggen?",
                 "Ja. Op elk moment opzeggen, geen vragen gesteld.\n\n"
-                "Er is ook 100% terugbetaling binnen 24 uur als het toch niet is wat je verwachtte. "
-                "Geen formulieren, geen wachttijd.\n\n"
-                "Begin hier: https://learnwithlucas.com/ondersteund-spreken/"
+                "Er is ook een geld-terug-garantie van 14 dagen als het toch niet is wat je verwachtte.\n\n"
+                f"Begin hier: {NL_SUPPORTED_SPEAKING_URL}"
             ),
             (
                 "Welk niveau heb ik nodig?",
@@ -485,13 +487,13 @@ NL_FAQ: dict[str, dict] = {
                 "Dat betekent dat je Nederlands redelijk begrijpt maar vastloopt als je moet spreken.\n\n"
                 "Er zijn breakout rooms per niveau, dus je oefent altijd met mensen op jouw niveau. "
                 "Je kiest zelf welke kamer je ingaat.\n\n"
-                "Als je nog een complete beginner bent, begin dan met de gratis vrijdagsessie en sluit je aan als je er klaar voor bent."
+                "Als je nog een complete beginner bent, begin dan met de gratis spreekgroep en sluit je aan als je er klaar voor bent."
             ),
             (
                 "Kan ik betalen met GCash, DANA of Touch n Go?",
                 "Ja. Als je in de Filipijnen, Indonesië, Maleisië of Thailand zit, "
                 "zijn er Airwallex betaallinks die GCash, DANA en Touch 'n Go accepteren.\n\n"
-                "Ga naar https://learnwithlucas.com/ondersteund-spreken/ en scroll naar het betalingsgedeelte. "
+                f"Ga naar {NL_SUPPORTED_SPEAKING_URL} en scroll naar het betalingsgedeelte. "
                 "Daar zie je de SEA betaaloptie."
             ),
             (
@@ -514,18 +516,16 @@ NL_FAQ: dict[str, dict] = {
                 "Privélessen zijn een-op-een sessies met Lucas, via Zoom of Discord.\n\n"
                 "Geen scripts, geen examens, pauzes inbegrepen. Echt gesprek vanaf het begin. "
                 "Het doel is rustige, persoonlijke spreekoefening met iemand die echt luistert en nuttige feedback geeft.\n\n"
-                "Meer info: https://learnwithlucas.com/priveles-nederlands/"
+                f"Meer info: {NL_PRIVATE_LESSONS_URL}"
             ),
             (
                 "Hoeveel kosten privélessen?",
                 "**Proefsessie** — 30 minuten — €28 (eenmalig)\n"
-                "**Speaking Builder** — 4 x 60 minuten — €219 (10% korting)\n"
-                "**Confidence Intensive** — 10 x 60 minuten — €469 (20% korting)\n\n"
-                "**Examenvoorbereiding:**\n"
-                "Examenvoorbereiding Builder — 4 x 60 minuten — €249\n"
-                "Examenvoorbereiding Intensive — 10 x 60 minuten — €529\n\n"
+                "**Speaking Builder** — 4 x 60 minuten — €219 (+ 3 maanden Ondersteund Spreken)\n"
+                "**Confidence Intensive** — 10 x 60 minuten — €469 (+ 6 maanden Ondersteund Spreken)\n\n"
+                "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
                 "Niet zeker welk pakket past? Begin met de proefsessie. "
-                "Alle info: https://learnwithlucas.com/priveles-nederlands/"
+                f"Alle info: {NL_PRIVATE_LESSONS_URL}"
             ),
             (
                 "Welk niveau heb ik nodig voor privélessen?",
@@ -538,10 +538,10 @@ NL_FAQ: dict[str, dict] = {
             ),
             (
                 "Hoe boek ik een privéles?",
-                "Ga naar https://learnwithlucas.com/priveles-nederlands/ en kies een sessie of pakket.\n\n"
+                f"Ga naar {NL_PRIVATE_LESSONS_URL} en kies een sessie of pakket.\n\n"
                 "Na betaling ontvang je een kalenderlink. Kies een tijd die voor jou werkt. "
                 "Dan ontmoeten jullie elkaar via Zoom of Discord. Geen installatie nodig.\n\n"
-                "Vragen voor je boekt? Mail dutch@learnwithlucas.com"
+                "Vragen voor je boekt? Mail english@learnwithlucas.com"
             ),
             (
                 "Wat gebeurt er in een sessie?",
@@ -554,9 +554,9 @@ NL_FAQ: dict[str, dict] = {
             (
                 "Is er nu plek?",
                 "Privélessen zijn beperkt zodat ze rustig en gefocust blijven.\n\n"
-                "Als er nu geen plek is, ben je altijd welkom bij de gratis sessies "
+                "Als er nu geen plek is, ben je altijd welkom bij de gratis spreekgroep "
                 "en de spreekgemeenschap hier.\n\n"
-                "Bekijk huidige beschikbaarheid op https://learnwithlucas.com/priveles-nederlands/"
+                f"Bekijk huidige beschikbaarheid op {NL_PRIVATE_LESSONS_URL}"
             ),
         ],
     },
@@ -628,11 +628,10 @@ NL_FAQ: dict[str, dict] = {
         "label": "🏠 Community",
         "questions": [
             (
-                "Wanneer zijn de gratis live sessies?",
-                "Gratis live sessies zijn elke vrijdag om 20:30 CET. Open voor iedereen, geen lidmaatschap nodig.\n\n"
-                "Leden van Ondersteund Spreken hebben ook toegang tot de maandag en woensdag sessies om 19:00.\n\n"
-                "Gewoon binnenkomen. Je kunt luisteren, één zin zeggen of een heel gesprek voeren. "
-                "Wat die dag goed voelt. Geen voorbereiding nodig."
+                "Waar is de gratis spreekgroep?",
+                f"De gratis spreekgroep staat hier: {NL_COMMUNITY_URL}\n\n"
+                "Je kunt oefenen via WhatsApp, Discord of Telegram. Lees eerst mee, "
+                "zeg één zin, of praat mee zodra je er klaar voor bent."
             ),
             (
                 "Hoe vind ik een spreekpartner?",
@@ -670,8 +669,8 @@ NL_FAQ: dict[str, dict] = {
             ),
             (
                 "Waar vind ik gratis leermateriaal?",
-                "Gratis oefengidsen: https://learnwithlucas.com/nederlandse-leermaterialen/\n"
-                "Gratis maandelijks verhaal: https://learnwithlucas.com/gratis-maandelijks-boek/\n"
+                f"Gratis spreekgroep: {NL_COMMUNITY_URL}\n"
+                f"Gratis oefenexamens en cursussen: {NL_COURSES_URL}\n"
                 "YouTube: https://www.youtube.com/@learndutchwithlucas\n"
                 "TikTok: https://www.tiktok.com/@dutchwithlucas\n\n"
                 "Alles op die pagina's is gratis. Voor de meeste onderdelen heb je geen account nodig."
@@ -809,12 +808,12 @@ NL_FAQ: dict[str, dict] = {
             (
                 "Waar vind ik info over Ondersteund Spreken?",
                 "Er is een apart kanaal met alle details en een FAQ-menu. "
-                "Of ga direct naar https://learnwithlucas.com/ondersteund-spreken/"
+                f"Of ga direct naar {NL_SUPPORTED_SPEAKING_URL}"
             ),
             (
                 "Waar vind ik info over privélessen?",
                 "Er is een apart kanaal met alle details en een FAQ-menu. "
-                "Of ga direct naar https://learnwithlucas.com/priveles-nederlands/"
+                f"Of ga direct naar {NL_PRIVATE_LESSONS_URL}"
             ),
         ],
     },

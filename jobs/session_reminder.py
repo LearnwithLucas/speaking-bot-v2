@@ -27,10 +27,11 @@ KV_SS_LAST_REMINDER = "ss_session_reminder_last"
 KV_OS_LAST_REMINDER = "os_session_reminder_last"
 
 # ---- Schedule ----
-# OS: every Monday at 18:30 Amsterdam time (session at 19:00)
-OS_WEEKDAY = 0        # Monday
-OS_HOUR = 18
-OS_MINUTE = 30
+# OS: Monday 19:30 for 20:00, Wednesday 18:30 for 19:00, Amsterdam time
+OS_SLOTS = (
+    (0, 19, 30, "20:00"),  # Monday
+    (2, 18, 30, "19:00"),  # Wednesday
+)
 
 # SS: every Saturday at 14:00 Amsterdam time (session at 14:30)
 # Active from April 5, 2026 onwards (first Saturday on or after April 5)
@@ -86,22 +87,19 @@ class SessionReminderJob:
         date_str = now.date().isoformat()
         slot_key = f"{date_str}:{now.hour:02d}:{now.minute:02d}"
 
-        # OS reminder — every Monday 18:30 Amsterdam
-        if (
-            now.weekday() == OS_WEEKDAY
-            and now.hour == OS_HOUR
-            and now.minute == OS_MINUTE
-        ):
-            last = await self._repo.kv_get(
-                self._dutch_guild_id or self._guild_id, KV_OS_LAST_REMINDER
-            )
-            if last != slot_key:
-                await self._send_os_reminder()
-                await self._repo.kv_set(
-                    self._dutch_guild_id or self._guild_id,
-                    KV_OS_LAST_REMINDER,
-                    slot_key,
+        # OS reminders — 30 minutes before each Dutch live session
+        for weekday, hour, minute, session_time in OS_SLOTS:
+            if now.weekday() == weekday and now.hour == hour and now.minute == minute:
+                last = await self._repo.kv_get(
+                    self._dutch_guild_id or self._guild_id, KV_OS_LAST_REMINDER
                 )
+                if last != slot_key:
+                    await self._send_os_reminder(session_time=session_time)
+                    await self._repo.kv_set(
+                        self._dutch_guild_id or self._guild_id,
+                        KV_OS_LAST_REMINDER,
+                        slot_key,
+                    )
 
         # SS reminder — every Saturday 14:00 Amsterdam, from SS_START_DATE onwards
         if (
@@ -119,14 +117,14 @@ class SessionReminderJob:
     async def _before(self) -> None:
         await self._bot.wait_until_ready()
 
-    async def _send_os_reminder(self) -> None:
+    async def _send_os_reminder(self, *, session_time: str) -> None:
         ch = await self._get_channel(OS_CHANNEL_ID)
         if not ch:
             return
         try:
             await ch.send(
                 f"<@&{OS_ROLE_ID}>\n\n"
-                "De live sessie begint over 30 minuten. Om 19:00 CET zijn we live.\n\n"
+                f"De live sessie begint over 30 minuten. Om {session_time} zijn we live.\n\n"
                 "Het spreekonderwerp van vandaag heb je gisteren ontvangen. "
                 "Je hoeft je niet voor te bereiden, maar als je dat hebt gedaan, "
                 "is dat helemaal prima.\n\n"

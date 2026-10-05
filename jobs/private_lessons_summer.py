@@ -8,14 +8,11 @@ from jobs import private_lessons as base
 EN_PRIVATE_FAQS = {
     "cost": (
         "**What does it cost?**\n\n"
-        "**Summer offer - limited spots**\n\n"
         "Trial session - 30 min - **EUR 24** (one time)\n"
-        "Speaking Builder - 4 x 60 min - **EUR 189** (EUR 47.25/hour, save 10%)\n"
-        "Confidence Intensive - 10 x 60 min - **EUR 389** (EUR 38.90/hour, save 20%)\n\n"
-        "**Summer Split**\n"
-        "Speaking Builder: **EUR 95 now**, **EUR 94 before session 3**\n"
-        "Confidence Intensive: **EUR 195 now**, **EUR 194 before session 6**\n\n"
-        "Private tutors elsewhere often charge EUR 50-80 per hour.\n\n"
+        "Speaking Builder - 4 x 60 min - **EUR 189** (EUR 47.25/hour)\n"
+        "Confidence Intensive - 10 x 60 min - **EUR 389** (EUR 38.90/hour)\n\n"
+        "Split payments are possible. Use private lessons for work, calls, small talk, presentations, "
+        "confidence, or exam speaking practice.\n\n"
         f"Not sure which fits? Start with the trial. [View all packages]({base.EN_PRIVATE_URL})"
     ),
     "booking": base.EN_PRIVATE_FAQS["booking"],
@@ -32,10 +29,8 @@ EN_PRIVATE_FAQS = {
     "availability": (
         "**Is there space right now?**\n\n"
         "Private lessons are kept limited so they stay calm and focused.\n\n"
-        "Current summer availability:\n"
-        "- Speaking Builder: **10 spots left**\n"
-        "- Confidence Intensive: **7 spots left**\n\n"
-        f"Check current availability: [learnwithlucas.com/private-lessons]({base.EN_PRIVATE_URL})"
+        "Current availability is shown on the private lessons page.\n\n"
+        f"Check current availability: [learnwithlucas.com/en/private-lessons]({base.EN_PRIVATE_URL})"
     ),
     "vs_supported": (
         "**Private lessons vs Supported Speaking - which is better?**\n\n"
@@ -47,14 +42,14 @@ EN_PRIVATE_FAQS = {
     ),
     "exam_prep": (
         "**Can you help with exam prep?**\n\n"
-        "Yes. Private lessons can focus on speaking, grammar or exam preparation.\n\n"
-        "The Confidence Intensive is best if you have a specific goal or deadline.\n\n"
+        "Yes. Private lessons can focus on an exam, interview, presentation, work call, "
+        "or any speaking situation where pressure gets in the way.\n\n"
         f"[View packages]({base.EN_PRIVATE_URL})"
     ),
     "payment": (
         "**How do I pay?**\n\n"
         "Payment is via the website checkout. Sociabuzz is available as an alternative option.\n\n"
-        f"All packages and checkout: [learnwithlucas.com/private-lessons]({base.EN_PRIVATE_URL})\n\n"
+        f"All packages and checkout: [learnwithlucas.com/en/private-lessons]({base.EN_PRIVATE_URL})\n\n"
         "Questions about payment? Email english@learnwithlucas.com"
     ),
 }
@@ -63,15 +58,10 @@ EN_PRIVATE_FAQS = {
 NL_PRIVATE_FAQS = {
     "kosten": (
         "**Wat kost het?**\n\n"
-        "**Zomeractie - beperkt aantal plekken**\n\n"
         f"Proefsessie - 30 min - **EUR 28** - [boek hier]({base.NL_TRIAL_LINK})\n"
-        f"Speaking Builder - 4 x 60 min - **EUR 219** (EUR 54,75/uur, 10% korting) - [boek hier]({base.NL_BUILDER_LINK})\n"
-        f"Confidence Intensive - 10 x 60 min - **EUR 469** (EUR 46,90/uur, 20% korting) - [boek hier]({base.NL_INTENSIVE_LINK})\n\n"
-        "**Zomer Split**\n"
-        "Speaking Builder: **EUR 110 nu**, **EUR 109 voor sessie 3**\n"
-        f"Confidence Intensive: **EUR 235 nu** - [deel 1]({base.NL_INTENSIVE_P1_LINK}), "
-        f"**EUR 234 voor sessie 6** - [deel 2]({base.NL_INTENSIVE_P2_LINK})\n\n"
-        "Elders betaal je al snel EUR 60-80 per uur.\n\n"
+        f"Speaking Builder - 4 x 60 min - **EUR 219** (+ 3 maanden Ondersteund Spreken) - [boek hier]({base.NL_BUILDER_LINK})\n"
+        f"Confidence Intensive - 10 x 60 min - **EUR 469** (+ 6 maanden Ondersteund Spreken) - [boek hier]({base.NL_INTENSIVE_LINK})\n\n"
+        "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
         f"Niet zeker? Begin met de proefsessie. [Alle pakketten]({base.NL_PRIVATE_URL})"
     ),
     "boeken": base.NL_PRIVATE_FAQS["boeken"],
@@ -80,10 +70,8 @@ NL_PRIVATE_FAQS = {
     "beschikbaarheid": (
         "**Is er nu plek?**\n\n"
         "Privelessen zijn beperkt zodat ze rustig en gefocust blijven.\n\n"
-        "Huidige zomerbeschikbaarheid:\n"
-        "- Speaking Builder: **nog 10 beschikbaar**\n"
-        "- Confidence Intensive: **nog 7 beschikbaar**\n\n"
-        f"Bekijk beschikbaarheid: [learnwithlucas.com/priveles-nederlands]({base.NL_PRIVATE_URL})"
+        "De actuele beschikbaarheid staat op de privelespagina.\n\n"
+        f"Bekijk beschikbaarheid: [learnwithlucas.com/nl/priveles-nederlands]({base.NL_PRIVATE_URL})"
     ),
     "bundels": base.NL_PRIVATE_FAQS["bundels"],
     "examen": base.NL_PRIVATE_FAQS["examen"],
@@ -98,20 +86,17 @@ def build_en_private_embed() -> discord.Embed:
             "One on one. Calm. Focused. Yours.\n\n"
             "For learners who understand English but want a quiet space to practice speaking "
             "with personal guidance. No scripts. No exams. Pauses included.\n\n"
-            "**Summer Split:** 4 hour and 10 hour packages can now be paid in 2 payments, "
-            "same total price. Limited spots.\n\n"
+            "Split payments are possible for larger packages.\n\n"
             "**Sessions and Packages**\n"
             f"- Trial session - 30 min - **EUR 24** - [book]({base.EN_PRIVATE_URL})\n"
             f"- Speaking Builder - 4 x 60 min - **EUR 189** (EUR 47.25/hour) - [book]({base.EN_PRIVATE_URL})\n"
-            "  Summer offer: **10 spots left** - split **EUR 95 now**, **EUR 94 before session 3**\n"
             f"- Confidence Intensive - 10 x 60 min - **EUR 389** (EUR 38.90/hour) - [book]({base.EN_PRIVATE_URL})\n"
-            "  Summer offer: **7 spots left** - split **EUR 195 now**, **EUR 194 before session 6**\n\n"
-            "Private tutors elsewhere often charge EUR 50-80 per hour.\n"
+            "\n"
             "Platform: Zoom or Discord, your choice.\n\n"
             "Questions? Use the dropdown below or email english@learnwithlucas.com"
         ),
     )
-    embed.set_footer(text="private-lessons:en:summer:v1")
+    embed.set_footer(text="private-lessons:en:v3")
     return embed
 
 
@@ -122,22 +107,18 @@ def build_nl_private_embed() -> discord.Embed:
             "Een op een. Rustig. Gericht. Voor jou.\n\n"
             "Voor leerlingen die Nederlands begrijpen maar een rustige plek willen om te spreken "
             "met persoonlijke begeleiding. Geen scripts. Geen examens. Pauzes inbegrepen.\n\n"
-            "**Zomer Split:** 4 uur en 10 uur pakketten kun je nu in 2 termijnen betalen, "
-            "zelfde totaalprijs. Beperkt aantal plekken.\n\n"
+            "Speaking Builder en Confidence Intensive bevatten gratis maanden Ondersteund Spreken.\n\n"
             "**Sessies en Pakketten**\n"
             f"- Proefsessie - 30 min - **EUR 28** - [boek]({base.NL_TRIAL_LINK})\n"
-            f"- Speaking Builder - 4 x 60 min - **EUR 219** (EUR 54,75/uur) - [boek]({base.NL_BUILDER_LINK})\n"
-            "  Zomeractie: **nog 10 beschikbaar** - split **EUR 110 nu**, **EUR 109 voor sessie 3**\n"
-            f"- Confidence Intensive - 10 x 60 min - **EUR 469** (EUR 46,90/uur) - [boek]({base.NL_INTENSIVE_LINK})\n"
-            f"  Zomeractie: **nog 7 beschikbaar** - [EUR 235 nu]({base.NL_INTENSIVE_P1_LINK}), "
-            f"[EUR 234 voor sessie 6]({base.NL_INTENSIVE_P2_LINK})\n\n"
+            f"- Speaking Builder - 4 x 60 min - **EUR 219** - [boek]({base.NL_BUILDER_LINK})\n"
+            f"- Confidence Intensive - 10 x 60 min - **EUR 469** - [boek]({base.NL_INTENSIVE_LINK})\n\n"
             "Speaking Builder bevat 3 maanden Ondersteund Spreken gratis.\n"
             "Confidence Intensive bevat 6 maanden Ondersteund Spreken gratis.\n"
             "Platform: Zoom of Discord, jouw keuze.\n\n"
-            "Vragen? Gebruik het menu hieronder of mail lucas@learnwithlucas.com"
+            "Vragen? Gebruik het menu hieronder of mail english@learnwithlucas.com"
         ),
     )
-    embed.set_footer(text="private-lessons:nl:summer:v1")
+    embed.set_footer(text="private-lessons:nl:v3")
     return embed
 
 

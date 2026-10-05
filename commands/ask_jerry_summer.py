@@ -28,7 +28,7 @@ def _replace_answer(
 
 
 def apply_ask_jerry_summer_copy() -> None:
-    """Keep Ask Jerry FAQ copy aligned with current summer lessons and voice behavior."""
+    """Keep Ask Jerry FAQ copy aligned with current lessons and voice behavior."""
 
     replacements = [
         _replace_answer(
@@ -37,24 +37,20 @@ def apply_ask_jerry_summer_copy() -> None:
             "How much does it cost?",
             "Supported Speaking costs **EUR 7.99 per month**, **EUR 39.95 for 6 months** "
             "(1 month free), or **EUR 79.90 per year** (2 months free).\n\n"
-            "For comparison: the current summer private trial session is EUR 24 for 30 minutes. "
+            "For comparison: a private trial session is EUR 24 for 30 minutes. "
             "Supported Speaking is weekly practice for less than one coffee a week.\n\n"
-            "100% refund within 24 hours if it is not what you expected. No questions asked.\n\n"
+            "14 day money back if it is not what you expected. No questions asked.\n\n"
             f"[Start today]({ask_jerry.EN_SUPPORTED_SPEAKING_URL})",
         ),
         _replace_answer(
             ask_jerry.FAQ,
             "private_lessons",
             "How much do private lessons cost?",
-            "**Summer offer - limited spots**\n\n"
             "**Trial session** - 30 minutes - **EUR 24** (one time)\n"
-            "**Speaking Builder** - 4 x 60 minutes - **EUR 189** "
-            "(EUR 47.25/hour, save 10%)\n"
-            "Summer split: **EUR 95 now**, **EUR 94 before session 3**\n\n"
-            "**Confidence Intensive** - 10 x 60 minutes - **EUR 389** "
-            "(EUR 38.90/hour, save 20%)\n"
-            "Summer split: **EUR 195 now**, **EUR 194 before session 6**\n\n"
-            "Private tutors elsewhere often charge EUR 50-80 per hour.\n\n"
+            "**Speaking Builder** - 4 x 60 minutes - **EUR 189** (EUR 47.25/hour)\n"
+            "**Confidence Intensive** - 10 x 60 minutes - **EUR 389** (EUR 38.90/hour)\n\n"
+            "Split payments are possible. Good for work, calls, small talk, presentations, "
+            "confidence, or exam speaking practice.\n\n"
             "Not sure which fits? Start with the trial. "
             f"[View all packages]({ask_jerry.EN_PRIVATE_LESSONS_URL})",
         ),
@@ -63,9 +59,7 @@ def apply_ask_jerry_summer_copy() -> None:
             "private_lessons",
             "Is there space right now?",
             "Private lessons are kept limited so they stay calm and focused.\n\n"
-            "Current summer availability:\n"
-            "- Speaking Builder: **10 spots left**\n"
-            "- Confidence Intensive: **7 spots left**\n\n"
+            "Current availability is shown on the private lessons page.\n\n"
             f"Check current availability at {ask_jerry.EN_PRIVATE_LESSONS_URL}",
         ),
         _replace_answer(
@@ -82,26 +76,20 @@ def apply_ask_jerry_summer_copy() -> None:
             ask_jerry.NL_FAQ,
             "priveles",
             "Hoeveel kosten privélessen?",
-            "**Zomeractie - beperkt aantal plekken**\n\n"
             "**Proefsessie** - 30 minuten - **EUR 28** (eenmalig)\n"
-            "**Speaking Builder** - 4 x 60 minuten - **EUR 219** "
-            "(EUR 54,75/uur, 10% korting)\n"
-            "Zomer split: **EUR 110 nu**, **EUR 109 voor sessie 3**\n\n"
-            "**Confidence Intensive** - 10 x 60 minuten - **EUR 469** "
-            "(EUR 46,90/uur, 20% korting)\n"
-            "Zomer split: **EUR 235 nu**, **EUR 234 voor sessie 6**\n\n"
+            "**Speaking Builder** - 4 x 60 minuten - **EUR 219** (+ 3 maanden Ondersteund Spreken)\n"
+            "**Confidence Intensive** - 10 x 60 minuten - **EUR 469** (+ 6 maanden Ondersteund Spreken)\n\n"
+            "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
             "Niet zeker welk pakket past? Begin met de proefsessie. "
-            "Alle info: https://learnwithlucas.com/priveles-nederlands/",
+            f"Alle info: {ask_jerry.NL_PRIVATE_LESSONS_URL}",
         ),
         _replace_answer(
             ask_jerry.NL_FAQ,
             "priveles",
             "Is er nu plek?",
             "Privelessen zijn beperkt zodat ze rustig en gefocust blijven.\n\n"
-            "Huidige zomerbeschikbaarheid:\n"
-            "- Speaking Builder: **nog 10 beschikbaar**\n"
-            "- Confidence Intensive: **nog 7 beschikbaar**\n\n"
-            "Bekijk huidige beschikbaarheid op https://learnwithlucas.com/priveles-nederlands/",
+            "De actuele beschikbaarheid staat op de privelespagina.\n\n"
+            f"Bekijk huidige beschikbaarheid op {ask_jerry.NL_PRIVATE_LESSONS_URL}",
         ),
         _replace_answer(
             ask_jerry.NL_FAQ,

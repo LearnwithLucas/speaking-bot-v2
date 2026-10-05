@@ -17,9 +17,10 @@ Hey, welcome to the Online English Café.
 This is a place to practice speaking English — not study it. \
 No tests, no grades, no pressure to be perfect.
 
-The free live lessons run on Monday, Wednesday, Thursday, Friday and Saturday. \
-Just show up. You can listen, say one sentence, or have a full conversation. \
-Whatever feels right.
+Start small: read along in the community, answer a daily question, \
+or try one short voice conversation when you are ready.
+
+If you want a guided path, use /guide or visit https://learnwithlucas.com/en/start/.
 
 If you want to say hi, <#{say_hello}> is a good place to start.
 
@@ -27,14 +28,15 @@ See you in there.\
 """
 
 NL_WELCOME_DM = """\
-Hey, welkom bij Ondersteund Spreken.
+Hey, welkom bij Learn with Lucas.
 
 Dit is een plek om Nederlands te oefenen, niet om het te bestuderen. \
 Geen toetsen, geen beoordelingen, geen druk om perfect te zijn.
 
-Elke maandag om 19:00 CET is er een live spreeksessie. \
-Je kunt gewoon binnenkomen. Luisteren, één zin zeggen, of een heel gesprek voeren. \
-Wat goed voelt.
+Begin klein: lees mee in de spreekgroep, beantwoord een dagelijkse vraag, \
+of probeer één kort gesprek wanneer je eraan toe bent.
+
+Als je een duidelijke route wilt, gebruik /guide of ga naar https://learnwithlucas.com/nl/begin/.
 
 Als je jezelf wilt voorstellen, kan dat in <#{zeg_hallo}>.
 

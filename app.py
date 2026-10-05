@@ -221,7 +221,7 @@ class SpeakingBot(commands.Bot):
             try:
                 guild_id = self.dutch_guild_id or self.guild_id
                 await self.repo.kv_set(
-                    guild_id, "supported_speaking_nl_message_id_v3", ""
+                    guild_id, "supported_speaking_nl_message_id_v4", ""
                 )
                 pl = PrivateLessonsPublisher(bot=self, repo=self.repo)
                 await pl.publish_nl_supported()

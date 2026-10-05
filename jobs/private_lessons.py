@@ -10,14 +10,14 @@ log = logging.getLogger("jobs.private_lessons")
 # ---- Channel IDs ----
 EN_PRIVATE_CHANNEL_ID = 1483062284346458122
 NL_PRIVATE_CHANNEL_ID = 1483061444399464540
-EN_SUPPORTED_CHANNEL_ID = 1483065969310961776
-NL_SUPPORTED_CHANNEL_ID = 1483065869465682083
+EN_SUPPORTED_CHANNEL_ID = EN_PRIVATE_CHANNEL_ID
+NL_SUPPORTED_CHANNEL_ID = NL_PRIVATE_CHANNEL_ID
 
 # ---- Info page links ----
-EN_PRIVATE_URL = "https://learnwithlucas.com/private-lessons/"
-NL_PRIVATE_URL = "https://learnwithlucas.com/priveles-nederlands/"
-EN_SUPPORTED_URL = "https://learnwithlucas.com/supported-speaking/"
-NL_SUPPORTED_URL = "https://learnwithlucas.com/ondersteund-spreken/"
+EN_PRIVATE_URL = "https://learnwithlucas.com/en/private-lessons/"
+NL_PRIVATE_URL = "https://learnwithlucas.com/nl/priveles-nederlands/"
+EN_SUPPORTED_URL = "https://learnwithlucas.com/en/supported-speaking/"
+NL_SUPPORTED_URL = "https://learnwithlucas.com/nl/ondersteund-spreken/"
 
 # ---- Payment links: Supported Speaking EN ----
 SS_STRIPE_MONTHLY = "https://buy.stripe.com/fZueVe9L7b0j5wf4jYg7e0d"
@@ -44,10 +44,10 @@ NL_EXAM_BUILDER_LINK   = "https://buy.stripe.com/7sY00k7CZc4n4sb4jYg7e0g"
 NL_EXAM_INTENSIVE_LINK = "https://buy.stripe.com/28E6oI6yVd8rf6P7wag7e0h"
 
 # ---- KV keys (bumped to force fresh posts) ----
-KV_EN_PRIVATE_MSG  = "private_lessons_en_message_id_v2"
-KV_NL_PRIVATE_MSG  = "private_lessons_nl_message_id_v2"
-KV_EN_SUPPORTED_MSG = "supported_speaking_en_message_id_v3"
-KV_NL_SUPPORTED_MSG = "supported_speaking_nl_message_id_v3"
+KV_EN_PRIVATE_MSG  = "private_lessons_en_message_id_v3"
+KV_NL_PRIVATE_MSG  = "private_lessons_nl_message_id_v3"
+KV_EN_SUPPORTED_MSG = "supported_speaking_en_message_id_v4"
+KV_NL_SUPPORTED_MSG = "supported_speaking_nl_message_id_v4"
 
 
 # =======================================================
@@ -57,17 +57,15 @@ KV_NL_SUPPORTED_MSG = "supported_speaking_nl_message_id_v3"
 EN_PRIVATE_FAQS = {
     "cost": (
         "**What does it cost?**\n\n"
-        "Trial session - 30 min - **€22** (one time)\n"
-        "Speaking Builder - 4 x 60 min - **€159** (save 10%)\n"
-        "Confidence Intensive - 10 x 60 min - **€349** (save 20%)\n\n"
-        "Exam prep:\n"
-        "Exam Prep Builder - 4 x 60 min - **€179**\n"
-        "Exam Prep Intensive - 10 x 60 min - **€379**\n\n"
+        "Trial session - 30 min - **€24** (one time)\n"
+        "Speaking Builder - 4 x 60 min - **€189** (€47.25/hour)\n"
+        "Confidence Intensive - 10 x 60 min - **€389** (€38.90/hour)\n\n"
+        "Good for work calls, small talk, presentations, confidence, or exam speaking practice.\n\n"
         f"Not sure which fits? Start with the trial. [View all packages]({EN_PRIVATE_URL})"
     ),
     "booking": (
         "**How do I book?**\n\n"
-        f"1. Go to [learnwithlucas.com/private-lessons]({EN_PRIVATE_URL})\n"
+        f"1. Go to [learnwithlucas.com/en/private-lessons]({EN_PRIVATE_URL})\n"
         "2. Pick a session or package and complete checkout\n"
         "3. You receive a calendar link. Pick a time that works for you.\n"
         "4. We meet via Zoom or Discord. No setup needed.\n\n"
@@ -94,15 +92,15 @@ EN_PRIVATE_FAQS = {
     "availability": (
         "**Is there space right now?**\n\n"
         "Private lessons are kept limited so they stay calm and focused.\n\n"
-        "If there is no space right now, you are always welcome in the free live lessons "
+        "If there is no space right now, you are always welcome in the free community "
         "and the speaking community here.\n\n"
-        f"Check current availability: [learnwithlucas.com/private-lessons]({EN_PRIVATE_URL})"
+        f"Check current availability: [learnwithlucas.com/en/private-lessons]({EN_PRIVATE_URL})"
     ),
     "vs_supported": (
         "**Private lessons vs Supported Speaking - which is better?**\n\n"
         "**Private lessons** are one-on-one with Lucas. Fully personalised, your pace, "
         "your topics, your goals. Best for specific targets or people who want dedicated attention. "
-        "Trial from €22.\n\n"
+        "Trial from €24.\n\n"
         "**Supported Speaking** is a group subscription at €7.99/month. Weekly live sessions "
         "with up to 20 people, practice guides three times a week, stories with audio every month. "
         "Best for consistent practice at a sustainable cost.\n\n"
@@ -110,16 +108,15 @@ EN_PRIVATE_FAQS = {
     ),
     "exam_prep": (
         "**Can you help with IELTS, TOEFL or Cambridge?**\n\n"
-        "Yes. The exam prep packages focus specifically on the speaking component.\n\n"
-        "Exam Prep Builder - 4 x 60 min - **€179**\n"
-        "Exam Prep Intensive - 10 x 60 min - **€379**\n\n"
-        "Sessions cover: test format, timing, structuring answers, common mistakes under pressure.\n\n"
-        f"[Book exam prep]({EN_PRIVATE_URL})"
+        "Yes. Private lessons can focus on an exam, interview, presentation, work call, "
+        "or any speaking situation where pressure gets in the way.\n\n"
+        "Start with the 30 minute trial, or email english@learnwithlucas.com if you want to ask about a package first.\n\n"
+        f"[View private lessons]({EN_PRIVATE_URL})"
     ),
     "payment": (
         "**How do I pay?**\n\n"
         "Payment is via Stripe (credit card, debit card).\n\n"
-        f"All packages and checkout: [learnwithlucas.com/private-lessons]({EN_PRIVATE_URL})\n\n"
+        f"All packages and checkout: [learnwithlucas.com/en/private-lessons]({EN_PRIVATE_URL})\n\n"
         "Questions about payment? Email english@learnwithlucas.com"
     ),
 }
@@ -133,18 +130,16 @@ NL_PRIVATE_FAQS = {
         "Confidence Intensive in twee delen:\n"
         f"Deel 1 - **€235** - [boek hier]({NL_INTENSIVE_P1_LINK})\n"
         f"Deel 2 - **€234** - [boek hier]({NL_INTENSIVE_P2_LINK})\n\n"
-        "Examenvoorbereiding:\n"
-        f"Builder - 4 x 60 min - **€249** - [boek hier]({NL_EXAM_BUILDER_LINK})\n"
-        f"Intensive - 10 x 60 min - **€529** - [boek hier]({NL_EXAM_INTENSIVE_LINK})\n\n"
+        "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
         f"Niet zeker? Begin met de proefsessie. [Alle pakketten]({NL_PRIVATE_URL})"
     ),
     "boeken": (
         "**Hoe boek ik?**\n\n"
-        f"1. Ga naar [learnwithlucas.com/priveles-nederlands]({NL_PRIVATE_URL})\n"
+        f"1. Ga naar [learnwithlucas.com/nl/priveles-nederlands]({NL_PRIVATE_URL})\n"
         "2. Kies een sessie of pakket en rond de betaling af\n"
         "3. Je ontvangt een kalenderlink. Kies een tijd die voor jou werkt.\n"
         "4. We ontmoeten elkaar via Zoom of Discord. Geen installatie nodig.\n\n"
-        "Vragen voor je boekt? Mail dutch@learnwithlucas.com"
+        "Vragen voor je boekt? Mail english@learnwithlucas.com"
     ),
     "niveau": (
         "**Welk niveau heb ik nodig?**\n\n"
@@ -167,9 +162,9 @@ NL_PRIVATE_FAQS = {
     "beschikbaarheid": (
         "**Is er nu plek?**\n\n"
         "Privélessen zijn beperkt zodat ze rustig en gefocust blijven.\n\n"
-        "Als er nu geen plek is, ben je altijd welkom bij de gratis live lessen "
+        "Als er nu geen plek is, ben je altijd welkom bij de gratis spreekgroep "
         "en de spreekgemeenschap hier.\n\n"
-        f"Bekijk beschikbaarheid: [learnwithlucas.com/priveles-nederlands]({NL_PRIVATE_URL})"
+        f"Bekijk beschikbaarheid: [learnwithlucas.com/nl/priveles-nederlands]({NL_PRIVATE_URL})"
     ),
     "bundels": (
         "**Zijn er bundels met Ondersteund Spreken?**\n\n"
@@ -180,18 +175,16 @@ NL_PRIVATE_FAQS = {
     ),
     "examen": (
         "**Kunnen privélessen helpen bij NT2 of inburgering?**\n\n"
-        "Ja. De examenvoorbereiding pakketten zijn specifiek gericht op spreektoetsen.\n\n"
-        f"Examenvoorbereiding Builder - 4 x 60 min - **€249** - [boek hier]({NL_EXAM_BUILDER_LINK})\n"
-        f"Examenvoorbereiding Intensive - 10 x 60 min - **€529** - [boek hier]({NL_EXAM_INTENSIVE_LINK})\n\n"
-        "De sessies richten zich op het spreekonderdeel: testformaat, timing, veelgemaakte fouten "
-        "en hoe je antwoorden structureert onder druk."
+        "Ja. Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten, "
+        "zonder extra kosten.\n\n"
+        "We oefenen met spreken, werk, de gemeente, de dokter of jouw examenonderdelen."
     ),
     "betaling": (
         "**Hoe betaal ik?**\n\n"
         "Betaling via Stripe (creditcard, debetkaart). Geen Airwallex voor privélessen.\n\n"
         "Directe betaallinks staan per pakket in het menu hierboven.\n\n"
-        f"Alle pakketten: [learnwithlucas.com/priveles-nederlands]({NL_PRIVATE_URL})\n\n"
-        "Vragen over betalen? Mail dutch@learnwithlucas.com"
+        f"Alle pakketten: [learnwithlucas.com/nl/priveles-nederlands]({NL_PRIVATE_URL})\n\n"
+        "Vragen over betalen? Mail english@learnwithlucas.com"
     ),
 }
 
@@ -205,12 +198,12 @@ EN_SUPPORTED_FAQS = {
         "- 5 B1-level stories with audio every month\n"
         "- Error recognition training in every guide\n"
         "- Community access on Discord, WhatsApp and Telegram\n\n"
-        "A private lesson with Lucas costs €22 for 30 minutes. "
+        "A private lesson with Lucas costs €24 for 30 minutes. "
         "This is a weekly live session and practice materials for €7.99 a month."
     ),
     "session": (
         "**When is the live session?**\n\n"
-        "Every Saturday at 14:30 CEST. The first session is Saturday April 5, 2026.\n\n"
+        "Every Saturday at 14:30 CEST on Discord.\n\n"
         "Session times by region:\n"
         "London - 13:30 BST\n"
         "Amsterdam / Brussels - 14:30 CEST\n"
@@ -241,13 +234,13 @@ EN_SUPPORTED_FAQS = {
         f"Monthly €7.99 - [GCash / DANA / Touch 'n Go]({SS_AIR_MONTHLY})\n"
         f"6 months €39.95 - [GCash / DANA / Touch 'n Go]({SS_AIR_6MO})\n"
         f"Yearly €79.90 - [GCash / DANA / Touch 'n Go]({SS_AIR_YEARLY})\n\n"
-        "100% refund within 24 hours. Cancel anytime."
+        "14 day money back. Cancel anytime."
     ),
     "level": (
         "**What level do I need?**\n\n"
         "Supported Speaking works best at B1 or B2 level. "
         "That means you understand English reasonably well but hesitate when it is time to speak.\n\n"
-        "If you are a complete beginner, start with the free live lessons first and join when you feel ready."
+        "If you are a complete beginner, start with the free community first and join when you feel ready."
     ),
     "community": (
         "**What community access do I get?**\n\n"
@@ -260,8 +253,7 @@ EN_SUPPORTED_FAQS = {
     "cancel": (
         "**Can I cancel anytime?**\n\n"
         "Yes. Cancel anytime, no questions asked.\n\n"
-        "There is also a 100% refund within 24 hours of joining if it turns out it is not what you expected. "
-        "No forms, no waiting."
+        "There is also a 14 day money back period if it turns out it is not what you expected."
     ),
     "sea_payment": (
         "**Can I pay with GCash, DANA or Touch 'n Go?**\n\n"
@@ -277,7 +269,7 @@ EN_SUPPORTED_FAQS = {
         "**Supported Speaking** is a group subscription at €7.99/month. "
         "Weekly live sessions with up to 20 people, practice guides three times a week, "
         "stories with audio every month. Best for consistent affordable practice.\n\n"
-        "**Private lessons** are one-on-one with Lucas from €22 for 30 minutes. "
+        "**Private lessons** are one-on-one with Lucas from €24 for 30 minutes. "
         "Fully personalised, your pace, your topics. Best for specific goals.\n\n"
         "Many members use both."
     ),
@@ -288,33 +280,34 @@ NL_SUPPORTED_FAQS = {
         "**Wat is Ondersteund Spreken?**\n\n"
         "Een wekelijks oefenlidmaatschap voor **€11,99/maand**.\n\n"
         "Je krijgt:\n"
-        "- Live sessie elke maandag of woensdag om 19:00 CET in een kleine groep\n"
+        "- Live sessies maandag 20:00 en woensdag 19:00 via WhatsApp\n"
         "- Leden editie oefengids elke vrijdag\n"
         "- Spreekonderwerp elke zondag (in 3 niveaus)\n"
         "- 5 verhalen met audio per maand\n"
-        "- Discord community toegang\n\n"
+        "- Kamers op A2, B1 en B2, plus emailfeedback\n\n"
         "Een privéles met Lucas kost €28 voor 30 minuten. "
         "Dit is elke week live Nederlands oefenen voor €11,99 per maand."
     ),
     "sessie": (
         "**Hoe werkt de live sessie?**\n\n"
-        "Elke maandag en woensdag om 19:00 CET, een uur lang.\n\n"
+        "Elke maandag om 20:00 en woensdag om 19:00, live via WhatsApp.\n\n"
         "- 0:00 tot 0:15 - introductie, iedereen samen\n"
         "- 0:15 tot 0:45 - breakout rooms op niveau (A2, B1 of B2), Lucas bezoekt elke kamer\n"
         "- 0:45 tot 1:00 - afsluiting, veelgemaakte fouten besproken\n\n"
         "Max 20 personen per sessie. Rustige sfeer. "
-        "Je kiest zelf welke avond past. Je hoeft niet beide avonden te komen."
+        "Je kiest zelf welke avond past. Met Standaard kom je een keer per week, met Premium twee keer per week."
     ),
     "aanmelden": (
         "**Hoe meld ik me aan?**\n\n"
         "Nederland / Belgie / EU:\n"
         f"Maandelijks €11,99 - [Stripe]({OS_STRIPE_MONTHLY})\n"
-        f"6 maanden €59,95 - [Stripe]({OS_STRIPE_6MO})\n"
-        f"Jaarlijks €119,90 - [Stripe]({OS_STRIPE_YEARLY})\n\n"
+        f"Premium €19,99 per maand - [Stripe]({OS_STRIPE_6MO})\n"
+        f"Standaard jaar €119,90 - [Stripe]({OS_STRIPE_YEARLY})\n"
+        "Premium jaar €199,90 - via de cursuspagina\n\n"
         "Filipijnen / Indonesie / Maleisie / Thailand:\n"
         f"Maandelijks €11,99 - [GCash / DANA / Touch 'n Go]({OS_AIR_MONTHLY})\n"
         f"Jaarlijks €119,90 - [GCash / DANA / Touch 'n Go]({OS_AIR_YEARLY})\n\n"
-        "100% terugbetaling binnen 24 uur. Op elk moment opzegbaar."
+        "14 dagen geld-terug-garantie. Op elk moment opzegbaar."
     ),
     "niveau": (
         "**Welk niveau heb ik nodig?**\n\n"
@@ -322,7 +315,7 @@ NL_SUPPORTED_FAQS = {
         "Dat betekent dat je Nederlands redelijk begrijpt maar vastloopt als je moet spreken.\n\n"
         "Er zijn breakout rooms per niveau zodat je altijd oefent met mensen op jouw niveau. "
         "Je kiest zelf welke kamer je ingaat.\n\n"
-        "Als je nog een complete beginner bent, begin dan met de gratis vrijdagsessie "
+        "Als je nog een complete beginner bent, begin dan met de gratis spreekgroep "
         "en sluit je aan als je er klaar voor bent."
     ),
     "community": (
@@ -337,8 +330,7 @@ NL_SUPPORTED_FAQS = {
     "opzeggen": (
         "**Kan ik opzeggen?**\n\n"
         "Ja. Op elk moment opzeggen, geen vragen gesteld.\n\n"
-        "Er is ook 100% terugbetaling binnen 24 uur als het toch niet is wat je verwachtte. "
-        "Geen formulieren, geen wachttijd."
+        "Er is ook een geld-terug-garantie van 14 dagen als het toch niet is wat je verwachtte."
     ),
     "sea_betaling": (
         "**Kan ik betalen met GCash, DANA of Touch 'n Go?**\n\n"
@@ -352,7 +344,7 @@ NL_SUPPORTED_FAQS = {
         "**Wat is het verschil met privélessen?**\n\n"
         "**Ondersteund Spreken** is een groepslidmaatschap voor €11,99/maand. "
         "Wekelijks live oefenen in een kleine groep op jouw niveau, "
-        "oefenmateriaal drie keer per week en verhalen met audio. "
+        "oefenmateriaal, zondagse spreekonderwerpen, audioverhalen en emailfeedback. "
         "Beste keuze voor consistente, betaalbare oefening.\n\n"
         "**Privélessen** zijn een-op-een met Lucas vanaf €28 voor 30 minuten. "
         "Volledig gepersonaliseerd, jouw tempo, jouw onderwerpen. "
@@ -384,16 +376,14 @@ def build_en_private_embed() -> discord.Embed:
             "For learners who understand English but want a quiet space to practice "
             "speaking with personal guidance. No scripts. No exams. Pauses included.\n\n"
             "**Sessions and Packages**\n"
-            f"🔹 Trial session - 30 min - **€22** - [book]({EN_PRIVATE_URL})\n"
-            f"🔹 Speaking Builder - 4 x 60 min - **€159** - [book]({EN_PRIVATE_URL})\n"
-            f"🔹 Confidence Intensive - 10 x 60 min - **€349** - [book]({EN_PRIVATE_URL})\n"
-            f"🔹 Exam Prep Builder - 4 x 60 min - **€179** - [book]({EN_PRIVATE_URL})\n"
-            f"🔹 Exam Prep Intensive - 10 x 60 min - **€379** - [book]({EN_PRIVATE_URL})\n\n"
+            f"🔹 Trial session - 30 min - **€24** - [book]({EN_PRIVATE_URL})\n"
+            f"🔹 Speaking Builder - 4 x 60 min - **€189** - [book]({EN_PRIVATE_URL})\n"
+            f"🔹 Confidence Intensive - 10 x 60 min - **€389** - [book]({EN_PRIVATE_URL})\n\n"
             "Platform: Zoom or Discord, your choice.\n\n"
             "Questions? Use the dropdown below or email english@learnwithlucas.com"
         ),
     )
-    embed.set_footer(text="private-lessons:en:v2")
+    embed.set_footer(text="private-lessons:en:v3")
     return embed
 
 
@@ -407,15 +397,14 @@ def build_nl_private_embed() -> discord.Embed:
             "**Sessies en Pakketten**\n"
             f"🔹 Proefsessie - 30 min - **€28** - [boek]({NL_TRIAL_LINK})\n"
             f"🔹 Speaking Builder - 4 x 60 min - **€219** - [boek]({NL_BUILDER_LINK})\n"
-            f"🔹 Confidence Intensive - 10 x 60 min - **€469** - [boek]({NL_INTENSIVE_LINK})\n"
-            f"🔹 Examenvoorbereiding Builder - 4 x 60 min - **€249** - [boek]({NL_EXAM_BUILDER_LINK})\n"
-            f"🔹 Examenvoorbereiding Intensive - 10 x 60 min - **€529** - [boek]({NL_EXAM_INTENSIVE_LINK})\n\n"
+            f"🔹 Confidence Intensive - 10 x 60 min - **€469** - [boek]({NL_INTENSIVE_LINK})\n\n"
             "Speaking Builder en Confidence Intensive bevatten gratis maanden Ondersteund Spreken.\n"
+            "Examentraining is inbegrepen voor Inburgering, KNM, ONA, NT2 en CNaVT.\n"
             "Platform: Zoom of Discord, jouw keuze.\n\n"
-            "Vragen? Gebruik het menu hieronder of mail dutch@learnwithlucas.com"
+            "Vragen? Gebruik het menu hieronder of mail english@learnwithlucas.com"
         ),
     )
-    embed.set_footer(text="private-lessons:nl:v2")
+    embed.set_footer(text="private-lessons:nl:v3")
     return embed
 
 
@@ -428,18 +417,18 @@ def build_en_supported_embed() -> discord.Embed:
             "and a live session every Saturday.\n\n"
             "**€7.99 / month** — or €39.95 for 6 months (1 month free) — or €79.90/year (2 months free)\n\n"
             "**What you get:**\n"
-            "🎙️ Live session every Saturday 14:30 CEST (max 20 people)\n"
+            "🎙️ Live session every Saturday 14:30 CEST on Discord (max 20 people)\n"
             "📖 Supporter edition guides every Mon, Fri and Sat\n"
             "📚 5 B1-level stories with audio every month\n"
             "🎯 Error recognition training in every guide\n"
             "💬 Community access on Discord, WhatsApp and Telegram\n\n"
             f"EU: [Monthly €7.99]({SS_STRIPE_MONTHLY}) · [6 months €39.95]({SS_STRIPE_6MO}) · [Yearly €79.90]({SS_STRIPE_YEARLY})\n"
             f"SEA: [Monthly €7.99]({SS_AIR_MONTHLY}) · [6 months €39.95]({SS_AIR_6MO}) · [Yearly €79.90]({SS_AIR_YEARLY})\n\n"
-            "100% refund within 24 hours · cancel anytime\n\n"
+            "14 day money back · cancel anytime\n\n"
             "Questions? Use the dropdown below."
         ),
     )
-    embed.set_footer(text="supported-speaking:en:v3")
+    embed.set_footer(text="supported-speaking:en:v4")
     return embed
 
 
@@ -450,20 +439,20 @@ def build_nl_supported_embed() -> discord.Embed:
             "Elke week live Nederlands oefenen met Lucas. In een kleine groep, op jouw niveau.\n\n"
             "Geen cursus. Geen vast schema. Gewoon wekelijks live spreken "
             "met oefenmateriaal dat je echt verder helpt.\n\n"
-            "**€11,99 / maand** — of €59,95 voor 6 maanden (1 maand gratis) — of €119,90/jaar (2 maanden gratis)\n\n"
+            "**Standaard €11,99 / maand** — Premium €19,99 / maand — jaarplannen vanaf €119,90\n\n"
             "**Wat je krijgt:**\n"
-            "🎙️ Live sessie elke maandag of woensdag 19:00 CET\n"
-            "📖 Leden oefengids elke vrijdag\n"
+            "🎙️ Live sessies maandag 20:00 en woensdag 19:00 via WhatsApp\n"
+            "📖 Oefengids elke vrijdag\n"
             "📅 Spreekonderwerp elke zondag (3 niveaus)\n"
             "📚 5 verhalen met audio per maand\n"
-            "💬 Discord community toegang\n\n"
-            f"EU: [Maandelijks €11,99]({OS_STRIPE_MONTHLY}) · [6 maanden €59,95]({OS_STRIPE_6MO}) · [Jaarlijks €119,90]({OS_STRIPE_YEARLY})\n"
+            "✉️ Emailfeedback\n\n"
+            f"EU: [Standaard €11,99]({OS_STRIPE_MONTHLY}) · [Premium €19,99]({OS_STRIPE_6MO}) · [Standaard jaar €119,90]({OS_STRIPE_YEARLY})\n"
             f"SEA: [Maandelijks €11,99]({OS_AIR_MONTHLY}) · [Jaarlijks €119,90]({OS_AIR_YEARLY})\n\n"
-            "100% terugbetaling binnen 24 uur · op elk moment opzegbaar\n\n"
+            "14 dagen geld terug · op elk moment opzegbaar\n\n"
             "Vragen? Gebruik het menu hieronder."
         ),
     )
-    embed.set_footer(text="supported-speaking:nl:v3")
+    embed.set_footer(text="supported-speaking:nl:v4")
     return embed
 
 
