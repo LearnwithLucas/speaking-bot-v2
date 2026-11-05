@@ -73,7 +73,7 @@ EN_PRIVATE_FAQS = {
         "We start talking from the first minute. You can stop and think whenever you need to.\n\n"
         "- We talk about the topics you need English for\n"
         "- Feedback during or after the session, you choose\n"
-        "- Short notes after the session if you want them\n"
+        "- A short written summary after every lesson: what we did, your feedback and the next step\n"
         "- A session is 30 or 60 minutes, depending on what you booked\n"
         "- Platform: Zoom or Discord, your choice"
     ),
@@ -139,7 +139,7 @@ NL_PRIVATE_FAQS = {
         "We praten vanaf de eerste minuut. Je mag altijd even stoppen en nadenken.\n\n"
         "- We praten over de onderwerpen waarvoor jij Nederlands nodig hebt\n"
         "- Feedback tijdens of na de sessie, jij kiest\n"
-        "- Korte notities na de sessie als je die wilt\n"
+        "- Na elke les een korte samenvatting: wat we deden, je feedback en de volgende stap\n"
         "- Een sessie duurt 30 of 60 minuten, net wat je hebt geboekt\n"
         "- Platform: Zoom of Discord, jouw keuze"
     ),
@@ -153,7 +153,7 @@ NL_PRIVATE_FAQS = {
         "**Zijn er bundels met Ondersteund Spreken?**\n\n"
         "Ja. De grotere pakketten bevatten gratis maanden Ondersteund Spreken:\n\n"
         f"Speaking Builder (4 uur, €219): **3 maanden Ondersteund Spreken gratis** · [boek]({NL_BUILDER_LINK})\n"
-        f"Confidence Intensive (10 uur, €469): **6 maanden Ondersteund Spreken gratis** · [boek]({NL_INTENSIVE_LINK})\n\n"
+        f"Confidence Intensive (10 uur, €469): **6 maanden Ondersteund Spreken gratis**, plus de cursus Inburgering A2 compleet · [boek]({NL_INTENSIVE_LINK})\n\n"
         "Zo krijg je privéles en oefen je ook elke week in de groep."
     ),
     "examen": (
@@ -283,11 +283,10 @@ NL_SUPPORTED_FAQS = {
     "community": (
         "**Welke community toegang krijg ik?**\n\n"
         "Volledige toegang tot:\n"
-        "- Deze Discord server: alle kanalen, spraakkanalen en live lessen\n"
-        "- Woord van de dag\n"
-        "- Spreekpartner zoeken\n"
-        "- Alle oefenmateriaal en gidsen\n\n"
-        "Bijna alles gebeurt op Discord."
+        "- De WhatsApp-groep voor leden (de link krijg je na betaling)\n"
+        "- De live sessies, ook via WhatsApp\n"
+        "- De oefengids op vrijdag en het spreekonderwerp op zondag\n"
+        "- Deze Discord-server: woord van de dag, spreekpartner zoeken en de spraakkanalen"
     ),
     "opzeggen": (
         "**Kan ik opzeggen?**\n\n"
@@ -390,13 +389,13 @@ def build_nl_supported_embed() -> discord.Embed:
         title="🌟 Ondersteund Spreken",
         description=(
             "Elke week live Nederlands oefenen met Lucas. In een kleine groep, op jouw niveau.\n\n"
-            "Je spreekt elke week live en oefent met materiaal op jouw niveau.\n\n"
-            "**Standaard €11,99 per maand**, Premium €19,99 per maand, jaarplan vanaf €119,90\n\n"
+            "Standaard: één les per week (maandag of woensdag). Premium: allebei.\n\n"
+            "**Standaard €11,99 per maand**, Premium €19,99 per maand, jaarplan vanaf €119,90 (2 maanden gratis en een gratis privéles)\n\n"
             "**Wat je krijgt:**\n"
             "🎙️ Live sessies maandag 20:00 en woensdag 19:00 via WhatsApp\n"
             "📖 Oefengids elke vrijdag\n"
             "📅 Spreekonderwerp elke zondag (3 niveaus)\n"
-            "📚 5 verhalen met audio per maand\n"
+            "📚 5 verhalen met audio per maand (A2 tot B1)\n"
             "✉️ Emailfeedback\n\n"
             f"[Kies je abonnement →]({NL_SUPPORTED_CHECKOUT_URL})\n"
             "\n"

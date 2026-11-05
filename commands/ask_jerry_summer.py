@@ -49,7 +49,7 @@ def apply_ask_jerry_summer_copy() -> None:
             "**Trial session**, 30 minutes: **€24** (one time)\n"
             "**Speaking Builder**, 4 x 60 minutes: **€189** (€47.25/hour)\n"
             "**Confidence Intensive**, 10 x 60 minutes: **€389** (€38.90/hour)\n\n"
-            "You can pay in parts. Use them for work calls, small talk, presentations "
+            "You can pay the Confidence Intensive in two parts. Use them for work calls, small talk, presentations "
             "or exam speaking.\n\n"
             "Not sure which fits? Start with the trial. "
             f"[View all packages]({ask_jerry.EN_PRIVATE_LESSONS_URL})",
@@ -75,7 +75,7 @@ def apply_ask_jerry_summer_copy() -> None:
             "Hoeveel kosten privélessen?",
             "**Proefsessie**, 30 minuten: **€28** (eenmalig)\n"
             "**Speaking Builder**, 4 x 60 minuten: **€219** (+ 3 maanden Ondersteund Spreken)\n"
-            "**Confidence Intensive**, 10 x 60 minuten: **€469** (+ 6 maanden Ondersteund Spreken)\n\n"
+            "**Confidence Intensive**, 10 x 60 minuten: **€469** (+ 6 maanden Ondersteund Spreken en Inburgering A2 compleet)\n\n"
             "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
             "Niet zeker welk pakket past? Begin met de proefsessie. "
             f"Alle info: {ask_jerry.NL_PRIVATE_LESSONS_URL}",

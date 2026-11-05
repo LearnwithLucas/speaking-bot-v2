@@ -11,7 +11,7 @@ EN_PRIVATE_FAQS = {
         "Trial session, 30 min: **€24** (one time)\n"
         "Speaking Builder, 4 x 60 min: **€189** (€47.25/hour)\n"
         "Confidence Intensive, 10 x 60 min: **€389** (€38.90/hour)\n\n"
-        "You can pay in parts. Use private lessons for work calls, small talk, presentations "
+        "You can pay the Confidence Intensive in two parts. Use private lessons for work calls, small talk, presentations "
         "or exam speaking.\n\n"
         f"Not sure which fits? Start with the trial. [View all packages]({base.EN_PRIVATE_URL})"
     ),
@@ -29,7 +29,6 @@ EN_PRIVATE_FAQS = {
     "availability": (
         "**Is there space right now?**\n\n"
         "I keep the number of private students small.\n\n"
-        "The private lessons page shows when there is space.\n\n"
         f"Check if there is space: [learnwithlucas.com/en/private-lessons]({base.EN_PRIVATE_URL})"
     ),
     "vs_supported": (
@@ -48,7 +47,7 @@ EN_PRIVATE_FAQS = {
     ),
     "payment": (
         "**How do I pay?**\n\n"
-        "You pay through the checkout on the website. You can also pay with Sociabuzz.\n\n"
+        "You pay with Stripe (credit or debit card) on the website.\n\n"
         f"All packages and checkout: [learnwithlucas.com/en/private-lessons]({base.EN_PRIVATE_URL})\n\n"
         "Questions about payment? Email english@learnwithlucas.com"
     ),
@@ -60,7 +59,7 @@ NL_PRIVATE_FAQS = {
         "**Wat kost het?**\n\n"
         f"Proefsessie, 30 min: **€28** · [boek hier]({base.NL_TRIAL_LINK})\n"
         f"Speaking Builder, 4 x 60 min: **€219** (+ 3 maanden Ondersteund Spreken) · [boek hier]({base.NL_BUILDER_LINK})\n"
-        f"Confidence Intensive, 10 x 60 min: **€469** (+ 6 maanden Ondersteund Spreken) · [boek hier]({base.NL_INTENSIVE_LINK})\n\n"
+        f"Confidence Intensive, 10 x 60 min: **€469** (+ 6 maanden Ondersteund Spreken en Inburgering A2 compleet) · [boek hier]({base.NL_INTENSIVE_LINK})\n\n"
         "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
         f"Niet zeker? Begin met de proefsessie. [Alle pakketten]({base.NL_PRIVATE_URL})"
     ),
@@ -70,7 +69,6 @@ NL_PRIVATE_FAQS = {
     "beschikbaarheid": (
         "**Is er nu plek?**\n\n"
         "Ik houd het aantal privéleerlingen klein.\n\n"
-        "Op de privélespagina zie je wanneer er plek is.\n\n"
         f"Bekijk of er plek is: [learnwithlucas.com/nl/priveles-nederlands]({base.NL_PRIVATE_URL})"
     ),
     "bundels": base.NL_PRIVATE_FAQS["bundels"],
@@ -86,7 +84,7 @@ def build_en_private_embed() -> discord.Embed:
             "One on one with Lucas, at your pace.\n\n"
             "For learners who understand English but want a quiet place to practise speaking, "
             "with personal help. You can stop and think whenever you need to.\n\n"
-            "You can pay the larger packages in parts.\n\n"
+            "You can pay the Confidence Intensive in two parts. After every lesson you get a short written summary.\n\n"
             "**Sessions and packages**\n"
             f"- Trial session, 30 min: **€24** · [book]({base.EN_PRIVATE_URL})\n"
             f"- Speaking Builder, 4 x 60 min: **€189** (€47.25/hour) · [book]({base.EN_PRIVATE_URL})\n"
@@ -112,7 +110,7 @@ def build_nl_private_embed() -> discord.Embed:
             f"- Speaking Builder, 4 x 60 min: **€219** · [boek]({base.NL_BUILDER_LINK})\n"
             f"- Confidence Intensive, 10 x 60 min: **€469** · [boek]({base.NL_INTENSIVE_LINK})\n\n"
             "Speaking Builder bevat 3 maanden Ondersteund Spreken gratis.\n"
-            "Confidence Intensive bevat 6 maanden Ondersteund Spreken gratis.\n"
+            "Confidence Intensive bevat 6 maanden Ondersteund Spreken gratis en de cursus Inburgering A2 compleet.\nNa elke les krijg je een korte samenvatting.\n"
             "Platform: Zoom of Discord, jouw keuze.\n\n"
             "Vragen? Gebruik het menu hieronder of mail english@learnwithlucas.com"
         ),

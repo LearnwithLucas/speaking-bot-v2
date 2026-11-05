@@ -135,7 +135,7 @@ FAQ: dict[str, dict] = {
                 "What happens in a session?",
                 "We talk from the first minute, about the topics you need English for.\n\n"
                 "Lucas gives feedback during or after the session, you choose. "
-                "You get short notes after the session if you want them.\n\n"
+                "After every lesson you get a short written summary: what we did, your feedback and the next step.\n\n"
                 "A session is 30 or 60 minutes, depending on what you booked. "
                 "Grammar drills only if you ask for them."
             ),
@@ -422,7 +422,7 @@ NL_FAQ: dict[str, dict] = {
                 "Ondersteund Spreken is een oefenlidmaatschap voor €11,99 per maand.\n\n"
                 "Elke maandag of woensdag is er een live sessie in een kleine groep op jouw niveau (A2, B1 of B2). "
                 "Op vrijdag krijg je de ledenversie van de oefengids. Op zondag krijg je het spreekonderwerp voor de sessie. "
-                "Elke maand krijg je ook een verhaal met audio.\n\n"
+                "Elke maand krijg je ook 5 verhalen met audio (A2 tot B1).\n\n"
                 "Je spreekt elke week live, in een rustige groep en in je eigen tempo.\n\n"
                 f"Meer info: {NL_SUPPORTED_SPEAKING_URL}"
             ),
@@ -441,7 +441,7 @@ NL_FAQ: dict[str, dict] = {
                 "• Maandag 20:00 of woensdag 19:00: live sessie via WhatsApp, op jouw niveau\n"
                 "• Vrijdag: de ledenversie van de oefengids, met fouten om te vinden en extra oefenzinnen\n"
                 "• Zondag: het spreekonderwerp voor de sessie van maandag of woensdag\n\n"
-                "Elke maand krijg je ook een B1-verhaal met audio. "
+                "Elke maand krijg je ook 5 verhalen met audio (A2 tot B1). "
                 "Je leest en luistert tegelijk."
             ),
             (
@@ -475,7 +475,7 @@ NL_FAQ: dict[str, dict] = {
                 "• Een alinea met verborgen fouten om te vinden en te verbeteren\n"
                 "• Vragen om jezelf te testen\n"
                 "• Een korte herkenningstest\n\n"
-                "Dat is ongeveer 3 keer zoveel per gids. Daarbij krijg je de live sessie en elke maand een verhaal."
+                "Dat is ongeveer 3 keer zoveel per gids. Daarbij krijg je de live sessie en elke maand 5 verhalen met audio."
             ),
         ],
     },
@@ -493,7 +493,7 @@ NL_FAQ: dict[str, dict] = {
                 "Hoeveel kosten privélessen?",
                 "**Proefsessie**, 30 minuten: €28 (eenmalig)\n"
                 "**Speaking Builder**, 4 x 60 minuten: €219 (+ 3 maanden Ondersteund Spreken)\n"
-                "**Confidence Intensive**, 10 x 60 minuten: €469 (+ 6 maanden Ondersteund Spreken)\n\n"
+                "**Confidence Intensive**, 10 x 60 minuten: €469 (+ 6 maanden Ondersteund Spreken en Inburgering A2 compleet)\n\n"
                 "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
                 "Niet zeker welk pakket past? Begin met de proefsessie. "
                 f"Alle info: {NL_PRIVATE_LESSONS_URL}"
@@ -518,7 +518,7 @@ NL_FAQ: dict[str, dict] = {
                 "Wat gebeurt er in een sessie?",
                 "We praten vanaf de eerste minuut, over de onderwerpen waarvoor jij Nederlands nodig hebt.\n\n"
                 "Lucas geeft feedback tijdens of na de sessie, jij kiest. "
-                "Na de sessie krijg je korte notities als je die wilt.\n\n"
+                "Na elke les krijg je een korte samenvatting: wat we deden, je feedback en de volgende stap.\n\n"
                 "Een sessie duurt 30 of 60 minuten, net wat je hebt geboekt. "
                 "Grammaticaoefeningen doen we alleen als je erom vraagt."
             ),
