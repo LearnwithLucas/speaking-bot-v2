@@ -40,68 +40,50 @@ def _kv_key(user_id: int) -> str:
 
 # ---- DM content ----
 
-EN_STORY_URL = "https://discord.com/channels/1181652389732831323/1490320758507962490/1490341318801756402"
-NL_STORY_URL = "https://discord.com/channels/1336419808811679754/1490320826027741185/1490341327362195606"
+def _practice_duration(member: discord.Member, is_nl: bool) -> str:
+    """Human-readable time since the member joined the server."""
+    joined = getattr(member, "joined_at", None)
+    if joined is None:
+        return "een tijdje" if is_nl else "a while"
+    days = max(0, (discord.utils.utcnow() - joined).days)
+    if days < 14:
+        return "een paar dagen" if is_nl else "a few days"
+    if days < 60:
+        weeks = days // 7
+        return f"{weeks} weken" if is_nl else f"{weeks} weeks"
+    months = days // 30
+    if months < 12:
+        return f"{months} maanden" if is_nl else f"{months} months"
+    years, rest = divmod(months, 12)
+    if is_nl:
+        y = "1 jaar" if years == 1 else f"{years} jaar"
+        return y if rest == 0 else f"{y} en {rest} {'maand' if rest == 1 else 'maanden'}"
+    y = "1 year" if years == 1 else f"{years} years"
+    return y if rest == 0 else f"{y} and {rest} {'month' if rest == 1 else 'months'}"
 
 
-class ShareStoryViewEN(discord.ui.View):
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
-        self.add_item(discord.ui.Button(
-            label="Share my story ✍️",
-            style=discord.ButtonStyle.link,
-            url=EN_STORY_URL,
-        ))
-
-
-class ShareStoryViewNL(discord.ui.View):
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
-        self.add_item(discord.ui.Button(
-            label="Deel mijn verhaal ✍️",
-            style=discord.ButtonStyle.link,
-            url=NL_STORY_URL,
-        ))
-
-
-def _build_dm_embed_en(member: discord.Member) -> discord.Embed:
-    embed = discord.Embed(
-        title="🌟 Would you share your story?",
-        description=(
-            f"Hey {member.display_name}!\n\n"
-            "You've been a wonderful part of our community. "
-            "Your story could inspire others to join and learn.\n\n"
-            "Would you share your success? Here's a quick template — just answer what you like:\n\n"
-            "**1.** What's one thing you're proud of since joining?\n"
-            "**2.** How has practicing here helped you?\n"
-            "**3.** How would you describe your progress to a friend?\n\n"
-            "It takes less than 2 minutes and you choose whether it stays private or gets shared. "
-            "Head to the **#your-successes-and-stories** channel and press **Share my story** 🌟"
-        ),
-        color=discord.Color.gold(),
+def build_dm_text(member: discord.Member, is_nl: bool) -> str:
+    name = member.display_name
+    duration = _practice_duration(member, is_nl)
+    if is_nl:
+        return (
+            f"Hoi {name}, je oefent al {duration} met ons. "
+            "Mag ik je drie korte vragen stellen?\n\n"
+            "1. Wat was je slechtste moment met Nederlands spreken voordat je lid werd? "
+            "Eén echt moment, met details.\n"
+            "2. Wat kun je nu dat je toen nog niet kon?\n"
+            "3. Waar kom je vandaan en wat doe je?\n\n"
+            "Een spraakbericht is perfect. Jij bepaalt of het privé blijft."
+        )
+    return (
+        f"Hi {name}, you've been practising with us for {duration}. "
+        "Can I ask you three quick questions?\n\n"
+        "1. What was your worst moment speaking English before you joined? "
+        "One real moment, with details.\n"
+        "2. What can you do now that you couldn't do then?\n"
+        "3. Where are you from and what do you do?\n\n"
+        "A voice message is perfect. You decide if it stays private."
     )
-    embed.set_footer(text="You can always keep it private — the choice is yours.")
-    return embed
-
-
-def _build_dm_embed_nl(member: discord.Member) -> discord.Embed:
-    embed = discord.Embed(
-        title="🌟 Wil je jouw verhaal delen?",
-        description=(
-            f"Hey {member.display_name}!\n\n"
-            "Je bent een geweldig onderdeel van onze community. "
-            "Jouw verhaal kan anderen inspireren om ook mee te doen en te leren.\n\n"
-            "Wil je jouw succes delen? Hier is een kleine template — beantwoord wat je wilt:\n\n"
-            "**1.** Wat is iets waar je trots op bent sinds je lid bent geworden?\n"
-            "**2.** Hoe heeft het oefenen hier jou geholpen?\n"
-            "**3.** Hoe zou je jouw vooruitgang omschrijven aan een vriend?\n\n"
-            "Het duurt minder dan 2 minuten en jij kiest of het privé blijft of gedeeld wordt. "
-            "Ga naar **#jouw-successen-en-verhalen** en druk op **Deel mijn verhaal** 🌟"
-        ),
-        color=discord.Color.gold(),
-    )
-    embed.set_footer(text="Je kunt het altijd privé houden — de keuze is aan jou.")
-    return embed
 
 
 async def _count_recent_messages(guild: discord.Guild, member: discord.Member) -> int:
@@ -215,8 +197,7 @@ class TestimonialOutreachJob:
 
             # Send DM
             try:
-                embed = _build_dm_embed_nl(member) if is_nl else _build_dm_embed_en(member)
-                await member.send(embed=embed)
+                await member.send(build_dm_text(member, is_nl))
                 log.info(
                     "TestimonialOutreach: DM sent user=%s guild=%s reason=%s",
                     member.id, guild_id,
@@ -260,9 +241,9 @@ class TestimonialOutreachJob:
                 f"{'💬 Berichten' if is_nl else '💬 Messages'} ≥ {MESSAGE_THRESHOLD}"
             )
             lang = "NL" if is_nl else "EN"
+            prefix = "📨 DM verzonden naar" if is_nl else "📨 DM sent to"
             await ch.send(
-                f"📨 DM verzonden naar" if is_nl else f"📨 DM sent to"
-                f" **{member.display_name}** (`{member.id}`) [{lang}] — {reason}"
+                f"{prefix} **{member.display_name}** (`{member.id}`) [{lang}] — {reason}"
             )
         except Exception:
             log.exception("TestimonialOutreach: failed to log DM for user=%s", member.id)

@@ -31,84 +31,32 @@ KV_SAVED_PREFIX = "testimonial_saved:"    # key = f"{KV_SAVED_PREFIX}{user_id}"
 
 # ---- Questions (labels must be <=45 chars) ----
 EN_QUESTIONS = [
-    "What are you proud of since joining?",
-    "How has practicing here helped you?",
-    "How would you describe your progress?",
-    "Anything else you'd like to add?",
+    "Your worst moment speaking English before?",
+    "What can you do now that you couldn't then?",
+    "Where are you from and what do you do?",
 ]
 EN_PLACEHOLDERS = [
-    "What's one thing you're proud of since joining?",
-    "How has practicing here helped you?",
-    "If you were telling a friend, how would you describe your progress?",
-    "Optional — any other thoughts, moments or people you'd like to mention?",
+    "What was your worst moment speaking English before you joined? One real moment, with details.",
+    "What can you do now that you couldn't do then?",
+    "Where are you from and what do you do?",
 ]
 
 NL_QUESTIONS = [
-    "Waar ben je trots op sinds je lid bent?",
-    "Hoe heeft oefenen hier jou geholpen?",
-    "Hoe zou je jouw vooruitgang omschrijven?",
-    "Nog iets anders dat je wilt toevoegen?",
+    "Slechtste moment Nederlands spreken vóór?",
+    "Wat kun je nu dat je toen niet kon?",
+    "Waar kom je vandaan en wat doe je?",
 ]
 NL_PLACEHOLDERS = [
-    "Wat is iets waar je trots op bent sinds je lid bent geworden?",
-    "Hoe heeft het oefenen hier jou geholpen?",
-    "Als je het aan een vriend zou vertellen, hoe zou je je vooruitgang omschrijven?",
-    "Optioneel — andere gedachten, momenten of mensen die je wilt noemen?",
+    "Wat was je slechtste moment met Nederlands spreken voordat je lid werd? Eén echt moment, met details.",
+    "Wat kun je nu dat je toen nog niet kon?",
+    "Waar kom je vandaan en wat doe je?",
 ]
 
-# ---- Connectors — 3 sets, rotated by user ID for variety ----
-EN_CONNECTORS = [
-    [
-        "Since joining, I'm proud that",
-        "Practicing here has helped me",
-        "When it comes to my progress,",
-    ],
-    [
-        "One thing I'm really proud of is",
-        "Being here has helped me",
-        "If I had to describe how far I've come,",
-    ],
-    [
-        "Looking back since I joined, I'm proud that",
-        "The practice here has made a real difference —",
-        "In terms of progress,",
-    ],
-]
-
-NL_CONNECTORS = [
-    [
-        "Sinds ik lid ben, ben ik trots dat",
-        "Oefenen hier heeft mij geholpen",
-        "Als ik mijn vooruitgang beschrijf,",
-    ],
-    [
-        "Iets waar ik echt trots op ben is",
-        "Hier zijn heeft mij geholpen",
-        "Als ik terugkijk op hoe ver ik gekomen ben,",
-    ],
-    [
-        "Terugkijkend ben ik trots dat",
-        "De oefensessies hier hebben echt het verschil gemaakt —",
-        "Qua vooruitgang,",
-    ],
-]
-
-
-def _dm_link_view(is_nl: bool) -> discord.ui.View:
-    view = discord.ui.View(timeout=None)
-    if is_nl:
-        view.add_item(discord.ui.Button(
-            label="Deel mijn verhaal ✍️",
-            style=discord.ButtonStyle.link,
-            url=NL_STORY_URL,
-        ))
-    else:
-        view.add_item(discord.ui.Button(
-            label="Share my story ✍️",
-            style=discord.ButtonStyle.link,
-            url=EN_STORY_URL,
-        ))
-    return view
+# DM replies: how long after the outreach DM a reply still counts as a testimonial
+DM_REPLY_WINDOW_SECONDS = 60 * 86400
+KV_DM_SENT_PREFIX = "testimonial_dm_sent:"
+KV_REPLY_ASKED_PREFIX = "testimonial_reply_asked:"   # value = dm_sent timestamp it was asked for
+KV_REPLY_CHOICE_PREFIX = "testimonial_reply_choice:"
 
 
 def _build_testimonial_block(
@@ -116,20 +64,18 @@ def _build_testimonial_block(
     member: discord.User | discord.Member,
     is_nl: bool,
 ) -> str:
-    connector_pool = NL_CONNECTORS if is_nl else EN_CONNECTORS
-    connectors = connector_pool[member.id % len(connector_pool)]
-    lines = []
-    for connector, answer in zip(connectors, answers[:3]):
-        a = answer[0].lower() + answer[1:] if answer else answer
-        a = a.rstrip(".")
-        lines.append(f"{connector} {a}.")
-    if len(answers) >= 4 and answers[3].strip():
-        lines.append(f"\n{answers[3].strip()}")
+    worst, now, who = (answers + ["", "", ""])[:3]
+    before_label, now_label = ("Toen", "Nu") if is_nl else ("Before", "Now")
+    lines = [f"**{before_label}:** {worst}", f"**{now_label}:** {now}"]
+    signature = f"— {member.display_name}"
+    if who:
+        signature += f", {who.rstrip('.')}"
+    lines.append(signature)
     return "\n".join(lines)
 
 
 # =======================================================
-# MODAL — 4 fields, 4th optional
+# MODAL — 3 fields
 # =======================================================
 
 class TestimonialModal(discord.ui.Modal):
@@ -145,45 +91,36 @@ class TestimonialModal(discord.ui.Modal):
         self.q1 = discord.ui.TextInput(
             label=questions[0],
             style=discord.TextStyle.paragraph,
-            placeholder=placeholders[0],
+            placeholder=placeholders[0][:100],
             min_length=5,
-            max_length=500,
+            max_length=1000,
             required=True,
         )
         self.q2 = discord.ui.TextInput(
             label=questions[1],
             style=discord.TextStyle.paragraph,
-            placeholder=placeholders[1],
+            placeholder=placeholders[1][:100],
             min_length=5,
-            max_length=500,
+            max_length=1000,
             required=True,
         )
         self.q3 = discord.ui.TextInput(
             label=questions[2],
-            style=discord.TextStyle.paragraph,
-            placeholder=placeholders[2],
-            min_length=5,
-            max_length=500,
+            style=discord.TextStyle.short,
+            placeholder=placeholders[2][:100],
+            min_length=2,
+            max_length=200,
             required=True,
-        )
-        self.q4 = discord.ui.TextInput(
-            label=questions[3],
-            style=discord.TextStyle.paragraph,
-            placeholder=placeholders[3],
-            max_length=500,
-            required=False,
         )
         self.add_item(self.q1)
         self.add_item(self.q2)
         self.add_item(self.q3)
-        self.add_item(self.q4)
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         answers = [
             self.q1.value.strip(),
             self.q2.value.strip(),
             self.q3.value.strip(),
-            self.q4.value.strip(),
         ]
         view = ShareChoiceView(
             answers=answers,
@@ -364,9 +301,7 @@ def _build_public_embed(
         sep_label = "💬 **In their own words:**"
 
     lines = []
-    for i, (q, a) in enumerate(zip(questions, answers)):
-        if i == 3 and not a:
-            continue
+    for q, a in zip(questions, answers):
         lines.append(f"**{q}**\n{a}")
 
     block = _build_testimonial_block(answers, member, is_nl)
@@ -401,9 +336,7 @@ def _build_admin_embed(
         f"**Visibility:** {visibility}",
         "",
     ]
-    for i, (q, a) in enumerate(zip(questions, answers)):
-        if i == 3 and not a:
-            continue
+    for q, a in zip(questions, answers):
         lines.append(f"**{q}**\n{a}")
 
     block = _build_testimonial_block(answers, member, is_nl)
@@ -427,7 +360,7 @@ def _build_hub_embed_en() -> discord.Embed:
             "Every step forward counts. Whether you had your first real conversation, "
             "finally understood a joke, or just showed up when it was hard.\n\n"
             "**Share your story** and inspire others who are on the same journey.\n\n"
-            "It takes less than 2 minutes. Answer a few simple questions, "
+            "It takes less than 2 minutes. Answer three quick questions, "
             "then choose what happens next:\n\n"
             "🌟 **Share publicly** — your story gets posted here and I may use it "
             "on my social media to inspire other learners. Your name will be included. "
@@ -448,7 +381,7 @@ def _build_hub_embed_nl() -> discord.Embed:
             "Elke stap telt. Of je nu je eerste echte gesprek had, "
             "eindelijk een grap begreep, of gewoon opdaagde op een moeilijke dag.\n\n"
             "**Deel jouw verhaal** en inspireer anderen die hetzelfde pad bewandelen.\n\n"
-            "Het duurt minder dan 2 minuten. Beantwoord een paar eenvoudige vragen, "
+            "Het duurt minder dan 2 minuten. Beantwoord drie korte vragen, "
             "kies daarna wat er mee gebeurt:\n\n"
             "🌟 **Publiek delen** — jouw verhaal wordt hier geplaatst en ik kan het "
             "ook gebruiken op mijn sociale media om andere leerders te inspireren. "
@@ -515,6 +448,69 @@ class TestimonialPublisher:
         except Exception:
             log.exception("Testimonials: failed to post hub in channel %s", channel_id)
 
+    async def _collected_channel(self) -> discord.TextChannel | None:
+        ch = self._bot.get_channel(EN_COLLECTED_CHANNEL_ID)
+        if ch is None:
+            try:
+                ch = await self._bot.fetch_channel(EN_COLLECTED_CHANNEL_ID)
+            except Exception:
+                return None
+        return ch if isinstance(ch, discord.TextChannel) else None
+
+    async def notify_admin(self, text: str) -> None:
+        """Short status line to the collected channel and Lucas's DMs."""
+        ch = await self._collected_channel()
+        if ch is not None:
+            try:
+                await ch.send(text, allowed_mentions=discord.AllowedMentions.none())
+            except Exception:
+                log.exception("Testimonials: failed to notify collected channel")
+        try:
+            lucas = await self._bot.fetch_user(LUCAS_USER_ID)
+            await lucas.send(text)
+        except Exception:
+            log.exception("Testimonials: failed to notify Lucas")
+
+    async def forward_dm_reply(self, message: discord.Message, is_nl: bool) -> None:
+        """Forward a member's DM reply (text, voice message, files) to Lucas + collected channel."""
+        author = message.author
+        text = (message.content or "").strip()
+        has_voice = any(
+            (a.content_type or "").startswith("audio") or a.filename.endswith(".ogg")
+            for a in message.attachments
+        )
+        lines = [
+            f"**User:** {author.display_name} (`{author.id}`)",
+            f"**Language:** {'NL' if is_nl else 'EN'}",
+        ]
+        if has_voice:
+            lines.append("🎙️ **Voice message attached**")
+        if text:
+            lines += ["", text[:3500]]
+        embed = discord.Embed(
+            title=f"📥 Testimonial DM reply — {author.display_name}",
+            description="\n".join(lines),
+            color=discord.Color.gold(),
+        )
+        if author.display_avatar:
+            embed.set_thumbnail(url=author.display_avatar.url)
+
+        targets: list[discord.abc.Messageable] = []
+        ch = await self._collected_channel()
+        if ch is not None:
+            targets.append(ch)
+        try:
+            targets.append(await self._bot.fetch_user(LUCAS_USER_ID))
+        except Exception:
+            log.exception("Testimonials: could not fetch Lucas")
+
+        for target in targets:
+            try:
+                files = [await a.to_file() for a in message.attachments]
+                await target.send(embed=embed, files=files)
+            except Exception:
+                log.exception("Testimonials: failed to forward DM reply to %s", target)
+
     async def publish_testimonial(
         self,
         *,
@@ -563,6 +559,98 @@ class TestimonialPublisher:
 
 
 # =======================================================
+# DM REPLY — privacy choice after someone answers the outreach DM
+# =======================================================
+
+class ReplyPrivacyView(discord.ui.View):
+    """Persistent buttons sent in DM after a member replies to the outreach DM."""
+
+    def __init__(self, *, is_nl: bool = False) -> None:
+        super().__init__(timeout=None)
+        self.share.label = "Mag gedeeld worden" if is_nl else "You can share it"
+        self.keep_private.label = "Houd het privé" if is_nl else "Keep it private"
+
+    @discord.ui.button(
+        label="You can share it",
+        style=discord.ButtonStyle.success,
+        emoji="🌟",
+        custom_id="testimonial:reply:share:v1",
+    )
+    async def share(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await _handle_reply_choice(interaction, self, public=True)
+
+    @discord.ui.button(
+        label="Keep it private",
+        style=discord.ButtonStyle.secondary,
+        emoji="🔒",
+        custom_id="testimonial:reply:private:v1",
+    )
+    async def keep_private(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await _handle_reply_choice(interaction, self, public=False)
+
+
+async def _find_outreach(repo: Any, user_id: int) -> tuple[int, bool, int] | None:
+    """Return (guild_id, is_nl, dm_sent_ts) for the most recent outreach DM, if any."""
+    best: tuple[int, bool, int] | None = None
+    for guild_id, is_nl in ((EN_GUILD_ID, False), (NL_GUILD_ID, True)):
+        try:
+            raw = await repo.kv_get(guild_id, f"{KV_DM_SENT_PREFIX}{user_id}")
+        except Exception:
+            continue
+        if raw and str(raw).isdigit():
+            ts = int(raw)
+            if best is None or ts > best[2]:
+                best = (guild_id, is_nl, ts)
+    return best
+
+
+async def _handle_reply_choice(
+    interaction: discord.Interaction,
+    view: discord.ui.View,
+    *,
+    public: bool,
+) -> None:
+    publisher = _get_global_publisher()
+    found = await _find_outreach(publisher._repo, interaction.user.id)
+    is_nl = found[1] if found else False
+    guild_id = found[0] if found else EN_GUILD_ID
+
+    for item in view.children:
+        item.disabled = True  # type: ignore[attr-defined]
+    if public:
+        confirm = (
+            "🌟 Dankjewel! Ik mag je verhaal delen."
+            if is_nl else
+            "🌟 Thank you! I may share your story."
+        )
+    else:
+        confirm = (
+            "🔒 Je verhaal blijft privé. Alleen ik lees het."
+            if is_nl else
+            "🔒 Your story stays private. Only I will read it."
+        )
+    try:
+        await interaction.response.edit_message(content=confirm, view=view)
+    except Exception:
+        log.exception("Testimonials: failed to confirm reply choice")
+
+    try:
+        await publisher._repo.kv_set(
+            guild_id,
+            f"{KV_REPLY_CHOICE_PREFIX}{interaction.user.id}",
+            "public" if public else "private",
+        )
+    except Exception:
+        log.exception("Testimonials: failed to save reply choice uid=%s", interaction.user.id)
+
+    label = "🔓 Shared publicly OK" if public else "🔒 Do not share"
+    await publisher.notify_admin(
+        f"{label} — **{interaction.user.display_name}** (`{interaction.user.id}`) "
+        f"[{'NL' if is_nl else 'EN'}] chose for their DM reply."
+    )
+
+
+# =======================================================
 # COG + SETUP
 # =======================================================
 
@@ -578,6 +666,52 @@ class TestimonialsCog(commands.Cog):
     def __init__(self, bot: commands.Bot, publisher: TestimonialPublisher) -> None:
         self.bot = bot
         self._publisher = publisher
+
+    @commands.Cog.listener("on_message")
+    async def on_dm_reply(self, message: discord.Message) -> None:
+        if message.guild is not None or message.author.bot:
+            return
+        if not message.content and not message.attachments:
+            return
+
+        found = await _find_outreach(self._publisher._repo, message.author.id)
+        if found is None:
+            return
+        guild_id, is_nl, dm_sent_ts = found
+        if int(time.time()) - dm_sent_ts > DM_REPLY_WINDOW_SECONDS:
+            return
+
+        await self._publisher.forward_dm_reply(message, is_nl)
+
+        # Ask the privacy question once per outreach DM
+        asked_key = f"{KV_REPLY_ASKED_PREFIX}{message.author.id}"
+        try:
+            asked = await self._publisher._repo.kv_get(guild_id, asked_key)
+        except Exception:
+            asked = None
+        if asked == str(dm_sent_ts):
+            return
+        try:
+            await self._publisher._repo.kv_set(guild_id, asked_key, str(dm_sent_ts))
+        except Exception:
+            log.exception("Testimonials: failed to save reply_asked uid=%s", message.author.id)
+
+        if is_nl:
+            text = (
+                "Dankjewel! 🙏 Ik heb je antwoord ontvangen. Stuur gerust meer als je wilt.\n\n"
+                "Mag ik je verhaal delen (hier en op mijn sociale media, met je naam erbij), "
+                "of houd je het privé?"
+            )
+        else:
+            text = (
+                "Thank you! 🙏 I got your answer. Feel free to send more if you like.\n\n"
+                "Can I share your story (here and on my social media, with your name), "
+                "or do you want to keep it private?"
+            )
+        try:
+            await message.channel.send(text, view=ReplyPrivacyView(is_nl=is_nl))
+        except Exception:
+            log.exception("Testimonials: failed to send privacy question uid=%s", message.author.id)
 
     async def _resolve_member(
         self, interaction: discord.Interaction, username: str
@@ -635,9 +769,8 @@ class TestimonialsCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         try:
-            from jobs.testimonial_outreach import _build_dm_embed_en, _build_dm_embed_nl
-            embed = _build_dm_embed_nl(member) if is_nl else _build_dm_embed_en(member)
-            await member.send(embed=embed, view=_dm_link_view(is_nl))
+            from jobs.testimonial_outreach import build_dm_text
+            await member.send(build_dm_text(member, is_nl))
         except discord.Forbidden:
             await interaction.followup.send(
                 f"Could not DM **{member.display_name}** — their DMs are closed.",
@@ -838,6 +971,7 @@ async def setup(
 
     bot.add_view(StartTestimonialView(publisher=publisher))
     bot.add_view(StartTestimonialViewNL(publisher=publisher))
+    bot.add_view(ReplyPrivacyView())
 
     log.info("TestimonialsCog loaded.")
     return publisher
