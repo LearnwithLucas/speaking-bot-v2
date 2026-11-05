@@ -94,13 +94,6 @@ FAQ: dict[str, dict] = {
                 "• A quick recognition test\n\n"
                 "That is about 3 times more per guide."
             ),
-            (
-                "Can I pay with GCash, DANA or Touch n Go?",
-                "Yes. If you live in the Philippines, Indonesia, Malaysia or Thailand, "
-                "you can use the Airwallex payment links. They take GCash, DANA and Touch 'n Go.\n\n"
-                f"Go to {EN_SUPPORTED_SPEAKING_URL} and scroll down to the payment section. "
-                "You will see the SEA payment option there."
-            ),
         ],
     },
     "private_lessons": {
@@ -473,13 +466,6 @@ NL_FAQ: dict[str, dict] = {
                 "Er zijn breakout rooms per niveau, dus je oefent altijd met mensen op jouw niveau. "
                 "Je kiest zelf welke kamer je ingaat.\n\n"
                 "Als je nog een complete beginner bent, begin dan met de gratis spreekgroep en sluit je aan als je er klaar voor bent."
-            ),
-            (
-                "Kan ik betalen met GCash, DANA of Touch n Go?",
-                "Ja. Woon je in de Filipijnen, Indonesië, Maleisië of Thailand? "
-                "Dan kun je de Airwallex-betaallinks gebruiken. Die werken met GCash, DANA en Touch 'n Go.\n\n"
-                f"Ga naar {NL_SUPPORTED_SPEAKING_URL} en scroll naar het betalingsgedeelte. "
-                "Daar zie je de SEA betaaloptie."
             ),
             (
                 "Wat is het verschil met de gratis versie?",

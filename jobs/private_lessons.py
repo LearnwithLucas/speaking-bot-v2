@@ -26,15 +26,6 @@ EN_SUPPORTED_CHECKOUT_URL = "https://learnwithlucas.com/en/courses/supported-spe
 NL_SUPPORTED_CHECKOUT_URL = "https://learnwithlucas.com/nl/courses/ondersteund-spreken/"
 NL_PRIVATE_CHECKOUT_URL = "https://learnwithlucas.com/nl/courses/priveles-nederlands/"
 
-# ---- Payment links: Supported Speaking EN (SEA only) ----
-SS_AIR_MONTHLY    = "https://pay.airwallex.com/nlhgyqcoi3ac"
-SS_AIR_6MO        = "https://pay.airwallex.com/nlhgyqdho4yt"
-SS_AIR_YEARLY     = "https://pay.airwallex.com/nlhgyqe8hl5q"
-
-# ---- Payment links: Ondersteund Spreken NL (SEA only) ----
-OS_AIR_MONTHLY    = "https://pay.airwallex.com/nlhgm8kz6gwd"
-OS_AIR_YEARLY     = "https://pay.airwallex.com/nlhgm950ux71"
-
 # ---- Booking links: Private lessons NL (all go to the offer page) ----
 NL_TRIAL_LINK = NL_PRIVATE_CHECKOUT_URL
 NL_BUILDER_LINK = NL_PRIVATE_CHECKOUT_URL
@@ -173,7 +164,7 @@ NL_PRIVATE_FAQS = {
     ),
     "betaling": (
         "**Hoe betaal ik?**\n\n"
-        "Je betaalt met Stripe (creditcard of debetkaart). Airwallex werkt niet voor privélessen.\n\n"
+        "Je betaalt met Stripe (creditcard of debetkaart).\n\n"
         "Kies je pakket op de cursuspagina. Daar betaal je meteen.\n\n"
         f"[Naar de pakketten →]({NL_PRIVATE_CHECKOUT_URL})\n\n"
         "Vragen over betalen? Mail english@learnwithlucas.com"
@@ -218,12 +209,8 @@ EN_SUPPORTED_FAQS = {
     ),
     "joining": (
         "**How do I join?**\n\n"
-        "EU / Netherlands: choose a plan on the course page and pay there.\n"
+        "Choose a plan on the course page and pay there.\n"
         f"[Monthly €7.99, 6 months €39.95 or yearly €79.90 →]({EN_SUPPORTED_CHECKOUT_URL})\n\n"
-        "Philippines / Indonesia / Malaysia / Thailand:\n"
-        f"Monthly €7.99: [GCash / DANA / Touch 'n Go]({SS_AIR_MONTHLY})\n"
-        f"6 months €39.95: [GCash / DANA / Touch 'n Go]({SS_AIR_6MO})\n"
-        f"Yearly €79.90: [GCash / DANA / Touch 'n Go]({SS_AIR_YEARLY})\n\n"
         "14 day money back. Cancel anytime."
     ),
     "level": (
@@ -244,15 +231,6 @@ EN_SUPPORTED_FAQS = {
         "**Can I cancel anytime?**\n\n"
         "Yes. You can cancel anytime, and you don't need to give a reason.\n\n"
         "If it's not what you expected, you get your money back within 14 days."
-    ),
-    "sea_payment": (
-        "**Can I pay with GCash, DANA or Touch 'n Go?**\n\n"
-        "Yes. If you are in the Philippines, Indonesia, Malaysia or Thailand, "
-        "use the Airwallex links below.\n\n"
-        f"Monthly €7.99: [pay here]({SS_AIR_MONTHLY})\n"
-        f"6 months €39.95: [pay here]({SS_AIR_6MO})\n"
-        f"Yearly €79.90: [pay here]({SS_AIR_YEARLY})\n\n"
-        "Accepted: GCash (PH), DANA (ID), Touch 'n Go (MY), Rabbit LINE Pay (TH)"
     ),
     "vs_private": (
         "**Supported Speaking or private lessons?**\n\n"
@@ -289,11 +267,8 @@ NL_SUPPORTED_FAQS = {
     ),
     "aanmelden": (
         "**Hoe meld ik me aan?**\n\n"
-        "Nederland / België / EU: kies je abonnement op de cursuspagina en betaal daar.\n"
+        "Kies je abonnement op de cursuspagina en betaal daar.\n"
         f"[Standaard €11,99, Premium €19,99 per maand, of een jaarplan vanaf €119,90 →]({NL_SUPPORTED_CHECKOUT_URL})\n\n"
-        "Filipijnen / Indonesië / Maleisië / Thailand:\n"
-        f"Maandelijks €11,99: [GCash / DANA / Touch 'n Go]({OS_AIR_MONTHLY})\n"
-        f"Jaarlijks €119,90: [GCash / DANA / Touch 'n Go]({OS_AIR_YEARLY})\n\n"
         "14 dagen geld-terug-garantie. Op elk moment opzegbaar."
     ),
     "niveau": (
@@ -318,14 +293,6 @@ NL_SUPPORTED_FAQS = {
         "**Kan ik opzeggen?**\n\n"
         "Ja. Je kunt op elk moment opzeggen. Je hoeft niet te zeggen waarom.\n\n"
         "Is het niet wat je verwachtte? Dan krijg je binnen 14 dagen je geld terug."
-    ),
-    "sea_betaling": (
-        "**Kan ik betalen met GCash, DANA of Touch 'n Go?**\n\n"
-        "Ja. Als je in de Filipijnen, Indonesie, Maleisie of Thailand zit, "
-        "gebruik dan de Airwallex links hieronder.\n\n"
-        f"Maandelijks €11,99: [betaal hier]({OS_AIR_MONTHLY})\n"
-        f"Jaarlijks €119,90: [betaal hier]({OS_AIR_YEARLY})\n\n"
-        "Geaccepteerd: GCash (PH), DANA (ID), Touch 'n Go (MY), Rabbit LINE Pay (TH)"
     ),
     "verschil": (
         "**Wat is het verschil met privélessen?**\n\n"
@@ -408,8 +375,8 @@ def build_en_supported_embed() -> discord.Embed:
             "📚 5 B1-level stories with audio every month\n"
             "🎯 Find-the-mistake exercises in every guide\n"
             "💬 Community access on Discord, WhatsApp and Telegram\n\n"
-            f"EU: [Choose a plan →]({EN_SUPPORTED_CHECKOUT_URL})\n"
-            f"SEA: [Monthly €7.99]({SS_AIR_MONTHLY}) · [6 months €39.95]({SS_AIR_6MO}) · [Yearly €79.90]({SS_AIR_YEARLY})\n\n"
+            f"[Choose a plan →]({EN_SUPPORTED_CHECKOUT_URL})\n"
+            "\n"
             "14 day money back · cancel anytime\n\n"
             "Questions? Use the dropdown below."
         ),
@@ -431,8 +398,8 @@ def build_nl_supported_embed() -> discord.Embed:
             "📅 Spreekonderwerp elke zondag (3 niveaus)\n"
             "📚 5 verhalen met audio per maand\n"
             "✉️ Emailfeedback\n\n"
-            f"EU: [Kies je abonnement →]({NL_SUPPORTED_CHECKOUT_URL})\n"
-            f"SEA: [Maandelijks €11,99]({OS_AIR_MONTHLY}) · [Jaarlijks €119,90]({OS_AIR_YEARLY})\n\n"
+            f"[Kies je abonnement →]({NL_SUPPORTED_CHECKOUT_URL})\n"
+            "\n"
             "14 dagen geld terug · op elk moment opzegbaar\n\n"
             "Vragen? Gebruik het menu hieronder."
         ),
@@ -505,7 +472,6 @@ class EnSupportedFAQSelect(discord.ui.Select):
             discord.SelectOption(label="What level do I need?", value="level", emoji="🎯"),
             discord.SelectOption(label="What community access do I get?", value="community", emoji="💬"),
             discord.SelectOption(label="Can I cancel anytime?", value="cancel", emoji="✅"),
-            discord.SelectOption(label="GCash, DANA or Touch 'n Go payment", value="sea_payment", emoji="💳"),
             discord.SelectOption(label="Supported Speaking vs private lessons", value="vs_private", emoji="🔄"),
         ]
         super().__init__(
@@ -530,7 +496,6 @@ class NlSupportedFAQSelect(discord.ui.Select):
             discord.SelectOption(label="Welk niveau heb ik nodig?", value="niveau", emoji="🎯"),
             discord.SelectOption(label="Welke community toegang krijg ik?", value="community", emoji="💬"),
             discord.SelectOption(label="Kan ik opzeggen?", value="opzeggen", emoji="✅"),
-            discord.SelectOption(label="GCash, DANA of Touch 'n Go betaling", value="sea_betaling", emoji="💳"),
             discord.SelectOption(label="Verschil met privélessen", value="verschil", emoji="🔄"),
             discord.SelectOption(label="Wat zijn de oefengidsen?", value="gidsen", emoji="📖"),
         ]
