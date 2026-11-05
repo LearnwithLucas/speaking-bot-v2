@@ -125,9 +125,8 @@ class SessionReminderJob:
             await ch.send(
                 f"<@&{OS_ROLE_ID}>\n\n"
                 f"De live sessie begint over 30 minuten. Om {session_time} zijn we live.\n\n"
-                "Het spreekonderwerp van vandaag heb je gisteren ontvangen. "
-                "Je hoeft je niet voor te bereiden, maar als je dat hebt gedaan, "
-                "is dat helemaal prima.\n\n"
+                "Het onderwerp van vandaag heb je gisteren gekregen. "
+                "Je hoeft je niet voor te bereiden. Heb je het wel gedaan? Ook goed.\n\n"
                 "Tot zo!"
             )
             log.info("SessionReminder: OS reminder sent")
@@ -142,9 +141,9 @@ class SessionReminderJob:
             await ch.send(
                 f"<@&{SS_ROLE_ID}>\n\n"
                 "The live speaking session starts in 30 minutes. We go live at 14:30 CET.\n\n"
-                "No preparation needed. Just show up and speak. "
-                "One sentence is enough to get started.\n\n"
-                "See you there!"
+                "You don't need to prepare. Join and speak. "
+                "One sentence is enough to start.\n\n"
+                "See you there."
             )
             log.info("SessionReminder: SS reminder sent")
         except Exception:

@@ -35,22 +35,22 @@ def apply_ask_jerry_summer_copy() -> None:
             ask_jerry.FAQ,
             "supported_speaking",
             "How much does it cost?",
-            "Supported Speaking costs **EUR 7.99 per month**, **EUR 39.95 for 6 months** "
-            "(1 month free), or **EUR 79.90 per year** (2 months free).\n\n"
-            "For comparison: a private trial session is EUR 24 for 30 minutes. "
-            "Supported Speaking is weekly practice for less than one coffee a week.\n\n"
-            "14 day money back if it is not what you expected. No questions asked.\n\n"
+            "Supported Speaking costs **€7.99 a month**, **€39.95 for 6 months** "
+            "(1 month free) or **€79.90 a year** (2 months free).\n\n"
+            "A private trial session costs €24 for 30 minutes. "
+            "Supported Speaking is practice every week for €7.99 a month.\n\n"
+            "Not what you expected? You get your money back within 14 days. Cancel anytime.\n\n"
             f"[Start today]({ask_jerry.EN_SUPPORTED_SPEAKING_URL})",
         ),
         _replace_answer(
             ask_jerry.FAQ,
             "private_lessons",
             "How much do private lessons cost?",
-            "**Trial session** - 30 minutes - **EUR 24** (one time)\n"
-            "**Speaking Builder** - 4 x 60 minutes - **EUR 189** (EUR 47.25/hour)\n"
-            "**Confidence Intensive** - 10 x 60 minutes - **EUR 389** (EUR 38.90/hour)\n\n"
-            "Split payments are possible. Good for work, calls, small talk, presentations, "
-            "confidence, or exam speaking practice.\n\n"
+            "**Trial session**, 30 minutes: **€24** (one time)\n"
+            "**Speaking Builder**, 4 x 60 minutes: **€189** (€47.25/hour)\n"
+            "**Confidence Intensive**, 10 x 60 minutes: **€389** (€38.90/hour)\n\n"
+            "You can pay in parts. Use them for work calls, small talk, presentations "
+            "or exam speaking.\n\n"
             "Not sure which fits? Start with the trial. "
             f"[View all packages]({ask_jerry.EN_PRIVATE_LESSONS_URL})",
         ),
@@ -58,27 +58,24 @@ def apply_ask_jerry_summer_copy() -> None:
             ask_jerry.FAQ,
             "private_lessons",
             "Is there space right now?",
-            "Private lessons are kept limited so they stay calm and focused.\n\n"
-            "Current availability is shown on the private lessons page.\n\n"
-            f"Check current availability at {ask_jerry.EN_PRIVATE_LESSONS_URL}",
+            "I keep the number of private students small.\n\n"
+            f"The private lessons page shows when there is space: {ask_jerry.EN_PRIVATE_LESSONS_URL}",
         ),
         _replace_answer(
             ask_jerry.FAQ,
             "bot_features",
             "Why do I get messages in the voice channel?",
-            "Jerry may occasionally post a general conversation starter after people have been "
-            "in a voice channel for about an hour.\n\n"
-            "It is not a personal reminder, score, or public progress message. It is just a gentle "
-            "prompt in case the conversation has gone quiet.\n\n"
-            "If you are not sure what to talk about, use `/topics`, `/guide`, or the vocabulary channel.",
+            "After people have been in a voice channel for about an hour, Jerry sometimes posts "
+            "a question to talk about. It is for everyone in the channel, in case the conversation goes quiet.\n\n"
+            "Not sure what to talk about? Use `/topics`, `/guide` or the vocabulary channel.",
         ),
         _replace_answer(
             ask_jerry.NL_FAQ,
             "priveles",
             "Hoeveel kosten privélessen?",
-            "**Proefsessie** - 30 minuten - **EUR 28** (eenmalig)\n"
-            "**Speaking Builder** - 4 x 60 minuten - **EUR 219** (+ 3 maanden Ondersteund Spreken)\n"
-            "**Confidence Intensive** - 10 x 60 minuten - **EUR 469** (+ 6 maanden Ondersteund Spreken)\n\n"
+            "**Proefsessie**, 30 minuten: **€28** (eenmalig)\n"
+            "**Speaking Builder**, 4 x 60 minuten: **€219** (+ 3 maanden Ondersteund Spreken)\n"
+            "**Confidence Intensive**, 10 x 60 minuten: **€469** (+ 6 maanden Ondersteund Spreken)\n\n"
             "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
             "Niet zeker welk pakket past? Begin met de proefsessie. "
             f"Alle info: {ask_jerry.NL_PRIVATE_LESSONS_URL}",
@@ -87,19 +84,16 @@ def apply_ask_jerry_summer_copy() -> None:
             ask_jerry.NL_FAQ,
             "priveles",
             "Is er nu plek?",
-            "Privelessen zijn beperkt zodat ze rustig en gefocust blijven.\n\n"
-            "De actuele beschikbaarheid staat op de privelespagina.\n\n"
-            f"Bekijk huidige beschikbaarheid op {ask_jerry.NL_PRIVATE_LESSONS_URL}",
+            "Ik houd het aantal privéleerlingen klein.\n\n"
+            f"Op de privélespagina zie je wanneer er plek is: {ask_jerry.NL_PRIVATE_LESSONS_URL}",
         ),
         _replace_answer(
             ask_jerry.NL_FAQ,
             "server_functies",
             "Waarom krijg ik berichten in het spraakkanaal?",
-            "Jerry kan af en toe een algemene gespreksstarter plaatsen nadat mensen ongeveer "
-            "een uur in een spraakkanaal zijn.\n\n"
-            "Het is geen persoonlijke herinnering, score of openbaar voortgangsbericht. Het is alleen "
-            "een rustige prompt voor als het gesprek stilvalt.\n\n"
-            "Als je niet weet waarover te praten, gebruik `/onderwerpen`, `/guide` of het woordenboekkanaal.",
+            "Als mensen ongeveer een uur in een spraakkanaal zitten, stelt Jerry soms een vraag "
+            "om over te praten. Die is voor iedereen in het kanaal, voor als het gesprek stilvalt.\n\n"
+            "Weet je niet waarover je wilt praten? Gebruik `/onderwerpen`, `/guide` of het woordenboekkanaal.",
         ),
     ]
 

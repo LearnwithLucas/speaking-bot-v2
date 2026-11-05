@@ -30,10 +30,10 @@ ACHIEVEMENT_CHOICES = [
 ]
 
 INACTIVITY_MSG_A = (
-    "If you ever feel like joining a table again, you don’t need to catch up or explain anything. You can just join."
+    "Want to join a table again? You don't need to explain anything. Join whenever you feel like it."
 )
 INACTIVITY_MSG_B = (
-    "No pressure to be consistent here. If you want to speak again sometime, you can just join and leave whenever."
+    "You don't need to come every week. If you want to speak again, join and leave whenever you like."
 )
 
 

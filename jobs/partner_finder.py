@@ -88,18 +88,18 @@ def _amsterdam_now() -> dt.datetime:
 def _conversation_starters(*, is_nl: bool) -> str:
     if is_nl:
         return (
-            "\n\n**Makkelijke starters:**\n"
-            "- What did you do today?\n"
-            "- Tell me about a food you like.\n"
-            "- What is one thing you want to practice in English?\n\n"
-            "Je hoeft niet perfect te praten. Kies gewoon een vraag."
+            "\n\n**Makkelijke vragen om te beginnen:**\n"
+            "- Wat heb je vandaag gedaan?\n"
+            "- Welk eten vind je lekker?\n"
+            "- Wat wil je oefenen in het Nederlands?\n\n"
+            "Je hoeft niet perfect te praten. Kies één vraag."
         )
     return (
         "\n\n**Easy starters:**\n"
         "- What did you do today?\n"
         "- Tell me about a food you like.\n"
         "- What is one thing you want to practice in English?\n\n"
-        "No need to make it perfect. Pick one and start there."
+        "It doesn't need to be perfect. Pick one question and start."
     )
 
 
@@ -109,7 +109,7 @@ def _hub_content(*, is_nl: bool, weekly_ping: bool = False) -> str | None:
     role_mention = f"<@&{I_WANT_TO_SPEAK_ROLE_ID}>"
     if weekly_ping:
         return (
-            f"{role_mention} New week, new speaking practice.\n"
+            f"{role_mention} A new week has started.\n"
             "Click **Ping me for voice chats** if you want people to notify you when they are looking for a speaking partner."
         )
     return (
@@ -201,7 +201,7 @@ def build_weekly_speakers_embed(
     if speaker_names:
         embed.description = (
             "These people have joined voice since Monday. "
-            "Say hi if you want a low-pressure speaking partner."
+            "Say hi if you want someone friendly to practise with."
         )
         _add_speaker_columns(embed, speaker_names)
     else:
@@ -799,19 +799,19 @@ class PartnerFinder:
 
         if is_nl:
             content = (
-                "Zondag compliment voor iedereen die deze week in voice heeft geoefend, "
-                "voordat de lijst maandag opnieuw begint:\n"
+                "Een compliment voor iedereen die deze week in voice heeft geoefend. "
+                "Maandag begint de lijst opnieuw:\n"
                 f"{' '.join(mentions)}\n\n"
-                "Goed gedaan. Geen scorebord, gewoon mooi dat jullie zijn komen oefenen."
+                "Goed gedaan. Fijn dat jullie zijn komen oefenen."
             )
             if hidden_count:
                 content += f"\nEn nog {hidden_count} anderen hebben ook geoefend."
         else:
             content = (
-                "Sunday well done to everyone who practiced in voice this week, "
-                "before the list starts fresh on Monday:\n"
+                "Well done to everyone who practised in voice this week. "
+                "The list starts again on Monday:\n"
                 f"{' '.join(mentions)}\n\n"
-                "Well done. No leaderboard, just glad you showed up to practice."
+                "I'm glad you came to practise."
             )
             if hidden_count:
                 content += f"\nAnd {hidden_count} more people practiced too."

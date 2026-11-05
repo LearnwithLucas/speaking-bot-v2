@@ -67,10 +67,10 @@ def _build_testimonial_block(
     worst, now, who = (answers + ["", "", ""])[:3]
     before_label, now_label = ("Toen", "Nu") if is_nl else ("Before", "Now")
     lines = [f"**{before_label}:** {worst}", f"**{now_label}:** {now}"]
-    signature = f"— {member.display_name}"
+    signature = member.display_name
     if who:
         signature += f", {who.rstrip('.')}"
-    lines.append(signature)
+    lines.append(f"*{signature}*")
     return "\n".join(lines)
 
 
@@ -130,25 +130,21 @@ class TestimonialModal(discord.ui.Modal):
         )
         if self._is_nl:
             msg = (
-                "Dankjewel voor het delen! 🙏\n\n"
-                "**Wat wil je doen met jouw verhaal?**\n\n"
-                "🌟 **Ja, deel mijn verhaal** — Je verhaal wordt geplaatst in dit kanaal "
-                "en ik kan het ook gebruiken op mijn sociale media (zoals TikTok of Instagram) "
-                "om andere leerders te inspireren. Je naam wordt erbij vermeld. "
-                "Verhalen worden licht gecorrigeerd op grammatica.\n\n"
-                "🔒 **Houd het privé** — Je verhaal komt alleen bij mij terecht. "
-                "Ik lees het, maar het wordt nergens publiek gedeeld."
+                "Dankjewel voor je verhaal. 🙏\n\n"
+                "**Wat mag ik ermee doen?**\n\n"
+                "🌟 **Ja, deel mijn verhaal:** ik zet het in dit kanaal "
+                "en ik mag het gebruiken op TikTok of Instagram, met je naam erbij. "
+                "Kleine grammaticafouten haal ik eruit.\n\n"
+                "🔒 **Houd het privé:** alleen ik lees het. Ik deel het nergens."
             )
         else:
             msg = (
-                "Thank you for sharing! 🙏\n\n"
-                "**What would you like to do with your story?**\n\n"
-                "🌟 **Yes, share my story** — Your story will be posted in this channel "
-                "and I may also use it on my social media (like TikTok or Instagram) "
-                "to inspire other learners. Your name will be included. "
-                "Stories may be lightly corrected for grammar.\n\n"
-                "🔒 **Keep it private** — Your story comes to me only. "
-                "I'll read it, but it won't be shared anywhere publicly."
+                "Thank you for your story. 🙏\n\n"
+                "**What can I do with it?**\n\n"
+                "🌟 **Yes, share my story:** I post it in this channel "
+                "and I may use it on TikTok or Instagram, with your name. "
+                "I fix small grammar mistakes.\n\n"
+                "🔒 **Keep it private:** only I read it. I won't share it anywhere."
             )
         await interaction.response.send_message(msg, view=view, ephemeral=True)
 
@@ -206,9 +202,9 @@ class ShareChoiceView(discord.ui.View):
             return
         self._disable_all()
         confirm = (
-            "🔒 Jouw verhaal blijft privé. Bedankt dat je het met ons hebt gedeeld."
+            "🔒 Je verhaal blijft privé. Bedankt dat je het hebt gestuurd."
             if self._is_nl else
-            "🔒 Your story has been kept private. Thank you for sharing it with us."
+            "🔒 Your story stays private. Thank you for sending it."
         )
         await interaction.response.edit_message(content=confirm, view=self)
         await self._publisher.publish_testimonial(
@@ -343,7 +339,7 @@ def _build_admin_embed(
     description = "\n\n".join(lines) + f"\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n💬 **Testimonial block:**\n{block}"
 
     embed = discord.Embed(
-        title=f"📋 Testimonial — {member.display_name}",
+        title=f"📋 Testimonial: {member.display_name}",
         description=description,
         color=color,
     )
@@ -354,18 +350,16 @@ def _build_admin_embed(
 
 def _build_hub_embed_en() -> discord.Embed:
     embed = discord.Embed(
-        title="🌟 Your Successes and Stories",
+        title="🌟 Your successes and stories",
         description=(
-            "This is a space to celebrate your progress — big or small.\n\n"
-            "Every step forward counts. Whether you had your first real conversation, "
-            "finally understood a joke, or just showed up when it was hard.\n\n"
-            "**Share your story** and inspire others who are on the same journey.\n\n"
+            "Your first real conversation. A joke you finally understood. "
+            "A day you joined even though it was hard. Small steps count here too.\n\n"
+            "**Share your story.** It helps people who are where you were before.\n\n"
             "It takes less than 2 minutes. Answer three quick questions, "
             "then choose what happens next:\n\n"
-            "🌟 **Share publicly** — your story gets posted here and I may use it "
-            "on my social media to inspire other learners. Your name will be included. "
-            "Stories may be lightly corrected for grammar.\n\n"
-            "🔒 **Keep it private** — your story comes to me only. No one else sees it."
+            "🌟 **Share publicly:** I post it here and I may use it on social media, "
+            "with your name. I fix small grammar mistakes.\n\n"
+            "🔒 **Keep it private:** only I read it. Nobody else sees it."
         ),
         color=discord.Color.gold(),
     )
@@ -375,18 +369,16 @@ def _build_hub_embed_en() -> discord.Embed:
 
 def _build_hub_embed_nl() -> discord.Embed:
     embed = discord.Embed(
-        title="🌟 Jouw Successen en Verhalen",
+        title="🌟 Jouw successen en verhalen",
         description=(
-            "Dit is een plek om je vooruitgang te vieren — groot of klein.\n\n"
-            "Elke stap telt. Of je nu je eerste echte gesprek had, "
-            "eindelijk een grap begreep, of gewoon opdaagde op een moeilijke dag.\n\n"
-            "**Deel jouw verhaal** en inspireer anderen die hetzelfde pad bewandelen.\n\n"
-            "Het duurt minder dan 2 minuten. Beantwoord drie korte vragen, "
-            "kies daarna wat er mee gebeurt:\n\n"
-            "🌟 **Publiek delen** — jouw verhaal wordt hier geplaatst en ik kan het "
-            "ook gebruiken op mijn sociale media om andere leerders te inspireren. "
-            "Je naam wordt erbij vermeld. Verhalen worden licht gecorrigeerd op grammatica.\n\n"
-            "🔒 **Privé houden** — jouw verhaal komt alleen bij mij terecht. Niemand anders ziet het."
+            "Je eerste echte gesprek. Een grap die je eindelijk snapte. "
+            "Een dag dat je toch kwam, ook al was het moeilijk. Kleine stappen tellen hier ook.\n\n"
+            "**Deel je verhaal.** Het helpt mensen die nu zijn waar jij eerst was.\n\n"
+            "Het duurt minder dan 2 minuten. Beantwoord drie korte vragen "
+            "en kies daarna wat er met je verhaal gebeurt:\n\n"
+            "🌟 **Publiek delen:** ik zet het hier en ik mag het gebruiken op sociale media, "
+            "met je naam erbij. Kleine grammaticafouten haal ik eruit.\n\n"
+            "🔒 **Privé houden:** alleen ik lees het. Niemand anders ziet het."
         ),
         color=discord.Color.gold(),
     )
@@ -488,7 +480,7 @@ class TestimonialPublisher:
         if text:
             lines += ["", text[:3500]]
         embed = discord.Embed(
-            title=f"📥 Testimonial DM reply — {author.display_name}",
+            title=f"📥 Testimonial DM reply: {author.display_name}",
             description="\n".join(lines),
             color=discord.Color.gold(),
         )
@@ -645,7 +637,7 @@ async def _handle_reply_choice(
 
     label = "🔓 Shared publicly OK" if public else "🔒 Do not share"
     await publisher.notify_admin(
-        f"{label} — **{interaction.user.display_name}** (`{interaction.user.id}`) "
+        f"{label}: **{interaction.user.display_name}** (`{interaction.user.id}`) "
         f"[{'NL' if is_nl else 'EN'}] chose for their DM reply."
     )
 
@@ -698,13 +690,13 @@ class TestimonialsCog(commands.Cog):
 
         if is_nl:
             text = (
-                "Dankjewel! 🙏 Ik heb je antwoord ontvangen. Stuur gerust meer als je wilt.\n\n"
+                "Dankjewel! 🙏 Ik heb je antwoord. Wil je nog iets toevoegen? Stuur het gewoon.\n\n"
                 "Mag ik je verhaal delen (hier en op mijn sociale media, met je naam erbij), "
                 "of houd je het privé?"
             )
         else:
             text = (
-                "Thank you! 🙏 I got your answer. Feel free to send more if you like.\n\n"
+                "Thank you! 🙏 I got your answer. Want to add something? Just send it.\n\n"
                 "Can I share your story (here and on my social media, with your name), "
                 "or do you want to keep it private?"
             )
@@ -773,7 +765,7 @@ class TestimonialsCog(commands.Cog):
             await member.send(build_dm_text(member, is_nl))
         except discord.Forbidden:
             await interaction.followup.send(
-                f"Could not DM **{member.display_name}** — their DMs are closed.",
+                f"Could not DM **{member.display_name}**. Their DMs are closed.",
                 ephemeral=True,
             )
             return
@@ -790,7 +782,7 @@ class TestimonialsCog(commands.Cog):
         lang = "NL" if is_nl else "EN"
         cmd = "!getuigenis" if is_nl else "!testimonial"
         await self._log_action(
-            f"📨 DM sent to **{member.display_name}** (`{member.id}`) [{lang}] — manual via {cmd}"
+            f"📨 DM sent to **{member.display_name}** (`{member.id}`) [{lang}], sent by hand with {cmd}"
         )
         await interaction.followup.send(
             f"✅ DM sent to **{member.display_name}**.", ephemeral=True
@@ -829,7 +821,7 @@ class TestimonialsCog(commands.Cog):
         lang = "NL" if is_nl else "EN"
         cmd = "!getuigenisopslaan" if is_nl else "!testimonialsave"
         await self._log_action(
-            f"💾 Saved (no DM) **{member.display_name}** (`{member.id}`) [{lang}] — via {cmd}"
+            f"💾 Saved (no DM) **{member.display_name}** (`{member.id}`) [{lang}], with {cmd}"
         )
         await interaction.followup.send(
             f"✅ **{member.display_name}** marked as contacted (no DM sent).", ephemeral=True
@@ -869,7 +861,7 @@ class TestimonialsCog(commands.Cog):
                                 received_public += 1
                             elif "🔒" in desc:
                                 received_private += 1
-                            name = (emb.title or "").replace("📋 Testimonial — ", "").strip()
+                            name = (emb.title or "").replace("📋 Testimonial — ", "").replace("📋 Testimonial: ", "").strip()
                             if name:
                                 received_names.append(name)
         except Exception:
@@ -878,7 +870,7 @@ class TestimonialsCog(commands.Cog):
         total = received_public + received_private
 
         if is_nl:
-            title = "📊 Getuigenissen — Overzicht"
+            title = "📊 Getuigenissen: overzicht"
             lines = [
                 f"**📨 DMs verzonden:** {sent}",
                 f"**📋 Ontvangen:** {total} ({received_public} publiek · {received_private} privé)",
@@ -890,7 +882,7 @@ class TestimonialsCog(commands.Cog):
                 lines += ["**DM verzonden naar (recent):**", ", ".join(sent_names[:30]) + ("..." if len(sent_names) > 30 else "")]
             footer = "Gebaseerd op de laatste 500 berichten"
         else:
-            title = "📊 Testimonials — Overview"
+            title = "📊 Testimonials: overview"
             lines = [
                 f"**📨 DMs sent:** {sent}",
                 f"**📋 Received:** {total} ({received_public} public · {received_private} private)",

@@ -19,8 +19,8 @@
     "Nice. Tell me one more detail.",
     "Okay, that is enough to start.",
     "I hear you.",
-    "That sounds like a useful thing to practise.",
-    "Good message. Let's make it a little longer.",
+    "You can practise that here.",
+    "Okay. Can you make it a little longer?",
     "Nice try. Keep it simple.",
     "That is a good start.",
     "Let's build from that."
@@ -48,8 +48,8 @@
         "Hi {name}. Nice, you started.",
         "Hello {name}. Let's practise a little.",
         "Hey. I am here.",
-        "Hi. Small conversation mode is on.",
-        "Hello. No pressure, just one sentence at a time."
+        "Hi. Let's have a short chat.",
+        "Hello. One sentence at a time is fine."
       ],
       "follow_ups": [
         "How are you today?",
@@ -70,7 +70,7 @@
         "I am doing okay.",
         "Pretty good. Ready to chat.",
         "I am here and ready to practise.",
-        "Good enough for a small conversation.",
+        "Good, thanks. Ready for a short chat.",
         "I am fine. Thanks for asking."
       ],
       "follow_ups": [
@@ -93,7 +93,7 @@
         "Jerry. I help you practise small conversations.",
         "I am a simple conversation helper for English practice.",
         "I am here to ask questions and keep you talking.",
-        "I am Jerry. Think of me as a low-pressure practice partner."
+        "I am Jerry. You can practise with me, and mistakes are fine."
       ],
       "follow_ups": [
         "What should we talk about?",
@@ -139,7 +139,7 @@
         "Let's do an easy one.",
         "Good idea.",
         "Here is a simple question.",
-        "Let's keep it practical."
+        "Let's keep it simple."
       ],
       "follow_ups": [
         "What did you do today?",
@@ -160,7 +160,7 @@
         "Nice. We can practise that.",
         "Good idea.",
         "Sure, let's make it easy.",
-        "That is exactly what this channel is for.",
+        "You can do that right here.",
         "Small practice still counts.",
         "Good. Use simple words first."
       ],
@@ -206,9 +206,9 @@
         "Thanks for telling me.",
         "I get that.",
         "That makes sense.",
-        "Good sentence.",
-        "That is a useful feeling to describe.",
-        "Nice. Feelings are good speaking practice."
+        "I understand.",
+        "Thanks for sharing that.",
+        "Talking about feelings is hard in a new language. You did it."
       ],
       "follow_ups": [
         "Why do you feel that way?",
@@ -274,8 +274,8 @@
         "Tell me more.",
         "Nice.",
         "That sounds like a normal day.",
-        "Daily life is great practice.",
-        "Good topic. Simple but useful.",
+        "You can use this kind of sentence every day.",
+        "Good topic. You will talk about this a lot.",
         "That is something you can use in real conversation."
       ],
       "follow_ups": [
@@ -297,8 +297,8 @@
         "That sounds useful.",
         "Okay, work English is practical.",
         "Good topic.",
-        "That is worth practising.",
-        "Professional English needs clear sentences.",
+        "You will need this one.",
+        "At work, short and clear sentences help most.",
         "Nice. Let's keep it natural."
       ],
       "follow_ups": [
@@ -320,9 +320,9 @@
         "That is a strong reason to practise.",
         "Good. Preparation helps.",
         "Let's make your answer clear.",
-        "Interviews and exams need simple, confident sentences.",
+        "In interviews and exams, simple sentences work well.",
         "We can practise one answer at a time.",
-        "Good topic. Clear structure matters."
+        "Good topic. Short answers with a clear order work best."
       ],
       "follow_ups": [
         "What question are you preparing for?",
@@ -344,8 +344,8 @@
         "Nice.",
         "That sounds good.",
         "Good small-talk topic.",
-        "I like this topic because everyone has an opinion.",
-        "Useful vocabulary lives in food conversations."
+        "Everyone has an opinion about food.",
+        "You learn a lot of words when you talk about food."
       ],
       "follow_ups": [
         "What food do you like most?",
@@ -366,7 +366,7 @@
         "Nice. I like that topic.",
         "That sounds fun.",
         "Good travel idea.",
-        "Travel gives you many useful phrases.",
+        "You can use travel phrases on your next trip.",
         "That is easy to turn into a conversation.",
         "Good. Places are fun to describe."
       ],
@@ -388,10 +388,10 @@
       "replies": [
         "Nice hobby.",
         "That is a good topic for easy conversation.",
-        "Free-time topics are very useful.",
+        "People ask about free time all the time.",
         "Good. You can say a lot about that.",
         "That sounds interesting.",
-        "Great. Hobbies help you sound more natural."
+        "Great. People love talking about hobbies."
       ],
       "follow_ups": [
         "How often do you do it?",
@@ -414,7 +414,7 @@
         "That is a fun conversation starter.",
         "Good choice.",
         "You can practise opinions with that.",
-        "This topic is perfect for casual English."
+        "People talk about this every day."
       ],
       "follow_ups": [
         "What did you watch or listen to?",
@@ -433,11 +433,11 @@
       "topics": ["relationship", "home", "together", "meet"],
       "replies": [
         "People are always a good topic.",
-        "That sounds personal and useful.",
-        "Good. Relationships give you many everyday words.",
+        "Thanks for telling me.",
+        "Good. You can use words about people every day.",
         "Nice. You can keep it simple.",
         "That is a common conversation topic.",
-        "Good sentence topic."
+        "Nice topic."
       ],
       "follow_ups": [
         "Who are you talking about?",
@@ -458,7 +458,7 @@
         "Good goal.",
         "That is clear.",
         "Nice. Goals are easier with small steps.",
-        "That sounds worth working on.",
+        "You can work on that.",
         "Good motivation.",
         "Let's make it practical."
       ],
@@ -478,11 +478,11 @@
       "keywords": ["weather", "rain", "raining", "sunny", "cold", "hot", "warm", "windy", "storm", "snow", "cloudy"],
       "topics": ["temperature", "outside", "season"],
       "replies": [
-        "Weather talk is useful.",
+        "People talk about the weather a lot.",
         "Good small-talk topic.",
         "Nice. Weather is easy to practise.",
         "That is a common first conversation.",
-        "Good topic for simple adjectives.",
+        "You can use simple words like hot, cold and wet.",
         "Everyone can say something about the weather."
       ],
       "follow_ups": [
@@ -501,7 +501,7 @@
       "keywords": ["sick", "ill", "headache", "tired", "sleep", "slept", "doctor", "medicine", "exercise", "healthy", "pain", "hurt"],
       "topics": ["health", "body", "rest", "energy"],
       "replies": [
-        "Health is useful to talk about.",
+        "You might need these words at the doctor.",
         "Sorry to hear that.",
         "That sounds uncomfortable.",
         "Good topic, but keep it simple.",
@@ -526,7 +526,7 @@
       "replies": [
         "Shopping English is very practical.",
         "Good daily-life topic.",
-        "Money and prices are useful vocabulary.",
+        "You need price words in every shop.",
         "Nice. You can use this in real life.",
         "That is a common conversation.",
         "Good topic for asking questions."
@@ -572,7 +572,7 @@
       "replies": [
         "Schedules are useful to practise.",
         "Good practical topic.",
-        "Time phrases matter a lot.",
+        "You use time phrases every day.",
         "Nice. That can become a real conversation.",
         "That is a useful daily sentence.",
         "Good. Be clear with times."
@@ -597,7 +597,7 @@
         "Anytime.",
         "No problem.",
         "Happy to help.",
-        "Good work continuing the conversation."
+        "Nice, you kept talking."
       ],
       "follow_ups": [
         "Want another question?",
@@ -618,7 +618,7 @@
         "Good practice today.",
         "Bye. Nice chatting.",
         "Talk later.",
-        "Good work showing up.",
+        "Thanks for practising.",
         "See you next time."
       ],
       "follow_ups": [
@@ -627,7 +627,7 @@
         "Next time we can practise another topic.",
         "Have a good day.",
         "Rest well.",
-        "Keep one small English habit today."
+        "Try to use one English sentence later today."
       ]
     }
   ]

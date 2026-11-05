@@ -14,15 +14,15 @@ NL_ZEG_HALLO_CHANNEL_ID = 1336419808811679757   # 👋┃zeg-hallo
 EN_WELCOME_DM = """\
 Hey, welcome to the Online English Café.
 
-This is a place to practice speaking English — not study it. \
-No tests, no grades, no pressure to be perfect.
+This is a place to practise speaking English. \
+You won't get tests or grades here, and nobody expects you to be perfect.
 
-Start small: read along in the community, answer a daily question, \
+Start small. Read along in the community, answer the daily question \
 or try one short voice conversation when you are ready.
 
 If you want a guided path, use /guide or visit https://learnwithlucas.com/en/start/.
 
-If you want to say hi, <#{say_hello}> is a good place to start.
+Want to say hi? Do it in <#{say_hello}>.
 
 See you in there.\
 """
@@ -30,15 +30,15 @@ See you in there.\
 NL_WELCOME_DM = """\
 Hey, welkom bij Learn with Lucas.
 
-Dit is een plek om Nederlands te oefenen, niet om het te bestuderen. \
-Geen toetsen, geen beoordelingen, geen druk om perfect te zijn.
+Dit is een plek om Nederlands te spreken. \
+Je krijgt hier geen toetsen of cijfers, en niemand verwacht dat je perfect bent.
 
-Begin klein: lees mee in de spreekgroep, beantwoord een dagelijkse vraag, \
-of probeer één kort gesprek wanneer je eraan toe bent.
+Begin klein. Lees mee in de spreekgroep, beantwoord de vraag van de dag \
+of probeer één kort gesprek wanneer je er klaar voor bent.
 
-Als je een duidelijke route wilt, gebruik /guide of ga naar https://learnwithlucas.com/nl/begin/.
+Wil je een vaste route? Gebruik /guide of ga naar https://learnwithlucas.com/nl/begin/.
 
-Als je jezelf wilt voorstellen, kan dat in <#{zeg_hallo}>.
+Wil je jezelf voorstellen? Dat kan in <#{zeg_hallo}>.
 
 Tot dan.\
 """

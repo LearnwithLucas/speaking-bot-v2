@@ -55,18 +55,18 @@ def _open_conversation_link(guild_id: int) -> str:
 def _conversation_starters(*, is_nl: bool) -> str:
     if is_nl:
         return (
-            "\n\n**Makkelijke starters:**\n"
-            "- What did you do today?\n"
-            "- Tell me about a food you like.\n"
-            "- What is one thing you want to practice in English?\n\n"
-            "Je hoeft niet perfect te praten. Kies gewoon een vraag."
+            "\n\n**Makkelijke vragen om te beginnen:**\n"
+            "- Wat heb je vandaag gedaan?\n"
+            "- Welk eten vind je lekker?\n"
+            "- Wat wil je oefenen in het Nederlands?\n\n"
+            "Je hoeft niet perfect te praten. Kies één vraag."
         )
     return (
         "\n\n**Easy starters:**\n"
         "- What did you do today?\n"
         "- Tell me about a food you like.\n"
         "- What is one thing you want to practice in English?\n\n"
-        "No need to make it perfect. Pick one and start there."
+        "It doesn't need to be perfect. Pick one question and start."
     )
 
 
@@ -172,10 +172,10 @@ class PartnerPlanTimeView(discord.ui.View):
             title="Plan a speaking time" if not self.is_nl else "Plan een spreekmoment",
             description=(
                 f"{interaction.user.mention} is looking for a speaking partner **{label}**.\n\n"
-                "Click **I might join** if you may want to join. No pressure - this just helps people find each other."
+                "Click **I might join** if you want to join. It only helps people find each other, so you are not promising anything."
                 if not self.is_nl
                 else f"{interaction.user.mention} zoekt een spreekpartner **{label}**.\n\n"
-                "Klik op **Misschien doe ik mee** als je misschien wilt aansluiten. Geen druk - dit helpt mensen elkaar te vinden."
+                "Klik op **Misschien doe ik mee** als je wilt meedoen. Het helpt mensen elkaar te vinden. Je belooft er niets mee."
             ),
             color=discord.Color.blurple(),
         )
@@ -281,7 +281,7 @@ class PlannedPracticeView(discord.ui.View):
 
         self._sent_to.add(interaction.user.id)
         await interaction.response.send_message(
-            "Nice. I will DM you both with the conversation channel."
+            "Nice. I'll send you both a DM with the conversation channel."
             if not self.is_nl
             else "Mooi. Ik stuur jullie allebei een DM met het gesprekskanaal.",
             ephemeral=True,

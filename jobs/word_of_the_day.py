@@ -342,7 +342,7 @@ NL_WORD_LIST: list[tuple[str, str, str, str, str]] = [
     # A
     ("aanpassen", "werkwoord", "iets veranderen zodat het beter past bij een situatie", "to adjust / to adapt", "Ze paste haar schema aan om eerder te beginnen."),
     ("aarzelen", "werkwoord", "even wachten voordat je iets doet of zegt, omdat je niet zeker bent", "to hesitate", "Hij aarzelde voordat hij antwoord gaf."),
-    ("afhangen", "werkwoord", "bepaald worden door iets anders — 'het hangt af van...'", "to depend on", "Of we gaan hangt af van het weer."),
+    ("afhangen", "werkwoord", "bepaald worden door iets anders, zoals in 'het hangt af van...'", "to depend on", "Of we gaan hangt af van het weer."),
     ("afleiding", "zelfstandig naamwoord", "iets wat je aandacht wegtrekt van wat je eigenlijk doet", "distraction", "Zijn telefoon was een grote afleiding tijdens de les."),
     ("afsluiten", "werkwoord", "iets beëindigen of afsluiten, zoals een gesprek of een rekening", "to close / to conclude", "Ze sloot het gesprek af met een duidelijke conclusie."),
     ("aanmoedigen", "werkwoord", "iemand motiveren om iets te blijven doen", "to encourage", "Hij moedigde haar aan om door te gaan met haar studie."),
@@ -352,7 +352,7 @@ NL_WORD_LIST: list[tuple[str, str, str, str, str]] = [
     ("aanpakken", "werkwoord", "een probleem of taak actief aanvatten en oplossen", "to tackle / to address", "Hij pakte het probleem direct aan."),
 
     # B
-    ("bedoelen", "werkwoord", "willen zeggen — wat je bedoelt is je eigenlijke bedoeling", "to mean", "Wat bedoel je precies met dat woord?"),
+    ("bedoelen", "werkwoord", "iets willen zeggen; wat je echt wilt zeggen", "to mean", "Wat bedoel je precies met dat woord?"),
     ("begrijpen", "werkwoord", "de betekenis of inhoud van iets snappen", "to understand", "Ze begreep de uitleg pas na het tweede voorbeeld."),
     ("behoefte", "zelfstandig naamwoord", "iets wat je nodig hebt of sterk wilt", "need", "Hij had behoefte aan rust na de lange dag."),
     ("beleefd", "bijvoeglijk naamwoord", "vriendelijk en respectvol in omgang met anderen", "polite", "Ze was altijd beleefd, ook als ze het er niet mee eens was."),
@@ -539,7 +539,7 @@ NL_WORD_LIST: list[tuple[str, str, str, str, str]] = [
     ("vertalen", "werkwoord", "woorden omzetten van de ene taal naar de andere", "to translate", "Ze probeerde niet te vertalen maar direct in het Nederlands te denken."),
     ("vlot", "bijvoeglijk naamwoord / bijwoord", "soepel en zonder veel moeite", "fluent / smooth", "Ze sprak vlotter dan een maand geleden."),
     ("wachten", "werkwoord", "de tijd nemen tot iets gebeurt", "to wait", "Ze wachtte rustig op haar beurt om te spreken."),
-    ("waar", "bijvoeglijk naamwoord", "overeenkomend met de werkelijkheid", "true / real", "Dat is waar — oefening maakt de meester."),
+    ("waar", "bijvoeglijk naamwoord", "overeenkomend met de werkelijkheid", "true / real", "Dat is waar: oefening baart kunst."),
     ("welkom", "bijvoeglijk naamwoord", "graag gezien, ontvangen als iemand die erbij hoort", "welcome", "Ze voelde zich welkom in de groep."),
     ("woord", "zelfstandig naamwoord", "een taaleenheid met een betekenis", "word", "Ze leerde elke dag een nieuw woord."),
     ("zinvol", "bijvoeglijk naamwoord", "een duidelijk doel of waarde hebben", "meaningful / worthwhile", "Een kort maar zinvol gesprek is meer waard dan een uur luisteren."),

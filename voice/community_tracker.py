@@ -79,27 +79,23 @@ def _format_duration(seconds: int, *, is_nl: bool) -> str:
 def _build_weekly_recap_message(*, seconds: int, is_nl: bool) -> str:
     if is_nl:
         if seconds >= 60:
-            opener = f"Deze week was je ongeveer {_format_duration(seconds, is_nl=True)} in voice. Mooi dat je geoefend hebt."
+            opener = f"Deze week was je ongeveer {_format_duration(seconds, is_nl=True)} in voice. Fijn dat je bent komen oefenen."
         else:
             opener = "Je bent deze week in voice geweest. Dat telt al."
         return (
             f"{opener}\n\n"
-            "Ik stuur dit pas na je eerste 5 minuten, zodat het geen druk geeft zodra je binnenkomt.\n"
-            "Geen scorebord, geen vergelijking. Gewoon fijn dat je bent komen oefenen.\n\n"
-            "Tip: gebruik de vraag in het voice-kanaal om te laten zien hoelang je blijft, "
-            "dan kunnen anderen je makkelijker vinden in op-zoek-naar-een-partner."
+            "Tip: beantwoord in het voicekanaal de vraag hoelang je blijft. "
+            "Dan vinden anderen je makkelijker in op-zoek-naar-een-partner."
         )
 
     if seconds >= 60:
-        opener = f"This week you spent about {_format_duration(seconds, is_nl=False)} in voice. Nice work showing up."
+        opener = f"This week you spent about {_format_duration(seconds, is_nl=False)} in voice. I'm glad you came to practise."
     else:
-        opener = "You joined voice this week. That counts already."
+        opener = "You joined voice this week. That already counts."
     return (
         f"{opener}\n\n"
-        "I wait until you have been here 5 minutes before sending this, so it does not jump on you right away.\n"
-        "No leaderboard, no comparison. Just glad you came to practice.\n\n"
-        "Tip: use the question in the voice chat to share how long you are staying, "
-        "then people can find you more easily in looking-for-a-partner."
+        "Tip: answer the question in the voice chat about how long you're staying. "
+        "Then people can find you more easily in looking-for-a-partner."
     )
 
 

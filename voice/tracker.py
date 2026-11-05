@@ -122,7 +122,7 @@ EN_ENGAGEMENT_QUESTIONS = [
     "What's something you learned in the last month?",
     "If you had one extra hour today, what would you do with it?",
     "What's a place you really want to visit one day?",
-    "What's your go-to food when you don't feel like cooking?",
+    "What do you eat when you don't feel like cooking?",
     "What's something that's harder than it looks?",
     "What's a habit you've been trying to build?",
     "What's something that always makes you laugh?",
@@ -143,7 +143,7 @@ EN_ENGAGEMENT_QUESTIONS = [
     "What's something you want to get better at?",
     "What's a place that feels like home to you?",
     "Not sure what to talk about? Try /topics for some conversation starters.",
-    "If the conversation has slowed down, /topics has questions ready to go.",
+    "Is the conversation slowing down? /topics has questions ready.",
     "Want a conversation starter? Use /topics and pick a subject.",
 ]
 
@@ -215,19 +215,19 @@ NL_ENCOURAGEMENT_30MIN = [
 
 NL_ENGAGEMENT_QUESTIONS = [
     "Wat heb je deze week gedaan wat je niet had gepland?",
-    "Als je een week lang maar een maaltijd mocht eten, wat zou het zijn?",
+    "Als je een week lang maar één maaltijd mocht eten, wat zou het zijn?",
     "Wat is iets kleins dat je onlangs blij maakte?",
     "Wat is een woord in jouw taal dat niet bestaat in het Nederlands?",
     "Waar kijk je naar uit?",
     "Wat heb je afgelopen weekend gedaan?",
-    "Welke film of serie heb je recentelijk gekeken?",
+    "Welke film of serie heb je onlangs gekeken?",
     "Wat heb je de afgelopen maand geleerd?",
     "Als je vandaag een extra uur had, wat zou je ermee doen?",
     "Welke plek wil je ooit echt bezoeken?",
     "Wat eet je als je geen zin hebt om te koken?",
     "Wat is iets dat moeilijker is dan het lijkt?",
     "Welke gewoonte probeer je op te bouwen?",
-    "Wat zorgt er altijd voor dat je moet lachen?",
+    "Waar moet je altijd om lachen?",
     "Wat zou je anders doen als je gisteren opnieuw kon doen?",
     "Welke vaardigheid zou je willen hebben?",
     "Wat is het beste advies dat iemand je ooit gaf?",
@@ -235,22 +235,22 @@ NL_ENGAGEMENT_QUESTIONS = [
     "Wat doe je om te ontspannen na een lange dag?",
     "Wat is een vraag die je altijd al aan iemand wilde stellen maar nog niet hebt gedaan?",
     "Wat is iets wat je vroeger geloofde maar nu niet meer?",
-    "Wat is het interessantste gesprek dat je recentelijk hebt gehad?",
-    "Wat is een eenvoudig genieten dat je echt leuk vindt?",
+    "Wat was onlangs een interessant gesprek voor jou?",
+    "Van welk klein ding geniet je echt?",
     "Als je voor een dag van leven kon ruilen met iemand, wie zou het zijn?",
     "Wat weten mensen niet over jou?",
     "Wat is een geluid dat je kalm maakt?",
     "Wat heeft je onlangs verrast?",
     "Over welk onderwerp kun je uren praten?",
     "Wat wil je beter leren?",
-    "Weet je niet waarover praten? Gebruik /onderwerpen voor gespreksonderwerpen.",
-    "Als het gesprek wat stilvalt, /onderwerpen heeft vragen klaarstaan.",
+    "Weet je niet waarover je wilt praten? Gebruik /onderwerpen.",
+    "Valt het gesprek stil? In /onderwerpen staan vragen klaar.",
     "Wil je een gespreksopener? Gebruik /onderwerpen en kies een onderwerp.",
 ]
 
 WEEKLY_DM_MESSAGE = (
-    "👋 Hey! Noticed you hopped into voice this week — nice.\n"
-    "If you feel like speaking, start tiny: one sentence is enough. No pressure."
+    "👋 Hey, I saw you joined voice this week. Nice.\n"
+    "If you feel like speaking, start small. One sentence is enough."
 )
 
 INACTIVITY_MIN_DAYS = 14
@@ -258,10 +258,10 @@ INACTIVITY_COOLDOWN_DAYS = 30
 NO_NUDGE_AFTER_SPEAK_SECONDS = 72 * 3600
 
 INACTIVITY_MSG_A = (
-    "If you ever feel like joining a table again, you don’t need to catch up or explain anything. You can just join."
+    "Want to join a table again? You don't need to explain anything. Join whenever you feel like it."
 )
 INACTIVITY_MSG_B = (
-    "No pressure to be consistent here. If you want to speak again sometime, you can just join and leave whenever."
+    "You don't need to come every week. If you want to speak again, join and leave whenever you like."
 )
 
 

@@ -65,7 +65,7 @@ EN_TOPICS: dict[str, dict] = {
             ("What's the best place you've ever visited?", "Try: *blew me away, worth every penny, would go back, recommend*"),
             ("Do you prefer beach holidays or city breaks?", "Try: *switch off, explore, take in the sights, pace*"),
             ("What's the worst travel experience you've had?", "Try: *went wrong, delayed, lost, somehow survived*"),
-            ("How do you usually travel — planned or spontaneous?", "Try: *book in advance, last minute, go with the flow, itinerary*"),
+            ("How do you usually travel: planned or spontaneous?", "Try: *book in advance, last minute, go with the flow, itinerary*"),
             ("Is there a place you really want to visit one day?", "Try: *on my list, always dreamed of, ever since I saw*"),
             ("What do you always bring with you when you travel?", "Try: *can't leave without, essential, learned my lesson, always pack*"),
             ("How has travel changed you?", "Try: *opened my eyes, perspective, appreciate, realised*"),
@@ -353,7 +353,7 @@ class TopicCarouselView(discord.ui.View):
         vocab_label = "Handige woorden" if self.is_nl else "Useful vocabulary"
 
         embed = discord.Embed(
-            title=f"{self.topic_label} — {label} {self.index + 1}/{total}",
+            title=f"{self.topic_label}: {label} {self.index + 1}/{total}",
             description=f"**{question}**",
         )
         embed.add_field(name=vocab_label, value=vocab_tip, inline=False)

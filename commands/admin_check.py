@@ -204,15 +204,15 @@ async def setup(bot: Any) -> None:
         issue_count = sum(1 for line in lines if not line.startswith("OK "))
 
         embed = discord.Embed(
-            title="Speaking Bot Setup Check",
+            title="Speaking bot setup check",
             description=(
                 "Admin-only deployment and permission check.\n"
                 f"Channel issues found: **{issue_count}**"
             ),
         )
         embed.add_field(name="Database", value=f"{db_level} {db_message}", inline=False)
-        embed.add_field(name="Requested Intents", value="\n".join(_intent_lines(bot)), inline=False)
-        embed.add_field(name="Voice Chat Ping Role", value=_speaking_role_status(bot), inline=False)
+        embed.add_field(name="Requested intents", value="\n".join(_intent_lines(bot)), inline=False)
+        embed.add_field(name="Voice chat ping role", value=_speaking_role_status(bot), inline=False)
         embed.add_field(
             name="Guilds",
             value=(

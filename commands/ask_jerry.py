@@ -40,31 +40,31 @@ FAQ: dict[str, dict] = {
         "questions": [
             (
                 "What is Supported Speaking?",
-                "Supported Speaking is a weekly practice membership for €7.99/month.\n\n"
-                "Every Monday, Friday and Saturday you get the extended supporter edition practice guide. "
-                "You also get 5 B1-level English stories with audio every month, error recognition training in every guide, "
-                "and full community access on Discord, WhatsApp and Telegram.\n\n"
-                "It is not a course. There is no fixed schedule you have to follow. "
-                "You practice at your own pace with better materials than the free version.\n\n"
+                "Supported Speaking is a practice membership for €7.99 a month.\n\n"
+                "Every Monday, Friday and Saturday you get the longer member version of the practice guide. "
+                "Every month you get 5 B1 stories with audio. "
+                "There is a live group session every Saturday at 14:30 CEST, "
+                "and you can use the community on Discord, WhatsApp and Telegram.\n\n"
+                "You practise at your own pace. Join the live session when it fits you.\n\n"
                 f"More info: {EN_SUPPORTED_SPEAKING_URL}"
             ),
             (
                 "How much does it cost?",
-                "Supported Speaking costs **€7.99 per month**, **€39.95 for 6 months** (1 month free), or **€79.90 per year** (2 months free).\n\n"
-                "For comparison: a private lesson with Lucas costs €24 for 30 minutes. "
-                "This is weekly practice for less than one coffee a week.\n\n"
-                "14 day money back if it is not what you expected. No questions asked.\n\n"
+                "Supported Speaking costs **€7.99 a month**, **€39.95 for 6 months** (1 month free) or **€79.90 a year** (2 months free).\n\n"
+                "A private lesson with Lucas costs €24 for 30 minutes. "
+                "Supported Speaking is practice every week for €7.99 a month.\n\n"
+                "Not what you expected? You get your money back within 14 days. Cancel anytime.\n\n"
                 f"[Start today]({EN_SUPPORTED_SPEAKING_URL})"
             ),
             (
                 "What do I get every week?",
                 "Every week you get:\n"
                 "• Monday, Friday and Saturday: the supporter edition practice guide\n"
-                "• Error recognition paragraphs — find and fix hidden mistakes\n"
+                "• A paragraph with hidden mistakes to find and fix\n"
                 "• Extra practice sentences (3x more than the free version)\n"
-                "• Self-check questions\n\n"
-                "Every month you also get 5 B1-level English stories with audio. "
-                "Read and listen at the same time, written specifically for intermediate learners."
+                "• Questions to test yourself\n\n"
+                "Every month you also get 5 B1 stories with audio. "
+                "You read and listen at the same time."
             ),
             (
                 "Is there a live session?",
@@ -74,30 +74,30 @@ FAQ: dict[str, dict] = {
             ),
             (
                 "Can I cancel anytime?",
-                "Yes. Cancel anytime, no questions asked.\n\n"
-                "There is also a 14 day money back period if it turns out it is not what you expected.\n\n"
+                "Yes. You can cancel anytime, and you don't need to give a reason.\n\n"
+                "If it's not what you expected, you get your money back within 14 days.\n\n"
                 f"[Join here]({EN_SUPPORTED_SPEAKING_URL})"
             ),
             (
                 "What level do I need?",
-                "Supported Speaking works best if you are at B1 or B2 level. "
-                "That means you understand English reasonably well but freeze or hesitate when it is time to speak.\n\n"
+                "Supported Speaking fits best at B1 or B2. "
+                "That means you understand most English but freeze or hesitate when you have to speak.\n\n"
                 "If you are a complete beginner, start with the free community first and join when you feel ready."
             ),
             (
                 "How is it different from the free guides?",
-                "The free guides include the key phrases and 5 practice sentences.\n\n"
-                "The supporter edition adds:\n"
+                "The free guides have the main phrases and 5 practice sentences.\n\n"
+                "The member version adds:\n"
                 "• 10 extra practice sentences\n"
-                "• An error recognition paragraph (find and fix hidden mistakes)\n"
-                "• Self-check questions\n"
+                "• A paragraph with hidden mistakes to find and fix\n"
+                "• Questions to test yourself\n"
                 "• A quick recognition test\n\n"
-                "That is roughly 3 times more content per guide."
+                "That is about 3 times more per guide."
             ),
             (
                 "Can I pay with GCash, DANA or Touch n Go?",
-                "Yes. If you are based in the Philippines, Indonesia, Malaysia or Thailand, "
-                "there are Airwallex payment links that accept GCash, DANA and Touch 'n Go.\n\n"
+                "Yes. If you live in the Philippines, Indonesia, Malaysia or Thailand, "
+                "you can use the Airwallex payment links. They take GCash, DANA and Touch 'n Go.\n\n"
                 f"Go to {EN_SUPPORTED_SPEAKING_URL} and scroll down to the payment section. "
                 "You will see the SEA payment option there."
             ),
@@ -109,16 +109,16 @@ FAQ: dict[str, dict] = {
         "questions": [
             (
                 "What are private lessons?",
-                "Private lessons are one-on-one sessions with Lucas, via Zoom or Discord.\n\n"
-                "No scripts, no exams, pauses included. Real conversation from the start. "
-                "The goal is calm, personal speaking practice with someone who actually listens and gives you useful feedback.\n\n"
+                "Private lessons are one on one with Lucas, on Zoom or Discord.\n\n"
+                "We start talking from the first minute, and you can stop and think whenever you need to. "
+                "I listen, and I tell you what to fix and what already works.\n\n"
                 f"More info: {EN_PRIVATE_LESSONS_URL}"
             ),
             (
                 "How much do private lessons cost?",
-                "**Trial session** — 30 minutes — €24 (one time)\n"
-                "**Speaking Builder** — 4 x 60 minutes — €189\n"
-                "**Confidence Intensive** — 10 x 60 minutes — €389\n\n"
+                "**Trial session**, 30 minutes: €24 (one time)\n"
+                "**Speaking Builder**, 4 x 60 minutes: €189\n"
+                "**Confidence Intensive**, 10 x 60 minutes: €389\n\n"
                 "Not sure which fits? Start with the trial. "
                 f"[View all packages]({EN_PRIVATE_LESSONS_URL})"
             ),
@@ -129,29 +129,28 @@ FAQ: dict[str, dict] = {
                 "• Want calm, personal feedback without an audience\n"
                 "• Have a specific goal like a job interview, a presentation, or daily confidence\n"
                 "• Are preparing for IELTS, TOEFL, Cambridge or a workplace assessment\n\n"
-                "The first session always starts with real conversation so you can find your level together."
+                "The first session starts with a normal conversation. That's how we find your level."
             ),
             (
                 "How do I book a private lesson?",
                 f"Go to {EN_PRIVATE_LESSONS_URL} and pick a session or package.\n\n"
-                "After you pay you get a calendar link. Pick a time that works for you. "
-                "Then you meet via Zoom or Discord. No setup needed.\n\n"
+                "After you pay, you get a calendar link. Pick a time that works for you. "
+                "Then we meet on Zoom or Discord.\n\n"
                 "Questions before booking? Email english@learnwithlucas.com"
             ),
             (
                 "What happens in a session?",
-                "Real conversation from the start. You talk about topics that are relevant to you.\n\n"
-                "Lucas gives calm feedback during or after the session, whichever works best for you. "
-                "There is a short follow-up after the session if it is useful.\n\n"
-                "Sessions are 30 or 60 minutes depending on what you booked. "
-                "No scripts, no grammar drills unless you ask for them."
+                "We talk from the first minute, about the topics you need English for.\n\n"
+                "Lucas gives feedback during or after the session, you choose. "
+                "You get short notes after the session if you want them.\n\n"
+                "A session is 30 or 60 minutes, depending on what you booked. "
+                "Grammar drills only if you ask for them."
             ),
             (
                 "Is there space right now?",
-                "Private lessons are kept limited so they stay calm and focused.\n\n"
-                "If there is no space right now, you are always welcome in the free community "
-                "and the speaking community here.\n\n"
-                f"Check current availability at {EN_PRIVATE_LESSONS_URL}"
+                "I keep the number of private students small.\n\n"
+                "No space right now? You can still join the free community and practise here.\n\n"
+                f"The private lessons page shows when there is space: {EN_PRIVATE_LESSONS_URL}"
             ),
         ],
     },
@@ -161,70 +160,62 @@ FAQ: dict[str, dict] = {
         "questions": [
             (
                 "I understand English but freeze when I speak. What do I do?",
-                "That is the most common pattern and it makes sense. "
-                "Understanding and speaking use different parts of your brain.\n\n"
-                "The only fix is speaking more, but the key is speaking in low-pressure situations first. "
-                "Not a test. Not a presentation. Just a real conversation where mistakes are fine.\n\n"
-                "Start here: join the voice channels and say one sentence. That is it. That is the whole exercise."
+                "This happens to a lot of learners. Understanding and speaking are different skills, "
+                "and you have trained the first one much more.\n\n"
+                "The fix is speaking more, starting somewhere calm: a normal conversation "
+                "with people who don't mind mistakes.\n\n"
+                "Start here: join a voice channel and say one sentence. That's the whole exercise."
             ),
             (
                 "How do I stop switching back to my first language?",
                 "Switching happens when the pressure is too high or the word is not there yet.\n\n"
                 "Two things help:\n"
-                "1. Lower the stakes. If you are practicing with people who understand that you are learning, "
-                "there is no reason to switch.\n"
-                "2. Learn to buy time. Phrases like 'how do I say this', 'give me a second' or 'I think the word is' "
-                "keep you in English while you find the word.\n\n"
+                "1. Practise with people who know you are learning. Then there is less reason to switch.\n"
+                "2. Learn phrases that give you time: 'how do I say this', 'give me a second', 'I think the word is'. "
+                "They keep you in English while you look for the word.\n\n"
                 "You do not need perfect sentences. You need to stay in English longer each time."
             ),
             (
                 "How do I build confidence in speaking?",
-                "Confidence comes after doing it, not before.\n\n"
-                "Most people wait until they feel ready. That feeling does not come on its own. "
-                "It comes from speaking enough times that it starts to feel normal.\n\n"
-                "The practical answer: speak a little every day in a low-pressure setting. "
-                "This server, the voice channels, the daily chat and the free community. "
-                "Not to perform. Just to get used to the sound of your own voice in English."
+                "Confidence comes after you speak. Waiting to feel ready usually doesn't work.\n\n"
+                "Speak a little every day somewhere calm: the voice channels, the daily chat or the free community. "
+                "After enough times, hearing your own voice in English starts to feel normal."
             ),
             (
                 "How do I improve my pronunciation?",
-                "Pronunciation improves through listening and speaking together, not through rules.\n\n"
+                "Pronunciation gets better when you listen and speak a lot. Rules help less.\n\n"
                 "Listen to a lot of English at your level. Repeat sentences out loud, not just words. "
                 "Record yourself occasionally and compare.\n\n"
-                "The goal is not a native accent. The goal is being clearly understood. "
-                "Most people are more understandable than they think."
+                "You don't need a native accent. You need people to understand you, "
+                "and most learners are easier to understand than they think."
             ),
             (
                 "How do I remember new vocabulary?",
-                "You remember words best when you use them in real sentences, not when you memorise lists.\n\n"
-                "When you learn a new word, use it in a sentence that is relevant to your life. "
+                "You remember a word when you use it in a real sentence. Lists help less.\n\n"
+                "When you learn a new word, make a sentence about your own life with it. "
                 "Say it out loud. Use it in a conversation the same day if you can.\n\n"
-                "Check the word of the day channel every morning. That is what it is there for."
+                "The word of the day channel gives you one new word every morning."
             ),
             (
                 "How often should I practice to improve?",
-                "A little every day beats a long session once a week.\n\n"
-                "15 minutes of real speaking practice daily will move you forward faster than "
-                "two hours on a Saturday. The consistency is what builds the habit.\n\n"
-                "Use the voice channels, the daily chat, and the partner button when you are free. "
-                "Small steps add up."
+                "A little every day works better than one long session a week.\n\n"
+                "15 minutes of speaking a day helps more than two hours on a Saturday, "
+                "because it turns into a habit.\n\n"
+                "Use the voice channels, the daily chat and the partner button when you are free."
             ),
             (
                 "I feel embarrassed making mistakes. How do I get past that?",
-                "Everyone feels this. It is not a sign that you are bad at English. "
-                "It is a sign that you care.\n\n"
-                "The people in this community are learning too. Nobody is judging your grammar. "
-                "Mistakes are actually useful because they tell you what to fix.\n\n"
-                "The only way to stop feeling embarrassed is to speak often enough that it becomes normal. "
-                "That takes time. Give yourself that time."
+                "Almost every learner feels this. It doesn't mean your English is bad.\n\n"
+                "The people in this community are learning too. Nobody here is checking your grammar. "
+                "And a mistake shows you what to work on next.\n\n"
+                "The feeling goes away when speaking becomes normal for you. That takes time, and that's okay."
             ),
             (
                 "What is the difference between fluency and being a good speaker?",
                 "Fluency means speaking without long pauses or needing to translate in your head. "
                 "Being a good speaker means communicating clearly and connecting with the person you are talking to.\n\n"
-                "You can be a good speaker without being fluent. "
-                "Clear, honest, direct communication matters more than speed.\n\n"
-                "This community is not about becoming fluent. It is about being able to speak without pressure getting in the way."
+                "You can be a good speaker without being fluent. Being clear helps people more than being fast.\n\n"
+                "In this community the goal is to speak, even when you feel nervous. Fluency comes later."
             ),
         ],
     },
@@ -241,34 +232,34 @@ FAQ: dict[str, dict] = {
             (
                 "How do I find a speaking partner?",
                 "Go to the looking-for-a-partner channel and press the button when you are free.\n\n"
-                "If someone else is also free within 30 minutes, you both get a DM and can jump into a voice channel together. "
-                "No scheduling, no planning. Just press the button when you feel like practicing."
+                "If someone else is also free within 30 minutes, you both get a DM and can join a voice channel together. "
+                "You don't need to plan anything. Press the button when you feel like practising."
             ),
             (
                 "What are the voice channels for?",
                 "The voice channels are open all day. You do not need to wait for a scheduled lesson.\n\n"
-                "Drop In and Talk and Open Conversation are both available anytime. "
-                "Join when you feel like it. Stay as long as you want. Leave whenever. No pressure."
+                "Drop In and Talk and Open Conversation are open anytime. "
+                "Join when you feel like it and leave whenever you want."
             ),
             (
                 "How do I use the /topics command?",
                 "Type `/topics` anywhere in the server and a menu appears with 10 topic categories: "
                 "family, food, hobbies, travel, work, learning, health, technology, emotions and future.\n\n"
-                "Pick a topic and you get 10 conversation questions, one at a time, with useful vocabulary for each one. "
-                "Use it as a starting point when you are not sure what to talk about."
+                "Pick a topic and you get 10 conversation questions, one at a time, with useful words for each one. "
+                "Use it when you don't know what to talk about."
             ),
             (
                 "How do I look up a word?",
                 "Type `/d word: [word]` anywhere in the server.\n\n"
-                "You get the definition, part of speech, a usage example and similar words. "
-                "The result posts in the channel so everyone can see it.\n\n"
-                "There is also a dedicated vocabulary channel where all lookups appear."
+                "You get the meaning, the word type, an example sentence and similar words. "
+                "The result shows up in the channel, so everyone can see it.\n\n"
+                "All lookups also appear in the vocabulary channel."
             ),
             (
                 "What is the word of the day?",
                 "Every morning at 09:00 CET a new B1/B2 level word goes up in the word of the day channel.\n\n"
-                "Each post includes the definition, a usage example and a prompt to use the word in the chat. "
-                "It is a simple daily habit that helps vocabulary stick."
+                "Each post has the meaning, an example sentence and a small task: use the word in the chat. "
+                "Using a word once makes it easier to remember."
             ),
             (
                 "Where can I find free learning materials?",
@@ -277,15 +268,14 @@ FAQ: dict[str, dict] = {
                 f"All English courses: {EN_COURSES_URL}\n"
                 f"TikTok lessons: {TIKTOK_URL}\n"
                 f"YouTube: {YOUTUBE_EN_URL}\n\n"
-                "Everything on those pages is free. No sign-up needed for most of it."
+                "Everything on those pages is free. For most of it you don't need an account."
             ),
             (
                 "How is this community different from other English communities?",
-                "Most English communities focus on grammar or vocabulary. This one focuses on speaking.\n\n"
-                "The whole setup, the voice channels, the partner finder, the live lessons, the practice guides, "
-                "is built around one idea: the best way to get better at speaking is to speak more, "
-                "in a calm environment where making mistakes is part of the process.\n\n"
-                "No pressure, no tests, no leaderboard for grammar. Just speaking practice."
+                "This community is about speaking.\n\n"
+                "The voice channels, the partner finder, the live lessons and the practice guides "
+                "are all there for one reason: you get better at speaking by speaking more, "
+                "somewhere calm where mistakes are normal."
             ),
         ],
     },
@@ -304,8 +294,8 @@ FAQ: dict[str, dict] = {
             ),
             (
                 "What is the difference between 'make' and 'do'?",
-                "This is one of the most common mistakes and there is no perfect rule, "
-                "but here is the pattern that helps:\n\n"
+                "Learners mix these up a lot. There is no perfect rule, "
+                "but this pattern helps:\n\n"
                 "**Make** is used when you produce or create something.\n"
                 "Make a decision, make a mistake, make coffee, make a plan\n\n"
                 "**Do** is used for actions, tasks and activities.\n"
@@ -348,8 +338,7 @@ FAQ: dict[str, dict] = {
                 "on Monday, on 14 March, on my birthday\n\n"
                 "**In** for longer periods.\n"
                 "in the morning, in March, in 2024, in the 20th century\n\n"
-                "A useful way to remember: the more specific the time, the smaller the preposition. "
-                "At is the most specific, in is the least."
+                "To remember it: at is for the most exact time, in is for the longest period."
             ),
             (
                 "What is the difference between 'its' and 'it's'?",
@@ -367,8 +356,7 @@ FAQ: dict[str, dict] = {
                 "She *could* swim when she was five. That *could* work. *Could* you repeat that?\n\n"
                 "**Should**: used for advice and expectation.\n"
                 "You *should* practice every day. He *should* be here by now.\n\n"
-                "In speaking, 'could' and 'would' are your most useful polite tools. "
-                "They soften almost any request."
+                "When you speak, 'could' and 'would' make almost any request sound more polite."
             ),
         ],
     },
@@ -378,18 +366,17 @@ FAQ: dict[str, dict] = {
         "questions": [
             (
                 "What does this bot do?",
-                "Jerry The Duck runs most of the automated features in this server.\n\n"
-                "That includes the word of the day, the speaking partner finder, encouragement messages in voice channels, "
-                "the vocabulary lookup command, the topic cards, the FAQ you are reading right now, "
-                "scheduled nudge messages and the product info channels.\n\n"
-                "If something posts automatically, it is probably Jerry."
+                "Jerry The Duck runs most of the automatic things in this server.\n\n"
+                "Jerry posts the word of the day, runs the speaking partner finder and the `/d` word lookup, "
+                "shows the topic cards and this FAQ, and posts the reminders and the product info channels.\n\n"
+                "If something posts by itself, it is probably Jerry."
             ),
             (
                 "How does the speaking partner finder work?",
-                "Go to the looking-for-a-partner channel and press the button when you feel like practicing.\n\n"
-                "You are marked as available for 30 minutes. If someone else presses the button in that same window, "
+                "Go to the looking-for-a-partner channel and press the button when you feel like practising.\n\n"
+                "You show as free for 30 minutes. If someone else presses the button in that time, "
                 "you both get a DM with a link to the voice channels.\n\n"
-                "No scheduling. No slots. Just press it when you are free and see who is around."
+                "You don't need to plan anything. Press it when you are free and see who is around."
             ),
             (
                 "How do I use /topics?",
@@ -397,20 +384,19 @@ FAQ: dict[str, dict] = {
                 "Pick one and you get question cards with navigation arrows. "
                 "Each card shows a conversation question and useful vocabulary for that question. "
                 "Everyone in the channel can browse the cards.\n\n"
-                "Good for when the conversation has slowed down and you want a new direction."
+                "Use it when the conversation slows down and you want something new to talk about."
             ),
             (
                 "How do I use /d to look up a word?",
                 "Type `/d word: [word]` and you get the definition, part of speech, example sentence and synonyms.\n\n"
-                "The result posts in the channel so everyone benefits, not just you. "
-                "You can also go directly to the vocabulary channel and use it there."
+                "The result shows up in the channel, so others can learn the word too. "
+                "You can also use it in the vocabulary channel."
             ),
             (
                 "What is the word of the day?",
                 "Every morning at 09:00 CET a new word appears in the word of the day channel.\n\n"
-                "B1/B2 level, practical vocabulary. Each post includes the definition, a usage example and "
-                "an invitation to use the word in a sentence in the chat. "
-                "Simple daily habit that helps new words stick."
+                "The words are B1/B2 level and useful in daily life. Each post has the meaning, an example sentence "
+                "and a small task: use the word in a sentence in the chat."
             ),
             (
                 "Why do I get messages in the voice channel?",
@@ -422,13 +408,13 @@ FAQ: dict[str, dict] = {
             ),
             (
                 "Where can I find info about Supported Speaking?",
-                f"There is a dedicated channel with all the details and a FAQ dropdown. "
-                f"Or go directly to {EN_SUPPORTED_SPEAKING_URL}"
+                f"There is a channel with all the details and a menu with questions. "
+                f"You can also go to {EN_SUPPORTED_SPEAKING_URL}"
             ),
             (
                 "Where can I find info about private lessons?",
-                f"There is a dedicated channel with all the details and a FAQ dropdown. "
-                f"Or go directly to {EN_PRIVATE_LESSONS_URL}"
+                f"There is a channel with all the details and a menu with questions. "
+                f"You can also go to {EN_PRIVATE_LESSONS_URL}"
             ),
         ],
     },
@@ -440,45 +426,44 @@ NL_FAQ: dict[str, dict] = {
         "questions": [
             (
                 "Wat is Ondersteund Spreken?",
-                "Ondersteund Spreken is een wekelijks oefenlidmaatschap voor €11,99 per maand.\n\n"
-                "Je krijgt elke maandag of woensdag een live sessie in een kleine groep op jouw niveau (A2, B1 of B2). "
-                "Op vrijdag krijg je de uitgebreide leden oefengids. Op zondag het spreekonderwerp voor maandag. "
-                "Elke maand ook een verhaal met audio.\n\n"
-                "Geen cursus. Geen vast schema dat je moet volgen. "
-                "Wekelijks live spreken in een rustige sfeer, op jouw eigen tempo.\n\n"
+                "Ondersteund Spreken is een oefenlidmaatschap voor €11,99 per maand.\n\n"
+                "Elke maandag of woensdag is er een live sessie in een kleine groep op jouw niveau (A2, B1 of B2). "
+                "Op vrijdag krijg je de ledenversie van de oefengids. Op zondag krijg je het spreekonderwerp voor de sessie. "
+                "Elke maand krijg je ook een verhaal met audio.\n\n"
+                "Je spreekt elke week live, in een rustige groep en in je eigen tempo.\n\n"
                 f"Meer info: {NL_SUPPORTED_SPEAKING_URL}"
             ),
             (
                 "Hoeveel kost het?",
                 "Ondersteund Spreken kost **€11,99 per maand** voor Standaard, **€19,99 per maand** voor Premium, "
                 "of vanaf **€119,90 per jaar**.\n\n"
-                "Ter vergelijking: een privéles met Lucas kost €28 voor 30 minuten. "
-                "Dit is elke week live oefenen voor minder dan twee kopjes koffie per maand.\n\n"
-                "14 dagen geld-terug-garantie als het toch niet is wat je verwachtte. Geen vragen gesteld.\n\n"
+                "Een privéles met Lucas kost €28 voor 30 minuten. "
+                "Ondersteund Spreken is elke week live oefenen voor €11,99 per maand.\n\n"
+                "Is het niet wat je verwachtte? Dan krijg je binnen 14 dagen je geld terug. Op elk moment opzegbaar.\n\n"
                 f"Begin vandaag: {NL_SUPPORTED_SPEAKING_URL}"
             ),
             (
                 "Wat krijg ik elke week?",
                 "Elke week:\n"
                 "• Maandag 20:00 of woensdag 19:00: live sessie via WhatsApp, op jouw niveau\n"
-                "• Vrijdag: de uitgebreide leden oefengids met foutherkenning en extra oefenzinnen\n"
+                "• Vrijdag: de ledenversie van de oefengids, met fouten om te vinden en extra oefenzinnen\n"
                 "• Zondag: het spreekonderwerp voor de sessie van maandag of woensdag\n\n"
-                "Elke maand ook een compleet B1-verhaal met audio. "
-                "Lezen en luisteren tegelijk, speciaal geschreven voor leerlingen op jouw niveau."
+                "Elke maand krijg je ook een B1-verhaal met audio. "
+                "Je leest en luistert tegelijk."
             ),
             (
                 "Hoe werkt de live sessie?",
                 "Elke maandag om 20:00 en woensdag om 19:00, live via WhatsApp.\n\n"
-                "• 0:00 tot 0:15 — introductie, iedereen samen\n"
-                "• 0:15 tot 0:45 — breakout rooms op niveau (A2, B1 of B2), Lucas bezoekt elke kamer\n"
-                "• 0:45 tot 1:00 — afsluiting, veelgemaakte fouten besproken\n\n"
-                "Max 20 personen per sessie. Rustige sfeer. Je kiest zelf welke avond past, maandag of woensdag. "
-                "Je hoeft niet beide te komen."
+                "• 0:00 tot 0:15: introductie, iedereen samen\n"
+                "• 0:15 tot 0:45: breakout rooms per niveau (A2, B1 of B2), Lucas komt in elke kamer\n"
+                "• 0:45 tot 1:00: afsluiting, we bespreken de fouten die vaak terugkwamen\n\n"
+                "Max 20 personen per sessie. Je kiest zelf welke avond past, maandag of woensdag. "
+                "Je hoeft niet allebei te komen."
             ),
             (
                 "Kan ik op elk moment opzeggen?",
-                "Ja. Op elk moment opzeggen, geen vragen gesteld.\n\n"
-                "Er is ook een geld-terug-garantie van 14 dagen als het toch niet is wat je verwachtte.\n\n"
+                "Ja. Je kunt op elk moment opzeggen. Je hoeft niet te zeggen waarom.\n\n"
+                "Is het niet wat je verwachtte? Dan krijg je binnen 14 dagen je geld terug.\n\n"
                 f"Begin hier: {NL_SUPPORTED_SPEAKING_URL}"
             ),
             (
@@ -491,20 +476,20 @@ NL_FAQ: dict[str, dict] = {
             ),
             (
                 "Kan ik betalen met GCash, DANA of Touch n Go?",
-                "Ja. Als je in de Filipijnen, Indonesië, Maleisië of Thailand zit, "
-                "zijn er Airwallex betaallinks die GCash, DANA en Touch 'n Go accepteren.\n\n"
+                "Ja. Woon je in de Filipijnen, Indonesië, Maleisië of Thailand? "
+                "Dan kun je de Airwallex-betaallinks gebruiken. Die werken met GCash, DANA en Touch 'n Go.\n\n"
                 f"Ga naar {NL_SUPPORTED_SPEAKING_URL} en scroll naar het betalingsgedeelte. "
                 "Daar zie je de SEA betaaloptie."
             ),
             (
                 "Wat is het verschil met de gratis versie?",
-                "De gratis gids heeft de kernuitleg en 5 oefenzinnen.\n\n"
-                "De leden editie voegt toe:\n"
+                "De gratis gids heeft de uitleg en 5 oefenzinnen.\n\n"
+                "In de ledenversie krijg je ook:\n"
                 "• 10 extra oefenzinnen\n"
-                "• Een foutherkenning alinea (vind en verbeter verborgen fouten)\n"
-                "• Zelfcontrole vragen\n"
-                "• Een snelle herkenningstest\n\n"
-                "Dat is ongeveer 3 keer meer inhoud per gids. Plus de live sessie en het maandelijkse verhaal."
+                "• Een alinea met verborgen fouten om te vinden en te verbeteren\n"
+                "• Vragen om jezelf te testen\n"
+                "• Een korte herkenningstest\n\n"
+                "Dat is ongeveer 3 keer zoveel per gids. Daarbij krijg je de live sessie en elke maand een verhaal."
             ),
         ],
     },
@@ -513,16 +498,16 @@ NL_FAQ: dict[str, dict] = {
         "questions": [
             (
                 "Wat zijn privélessen?",
-                "Privélessen zijn een-op-een sessies met Lucas, via Zoom of Discord.\n\n"
-                "Geen scripts, geen examens, pauzes inbegrepen. Echt gesprek vanaf het begin. "
-                "Het doel is rustige, persoonlijke spreekoefening met iemand die echt luistert en nuttige feedback geeft.\n\n"
+                "Privélessen zijn een op een met Lucas, op Zoom of Discord.\n\n"
+                "We praten vanaf de eerste minuut, en je mag altijd even stoppen en nadenken. "
+                "Ik luister, en ik vertel je wat je kunt verbeteren en wat al goed gaat.\n\n"
                 f"Meer info: {NL_PRIVATE_LESSONS_URL}"
             ),
             (
                 "Hoeveel kosten privélessen?",
-                "**Proefsessie** — 30 minuten — €28 (eenmalig)\n"
-                "**Speaking Builder** — 4 x 60 minuten — €219 (+ 3 maanden Ondersteund Spreken)\n"
-                "**Confidence Intensive** — 10 x 60 minuten — €469 (+ 6 maanden Ondersteund Spreken)\n\n"
+                "**Proefsessie**, 30 minuten: €28 (eenmalig)\n"
+                "**Speaking Builder**, 4 x 60 minuten: €219 (+ 3 maanden Ondersteund Spreken)\n"
+                "**Confidence Intensive**, 10 x 60 minuten: €469 (+ 6 maanden Ondersteund Spreken)\n\n"
                 "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
                 "Niet zeker welk pakket past? Begin met de proefsessie. "
                 f"Alle info: {NL_PRIVATE_LESSONS_URL}"
@@ -533,30 +518,29 @@ NL_FAQ: dict[str, dict] = {
                 "• Nederlands begrijpt maar aarzelt als het tijd is om te spreken\n"
                 "• Rustige, persoonlijke feedback wilt zonder publiek\n"
                 "• Een specifiek doel hebt zoals een sollicitatiegesprek, presentatie of dagelijks zelfvertrouwen\n"
-                "• Je voorbereidt op NT2, inburgeringsexamen of een zakelijke assessment\n\n"
-                "De eerste sessie begint altijd met een echt gesprek om samen je niveau te ontdekken."
+                "• Je voorbereidt op NT2, het inburgeringsexamen of een toets op je werk\n\n"
+                "De eerste sessie begint met een gewoon gesprek. Zo ontdekken we samen je niveau."
             ),
             (
                 "Hoe boek ik een privéles?",
                 f"Ga naar {NL_PRIVATE_LESSONS_URL} en kies een sessie of pakket.\n\n"
-                "Na betaling ontvang je een kalenderlink. Kies een tijd die voor jou werkt. "
-                "Dan ontmoeten jullie elkaar via Zoom of Discord. Geen installatie nodig.\n\n"
+                "Na het betalen krijg je een kalenderlink. Kies een tijd die voor jou werkt. "
+                "Daarna spreken we af op Zoom of Discord.\n\n"
                 "Vragen voor je boekt? Mail english@learnwithlucas.com"
             ),
             (
                 "Wat gebeurt er in een sessie?",
-                "Echt gesprek vanaf het begin. Je praat over onderwerpen die voor jou relevant zijn.\n\n"
-                "Lucas geeft rustige feedback tijdens of na de sessie, wat het beste voor jou werkt. "
-                "Een korte follow-up na de sessie als dat nuttig is.\n\n"
-                "Sessies zijn 30 of 60 minuten afhankelijk van wat je hebt geboekt. "
-                "Geen scripts, geen grammaticaoefeningen tenzij je daar om vraagt."
+                "We praten vanaf de eerste minuut, over de onderwerpen waarvoor jij Nederlands nodig hebt.\n\n"
+                "Lucas geeft feedback tijdens of na de sessie, jij kiest. "
+                "Na de sessie krijg je korte notities als je die wilt.\n\n"
+                "Een sessie duurt 30 of 60 minuten, net wat je hebt geboekt. "
+                "Grammaticaoefeningen doen we alleen als je erom vraagt."
             ),
             (
                 "Is er nu plek?",
-                "Privélessen zijn beperkt zodat ze rustig en gefocust blijven.\n\n"
-                "Als er nu geen plek is, ben je altijd welkom bij de gratis spreekgroep "
-                "en de spreekgemeenschap hier.\n\n"
-                f"Bekijk huidige beschikbaarheid op {NL_PRIVATE_LESSONS_URL}"
+                "Ik houd het aantal privéleerlingen klein.\n\n"
+                "Is er nu geen plek? Dan kun je nog steeds meedoen met de gratis spreekgroep en hier oefenen.\n\n"
+                f"Op de privélespagina zie je wanneer er plek is: {NL_PRIVATE_LESSONS_URL}"
             ),
         ],
     },
@@ -565,62 +549,55 @@ NL_FAQ: dict[str, dict] = {
         "questions": [
             (
                 "Ik begrijp Nederlands maar loop vast als ik spreek. Wat doe ik?",
-                "Dat is het meest voorkomende patroon en het heeft een logische reden. "
-                "Begrijpen en spreken gebruiken verschillende delen van je brein.\n\n"
-                "De enige oplossing is meer spreken, maar het gaat erom dat je begint in situaties zonder druk. "
-                "Geen test. Geen presentatie. Gewoon een echt gesprek waarbij fouten maken prima is.\n\n"
-                "Begin hier: ga naar de spraakkanalen en zeg één zin. Dat is het. Dat is de oefening."
+                "Dat gebeurt bij veel leerlingen. Begrijpen en spreken zijn verschillende dingen, "
+                "en het eerste heb je veel meer geoefend.\n\n"
+                "De oplossing is meer spreken, eerst op een rustige plek: een gewoon gesprek "
+                "met mensen die fouten niet erg vinden.\n\n"
+                "Begin hier: ga naar een spraakkanaal en zeg één zin. Meer hoeft niet."
             ),
             (
                 "Hoe stop ik met terugvallen op mijn eigen taal?",
                 "Terugvallen gebeurt als de druk te hoog is of het woord er nog niet is.\n\n"
                 "Twee dingen helpen:\n"
-                "1. Verlaag de druk. Als je oefent met mensen die begrijpen dat je aan het leren bent, "
-                "is er geen reden om te wisselen.\n"
-                "2. Leer tijd te kopen. Zinnen zoals 'hoe zeg je dat', 'even nadenken' of 'ik denk dat het woord is' "
-                "houden je in het Nederlands terwijl je het woord zoekt.\n\n"
+                "1. Oefen met mensen die weten dat je aan het leren bent. Dan hoef je minder snel te wisselen.\n"
+                "2. Leer zinnen die je tijd geven: 'hoe zeg je dat', 'even denken', 'ik denk dat het woord ... is'. "
+                "Zo blijf je in het Nederlands terwijl je het woord zoekt.\n\n"
                 "Je hebt geen perfecte zinnen nodig. Je moet alleen elke keer iets langer in het Nederlands blijven."
             ),
             (
                 "Hoe bouw ik zelfvertrouwen op bij het spreken?",
-                "Zelfvertrouwen komt na het doen, niet ervoor.\n\n"
-                "De meeste mensen wachten tot ze zich klaar voelen. Dat gevoel komt niet vanzelf. "
-                "Het komt van genoeg keren spreken totdat het normaal begint te voelen.\n\n"
-                "Het praktische antwoord: spreek elke dag een beetje in een omgeving zonder druk. "
-                "Deze server, de spraakkanalen, de live sessies. "
-                "Niet om te presteren. Gewoon om te wennen aan je eigen stem in het Nederlands."
+                "Zelfvertrouwen komt nadat je spreekt. Wachten tot je je klaar voelt, werkt meestal niet.\n\n"
+                "Spreek elke dag een beetje op een rustige plek: de spraakkanalen of de live sessies. "
+                "Na genoeg keren voelt je eigen stem in het Nederlands normaal."
             ),
             (
                 "Hoe verbeter ik mijn uitspraak?",
-                "Uitspraak verbetert door luisteren en spreken samen, niet door regels.\n\n"
+                "Je uitspraak wordt beter als je veel luistert en spreekt. Regels helpen minder.\n\n"
                 "Luister veel naar Nederlands op jouw niveau. Herhaal zinnen hardop, niet alleen woorden. "
                 "Neem jezelf af en toe op en vergelijk.\n\n"
-                "Het doel is geen perfect accent. Het doel is duidelijk begrepen worden. "
-                "De meeste mensen zijn beter te verstaan dan ze denken."
+                "Je hebt geen perfect accent nodig. Mensen moeten je kunnen verstaan, "
+                "en de meeste leerlingen zijn beter te verstaan dan ze denken."
             ),
             (
                 "Hoe onthoud ik nieuwe woorden?",
-                "Je onthoudt woorden het best als je ze gebruikt in echte zinnen, niet door lijsten te leren.\n\n"
-                "Als je een nieuw woord leert, gebruik het dan in een zin die relevant is voor jouw leven. "
-                "Zeg het hardop. Gebruik het dezelfde dag nog in een gesprek als je kunt.\n\n"
-                "Kijk elke ochtend naar het woord van de dag. Daar is dat kanaal voor."
+                "Je onthoudt een woord als je het in een echte zin gebruikt. Lijsten helpen minder.\n\n"
+                "Leer je een nieuw woord? Maak er een zin mee over je eigen leven. "
+                "Zeg het hardop. Gebruik het dezelfde dag nog in een gesprek als dat lukt.\n\n"
+                "In het kanaal woord van de dag staat elke ochtend een nieuw woord."
             ),
             (
                 "Hoe vaak moet ik oefenen om vooruit te gaan?",
-                "Een beetje elke dag werkt beter dan een lange sessie één keer per week.\n\n"
-                "15 minuten echte spreekoefening per dag brengt je sneller verder dan "
-                "twee uur op zaterdag. De regelmaat is wat de gewoonte opbouwt.\n\n"
-                "Gebruik de spraakkanalen. Doe mee met de live sessies. Druk op de partnerknop als je vrij bent. "
-                "Kleine stappen tellen op."
+                "Elke dag een beetje werkt beter dan één lange sessie per week.\n\n"
+                "15 minuten spreken per dag helpt meer dan twee uur op zaterdag, "
+                "omdat het een gewoonte wordt.\n\n"
+                "Gebruik de spraakkanalen, doe mee met de live sessies en druk op de partnerknop als je vrij bent."
             ),
             (
                 "Ik schaam me voor mijn fouten. Hoe kom ik daar overheen?",
-                "Iedereen voelt dit. Het is geen teken dat je slecht bent in Nederlands. "
-                "Het is een teken dat het je wat kan schelen.\n\n"
-                "De mensen in deze community leren ook. Niemand beoordeelt je grammatica. "
-                "Fouten zijn eigenlijk nuttig want ze laten zien wat je kunt verbeteren.\n\n"
-                "De enige manier om je niet meer te schamen is genoeg spreken totdat het normaal wordt. "
-                "Dat kost tijd. Gun jezelf die tijd."
+                "Bijna elke leerling voelt dit. Het betekent niet dat je Nederlands slecht is.\n\n"
+                "De mensen in deze community leren ook. Niemand let hier op je grammatica. "
+                "En een fout laat je zien waar je nog aan kunt werken.\n\n"
+                "Het gevoel gaat weg als spreken normaal wordt voor je. Dat kost tijd, en dat is oké."
             ),
         ],
     },
@@ -636,36 +613,34 @@ NL_FAQ: dict[str, dict] = {
             (
                 "Hoe vind ik een spreekpartner?",
                 "Ga naar het kanaal op-zoek-naar-een-partner en druk op de knop als je vrij bent.\n\n"
-                "Als iemand anders ook vrij is binnen 30 minuten, krijgen jullie allebei een DM "
-                "en kunnen jullie samen een spraakkanaal in. Geen planning, geen tijdslots. "
-                "Druk gewoon op de knop als je zin hebt om te oefenen."
+                "Is iemand anders binnen 30 minuten ook vrij? Dan krijgen jullie allebei een DM "
+                "en kunnen jullie samen een spraakkanaal in. Je hoeft niets te plannen. "
+                "Druk op de knop als je zin hebt om te oefenen."
             ),
             (
                 "Waarvoor zijn de spraakkanalen?",
                 "De spraakkanalen zijn de hele dag open. Je hoeft niet te wachten op een geplande les.\n\n"
-                "Kom binnen als je zin hebt. Blijf zo lang als je wilt. Ga weg wanneer je wilt. Geen druk."
+                "Kom binnen als je zin hebt en ga weg wanneer je wilt."
             ),
             (
                 "Hoe gebruik ik /onderwerpen?",
                 "Typ `/onderwerpen` en er verschijnt een menu met 10 onderwerpscategorieën: "
                 "familie, eten, hobby's, reizen, werk, leren, gezondheid, toekomst en meer.\n\n"
-                "Kies een onderwerp en je krijgt gesprekskaarten met navigatiepijlen. "
-                "Elke kaart toont een gespreksvraag en handige woordenschat. "
-                "Iedereen in het kanaal kan de kaarten doorbladeren.\n\n"
-                "Handig als het gesprek is stilgevallen en je een nieuwe richting wilt."
+                "Kies een onderwerp en je krijgt gesprekskaarten met pijltjes. "
+                "Op elke kaart staat een vraag met handige woorden. "
+                "Iedereen in het kanaal kan door de kaarten bladeren.\n\n"
+                "Gebruik het als het gesprek stilvalt en je iets nieuws wilt bespreken."
             ),
             (
                 "Hoe zoek ik een woord op?",
-                "Typ `/d word: [woord]` en je krijgt een definitie, woordtype, voorbeeldzin en synoniemen.\n\n"
-                "De bot probeert eerst de Engelse API. Als het woord daar niet in staat, "
-                "krijg je directe links naar woorden.org en Van Dale.\n\n"
-                "Het resultaat wordt gepost in het kanaal zodat iedereen het kan zien."
+                "Typ `/d word: [woord]`. Je krijgt dan links naar het woord op woorden.org en Van Dale.\n\n"
+                "Het resultaat komt in het kanaal, dus iedereen kan het zien."
             ),
             (
                 "Wat is het woord van de dag?",
                 "Elke ochtend om 09:00 CET verschijnt er een nieuw Nederlands woord in het woord-van-de-dag kanaal.\n\n"
-                "B1/B2 niveau, praktisch woordgebruik. Elk bericht bevat de Nederlandse uitleg, "
-                "een voorbeeldzin en een uitnodiging om het woord zelf te gebruiken in de chat."
+                "De woorden zijn B1/B2 en handig in het dagelijks leven. In elk bericht staan de uitleg, "
+                "een voorbeeldzin en een kleine opdracht: gebruik het woord zelf in de chat."
             ),
             (
                 "Waar vind ik gratis leermateriaal?",
@@ -688,7 +663,7 @@ NL_FAQ: dict[str, dict] = {
                 "**Altijd 'de':** beroepen (de leraar), mensen en dieren met een duidelijk geslacht, "
                 "namen van bergen en rivieren, meervouden.\n\n"
                 "Alles wat niet in een categorie past is onvoorspelbaar en moet je onthouden. "
-                "Het goede nieuws: in de meeste gevallen begrijpen mensen je ook als je de verkeerde kiest."
+                "Kies je de verkeerde? Meestal begrijpen mensen je dan nog steeds."
             ),
             (
                 "Wat is het verschil tussen 'er is' en 'er zijn'?",
@@ -710,18 +685,18 @@ NL_FAQ: dict[str, dict] = {
             (
                 "Wat is het verschil tussen 'omdat' en 'want'?",
                 "Beide betekenen 'because', maar de woordvolgorde is anders.\n\n"
-                "**Omdat** — het werkwoord gaat naar het einde van de zin.\n"
+                "**Omdat:** het werkwoord gaat naar het einde van de zin.\n"
                 "Ik ben moe *omdat ik weinig heb geslapen*.\n\n"
-                "**Want** — de normale volgorde blijft.\n"
+                "**Want:** de normale volgorde blijft.\n"
                 "Ik ben moe, *want ik heb weinig geslapen*.\n\n"
                 "In gesproken taal worden beide veel gebruikt. 'Want' is iets informeler."
             ),
             (
                 "Hoe gebruik ik de verleden tijd?",
                 "Er zijn twee manieren om de verleden tijd te vormen:\n\n"
-                "**Zwakke werkwoorden** — voeg -te of -de toe (en -ten/-den in meervoud).\n"
+                "**Zwakke werkwoorden:** voeg -te of -de toe (en -ten/-den in meervoud).\n"
                 "werken → ik werkte. leven → hij leefde.\n\n"
-                "**Sterke werkwoorden** — de klinker verandert, geen vaste regel.\n"
+                "**Sterke werkwoorden:** de klinker verandert. Daar is geen vaste regel voor.\n"
                 "rijden → ik reed. schrijven → ik schreef. lopen → ik liep.\n\n"
                 "De meeste werkwoorden zijn zwak. De sterke moet je per stuk leren. "
                 "Begin met de meest gebruikte: zijn, hebben, gaan, komen, zien, zeggen, weten."
@@ -749,13 +724,13 @@ NL_FAQ: dict[str, dict] = {
             ),
             (
                 "Hoe gebruik ik 'er' in een zin?",
-                "'Er' heeft meerdere functies in het Nederlands en dat maakt het verwarrend.\n\n"
+                "'Er' heeft in het Nederlands vier functies. Daarom is het verwarrend.\n\n"
                 "**1. Plaatsaanduiding** (there): Ik wil er niet naartoe. Ben je er al?\n\n"
                 "**2. Met een getal**: Er zijn drie mensen. Er is één probleem.\n\n"
                 "**3. Als verwijzing naar iets**: Ik heb er geen zin in. (= in dat)\n\n"
                 "**4. Met voorzetsels**: Ik denk er vaak aan. Ze houdt er niet van.\n\n"
                 "Het makkelijkst is om 'er' te leren in vaste combinaties. "
-                "Begin met: er is/zijn, er naartoe, er van houden, er aan denken."
+                "Begin met: er is/zijn, ernaartoe, ervan houden, eraan denken."
             ),
         ],
     },
@@ -764,38 +739,36 @@ NL_FAQ: dict[str, dict] = {
         "questions": [
             (
                 "Wat doet deze bot?",
-                "Jerry The Duck verzorgt de meeste geautomatiseerde functies in deze server.\n\n"
-                "Dat omvat het woord van de dag, de spreekpartnervinder, aanmoedigingsberichten in de spraakkanalen, "
-                "de woordenboekzoekfunctie, de onderwerpkaarten, deze FAQ en de productinfopagina's.\n\n"
-                "Als er automatisch iets wordt gepost, is het waarschijnlijk Jerry."
+                "Jerry The Duck doet de meeste automatische dingen in deze server.\n\n"
+                "Jerry plaatst het woord van de dag, regelt de spreekpartnerknop en `/d`, "
+                "laat de onderwerpkaarten en deze FAQ zien en plaatst de info over lessen.\n\n"
+                "Wordt er vanzelf iets gepost? Dan is het waarschijnlijk Jerry."
             ),
             (
                 "Hoe werkt de spreekpartnervinder?",
                 "Ga naar het kanaal op-zoek-naar-een-partner en druk op de knop als je zin hebt om te oefenen.\n\n"
-                "Je bent 30 minuten beschikbaar. Als iemand anders in datzelfde venster op de knop drukt, "
-                "krijgen jullie allebei een DM met een link naar de spraakkanalen.\n\n"
-                "Geen planning. Geen tijdslots. Druk gewoon als je vrij bent en kijk wie er is."
+                "Je staat dan 30 minuten als vrij. Drukt iemand anders in die tijd ook op de knop? "
+                "Dan krijgen jullie allebei een DM met een link naar de spraakkanalen.\n\n"
+                "Je hoeft niets te plannen. Druk als je vrij bent en kijk wie er is."
             ),
             (
                 "Hoe gebruik ik /onderwerpen?",
                 "Typ `/onderwerpen` en er verschijnt een dropdown met 10 categorieën.\n\n"
-                "Kies er een en je krijgt gesprekskaarten met navigatiepijlen. "
-                "Elke kaart toont een gespreksvraag en handige woordenschat. "
-                "Iedereen in het kanaal kan de kaarten doorbladeren.\n\n"
-                "Handig als het gesprek is stilgevallen en je een nieuwe richting wilt."
+                "Kies er een en je krijgt gesprekskaarten met pijltjes. "
+                "Op elke kaart staat een vraag met handige woorden. "
+                "Iedereen in het kanaal kan door de kaarten bladeren.\n\n"
+                "Gebruik het als het gesprek stilvalt en je iets nieuws wilt bespreken."
             ),
             (
                 "Hoe gebruik ik /d om een woord op te zoeken?",
-                "Typ `/d word: [woord]` en je krijgt een definitie, woordtype, voorbeeldzin en synoniemen.\n\n"
-                "De bot probeert eerst de Engelse API. Als het woord daar niet in staat, "
-                "krijg je directe links naar woorden.org en Van Dale.\n\n"
-                "Het resultaat wordt gepost in het kanaal zodat iedereen het kan zien."
+                "Typ `/d word: [woord]`. Je krijgt dan links naar het woord op woorden.org en Van Dale.\n\n"
+                "Het resultaat komt in het kanaal, dus iedereen kan het zien."
             ),
             (
                 "Wat is het woord van de dag?",
                 "Elke ochtend om 09:00 CET verschijnt er een nieuw Nederlands woord in het woord-van-de-dag kanaal.\n\n"
-                "B1/B2 niveau, praktisch woordgebruik. Elk bericht bevat de Nederlandse uitleg, "
-                "een voorbeeldzin en een uitnodiging om het woord zelf te gebruiken in de chat."
+                "De woorden zijn B1/B2 en handig in het dagelijks leven. In elk bericht staan de uitleg, "
+                "een voorbeeldzin en een kleine opdracht: gebruik het woord zelf in de chat."
             ),
             (
                 "Waarom krijg ik berichten in het spraakkanaal?",
@@ -807,13 +780,13 @@ NL_FAQ: dict[str, dict] = {
             ),
             (
                 "Waar vind ik info over Ondersteund Spreken?",
-                "Er is een apart kanaal met alle details en een FAQ-menu. "
-                f"Of ga direct naar {NL_SUPPORTED_SPEAKING_URL}"
+                "Er is een kanaal met alle details en een menu met vragen. "
+                f"Je kunt ook naar {NL_SUPPORTED_SPEAKING_URL} gaan."
             ),
             (
                 "Waar vind ik info over privélessen?",
-                "Er is een apart kanaal met alle details en een FAQ-menu. "
-                f"Of ga direct naar {NL_PRIVATE_LESSONS_URL}"
+                "Er is een kanaal met alle details en een menu met vragen. "
+                f"Je kunt ook naar {NL_PRIVATE_LESSONS_URL} gaan."
             ),
         ],
     },
@@ -865,7 +838,7 @@ class CategoryButton(discord.ui.Button):
 
         view = QuestionPickerView(category_key=self._category_key, questions=data["questions"])
         await interaction.response.send_message(
-            f"**{data['label']}** — pick a question:",
+            f"**{data['label']}**: pick a question.",
             view=view,
             ephemeral=True,
         )
@@ -956,7 +929,7 @@ class CategoryButtonNL(discord.ui.Button):
             return
         view = QuestionPickerView(category_key=self._category_key, questions=data["questions"])
         await interaction.response.send_message(
-            f"**{data['label']}** — kies een vraag:",
+            f"**{data['label']}**: kies een vraag.",
             view=view,
             ephemeral=True,
         )
@@ -979,13 +952,13 @@ def build_nl_hub_embed() -> discord.Embed:
         title="🦆 Vraag het Jerry",
         description=(
             "Heb je een vraag? Kies een categorie hieronder.\n\n"
-            "📖 **Ondersteund Spreken** — wat het is, prijs, wat je krijgt\n"
-            "🎙️ **Privélessen** — hoe het werkt, prijs, boeken\n"
-            "💬 **Spreektips** — hoe stop je met vastlopen, zelfvertrouwen opbouwen\n"
-            "🏠 **Community** — live sessies, spraakkanalen, hoe dingen hier werken\n"
-            "📝 **Grammatica** — veelgestelde vragen over Nederlandse grammatica\n"
-            "🤖 **Serverfuncties** — hoe gebruik je de bot, commando's en kanalen\n\n"
-            "Je antwoorden zijn alleen zichtbaar voor jou."
+            "📖 **Ondersteund Spreken:** wat het is, de prijs, wat je krijgt\n"
+            "🎙️ **Privélessen:** hoe het werkt, de prijs, boeken\n"
+            "💬 **Spreektips:** minder vastlopen, meer zelfvertrouwen\n"
+            "🏠 **Community:** live sessies, spraakkanalen, hoe het hier werkt\n"
+            "📝 **Grammatica:** vragen over Nederlandse grammatica\n"
+            "🤖 **Serverfuncties:** de bot, commando's en kanalen\n\n"
+            "Alleen jij ziet de antwoorden."
         ),
     )
     embed.set_footer(text="vraag-het-jerry:nl:v1")
@@ -1002,13 +975,13 @@ def build_hub_embed() -> discord.Embed:
         title="🦆 Ask Jerry",
         description=(
             "Got a question? Pick a category below.\n\n"
-            "📖 **Supported Speaking** — what it is, pricing, what you get\n"
-            "🎙️ **Private Lessons** — how it works, pricing, booking\n"
-            "💬 **Speaking Tips** — how to stop freezing, build confidence, improve\n"
-            "🏠 **Community** — live lessons, voice channels, how things work here\n"
-            "📝 **Grammar** — common questions about English grammar\n"
-            "🤖 **Server Features** — how to use the bot, commands and channels\n\n"
-            "Your answers are only visible to you."
+            "📖 **Supported Speaking:** what it is, the price, what you get\n"
+            "🎙️ **Private lessons:** how it works, the price, booking\n"
+            "💬 **Speaking tips:** freezing less, feeling more confident\n"
+            "🏠 **Community:** live lessons, voice channels, how things work here\n"
+            "📝 **Grammar:** questions about English grammar\n"
+            "🤖 **Server features:** the bot, commands and channels\n\n"
+            "Only you can see the answers."
         ),
     )
     embed.set_footer(text="ask-jerry:en:v1")

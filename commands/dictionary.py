@@ -101,7 +101,7 @@ def build_nl_embed(word: str) -> discord.Embed:
     embed = discord.Embed(
         title=f"{word.lower()}",
         description=(
-            f"Dutch dictionary lookup is not available via API yet.\n\n"
+            f"De bot kan Nederlandse woorden nog niet zelf opzoeken. Gebruik een van deze links:\n\n"
             f"[Open in woorden.org]({url})\n"
             f"[Open in Van Dale](https://www.vandale.nl/gratis-woordenboek/nederlands/betekenis/{word.strip().lower()})"
         ),
@@ -118,14 +118,14 @@ def build_en_channel_embed() -> discord.Embed:
     embed = discord.Embed(
         title="🔤 Vocabulary lookup",
         description=(
-            "Use `/d` followed by any English word to look it up right here.\n\n"
+            "Type `/d` and an English word to look it up here.\n\n"
             "**What you get:**\n"
-            "The definition, the part of speech, a usage example, and similar words.\n\n"
+            "The meaning, the word type, an example sentence and similar words.\n\n"
             "**How to use it:**\n"
             "`/d word: curious`\n"
             "`/d word: resilient`\n"
             "`/d word: figure out`\n\n"
-            "Works anywhere in the server. Results post here so everyone can see them.\n\n"
+            "It works anywhere in the server. The result shows up here, so everyone can see it.\n\n"
             "Looking for conversation topics? Try `/topics`."
         ),
     )

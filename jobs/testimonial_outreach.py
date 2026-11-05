@@ -243,7 +243,7 @@ class TestimonialOutreachJob:
             lang = "NL" if is_nl else "EN"
             prefix = "📨 DM verzonden naar" if is_nl else "📨 DM sent to"
             await ch.send(
-                f"{prefix} **{member.display_name}** (`{member.id}`) [{lang}] — {reason}"
+                f"{prefix} **{member.display_name}** (`{member.id}`) [{lang}], {reason}"
             )
         except Exception:
             log.exception("TestimonialOutreach: failed to log DM for user=%s", member.id)

@@ -270,7 +270,7 @@ QUESTION_SETS = [
 ]
 
 EN_DAILY_QUESTIONS: list[str] = [
-    "What is one small thing you want to practise saying today?",
+    "What is one sentence you want to practise today?",
     "What was a good moment from yesterday?",
     "What is something you are looking forward to this week?",
     "What is one habit that helps you learn a language?",
@@ -289,7 +289,7 @@ EN_DAILY_QUESTIONS: list[str] = [
     "What is something that makes a conversation easier for you?",
     "What is one mistake you made that taught you something useful?",
     "What is something you can describe without translating first?",
-    "What is one friendly follow-up question you can ask after someone answers?",
+    "Someone answers your question. What can you ask next?",
     "What is a simple opinion you can explain with one reason?",
     "What is something you do when you do not know the right word?",
     "What is a topic you can talk about for one minute?",
@@ -297,12 +297,12 @@ EN_DAILY_QUESTIONS: list[str] = [
 ]
 
 NL_DAILY_QUESTIONS: list[str] = [
-    "Wat is een klein ding dat je vandaag wilt oefenen met zeggen?",
+    "Welke zin wil je vandaag oefenen?",
     "Wat was een goed moment van gisteren?",
     "Waar kijk je deze week naar uit?",
     "Welke gewoonte helpt jou om een taal te leren?",
     "Wat kun je uitleggen in twee simpele zinnen?",
-    "Wat vond je de laatste tijd moeilijk, en hoe ging je ermee om?",
+    "Wat vond je laatst moeilijk, en wat deed je toen?",
     "Welk advies zou je geven aan iemand die zenuwachtig is om te spreken?",
     "Welke zin gebruik je vaak in het dagelijks leven?",
     "Wat heb je deze week geleerd?",
@@ -312,11 +312,11 @@ NL_DAILY_QUESTIONS: list[str] = [
     "Waar ben je trots op?",
     "Welk klein doel kun je vandaag afmaken?",
     "Wat doe je meestal in de ochtend?",
-    "Welk woord of welke zin wil je met meer vertrouwen gebruiken?",
+    "Welk woord of welke zin wil je makkelijker kunnen zeggen?",
     "Wat maakt een gesprek makkelijker voor jou?",
     "Welke fout heeft jou iets nuttigs geleerd?",
     "Wat kun je beschrijven zonder eerst te vertalen?",
-    "Welke vriendelijke vervolgvraag kun je stellen nadat iemand antwoord geeft?",
+    "Iemand geeft antwoord. Welke vraag kun je dan terug stellen?",
     "Welke simpele mening kun je uitleggen met een reden?",
     "Wat doe je als je het juiste woord niet weet?",
     "Over welk onderwerp kun je een minuut praten?",
@@ -639,7 +639,7 @@ def _voice_bridge_line(
     if topic_id not in practice_topics:
         return ""
     if voice_seconds >= ACTIVE_VOICE_SECONDS:
-        return "You have been active in voice recently, so you can try a slightly longer answer."
+        return "You were in voice recently. Try a slightly longer answer."
     if voice_seconds <= 0 and topic_id in {"english_practice", "nervous_shy"}:
         return "If speaking feels hard, start with one short sentence here first."
     return ""
@@ -1109,13 +1109,13 @@ class ChatJerryPublisher:
         question = daily_meta["question"]
         if is_nl:
             content = (
-                "Goedemorgen. Dagelijkse vraag:\n\n"
+                "Goedemorgen. De vraag van vandaag:\n\n"
                 f"**{question}**\n\n"
                 "Antwoord met een of twee zinnen. Fouten zijn welkom."
             )
         else:
             content = (
-                "Good morning. Daily question:\n\n"
+                "Good morning. Today's question:\n\n"
                 f"**{question}**\n\n"
                 "Reply with one or two sentences. Mistakes are welcome."
             )

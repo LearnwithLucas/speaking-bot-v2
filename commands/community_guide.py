@@ -95,7 +95,7 @@ class GuideChoiceView(discord.ui.View):
             [
                 ("shy", "Ik ben onzeker"),
                 ("partner", "Spreekpartner"),
-                ("lessons", "Priveles"),
+                ("lessons", "Privéles"),
                 ("words", "Woorden"),
                 ("ask", "Vraag Jerry"),
             ]
@@ -165,7 +165,7 @@ class GuideDetailView(discord.ui.View):
             if partner_url:
                 self.add_item(discord.ui.Button(label="Spreekpartner", style=discord.ButtonStyle.link, url=partner_url, row=0))
         if choice == "lessons":
-            self.add_item(discord.ui.Button(label="Priveles", style=discord.ButtonStyle.link, url=private_url, row=0))
+            self.add_item(discord.ui.Button(label="Privéles", style=discord.ButtonStyle.link, url=private_url, row=0))
         if choice == "words":
             self.add_item(discord.ui.Button(label="Gratis materiaal", style=discord.ButtonStyle.link, url=FREE_NL_GUIDES_URL, row=0))
         if ask_url and choice in {"shy", "words", "ask"}:
@@ -178,8 +178,8 @@ def build_en_guide_embed() -> discord.Embed:
     embed = discord.Embed(
         title="What do you need right now?",
         description=(
-            "Choose one private option below. "
-            "I will give you the shortest useful next step."
+            "Pick one option below. Only you can see it. "
+            "You get one small next step."
         ),
     )
     embed.add_field(
@@ -195,8 +195,8 @@ def build_nl_guide_embed() -> discord.Embed:
     embed = discord.Embed(
         title="Wat heb je nu nodig?",
         description=(
-            "Kies hieronder een prive optie. "
-            "Dan krijg je meteen de kortste nuttige volgende stap."
+            "Kies hieronder een optie. Alleen jij ziet het. "
+            "Je krijgt één kleine volgende stap."
         ),
     )
     embed.add_field(
@@ -219,7 +219,7 @@ def build_en_choice_embed(choice: str) -> discord.Embed:
 
     if choice == "partner":
         embed.title = "Find one person to speak with"
-        embed.description = "Use the partner channel when you want a simple practice moment."
+        embed.description = "Use the partner channel when you want to practise with one person."
         embed.add_field(
             name="Best next step",
             value=f"Go to <#{EN_LOOKING_CHANNEL_ID}> and share when you are free.",
@@ -232,7 +232,7 @@ def build_en_choice_embed(choice: str) -> discord.Embed:
         )
     elif choice == "lessons":
         embed.title = "Private lessons"
-        embed.description = "Choose this if you want personal feedback, structure, or help with a specific goal."
+        embed.description = "Choose this if you want personal feedback, a clear plan or help with one goal."
         embed.add_field(
             name="Best next step",
             value=f"Open <#{EN_PRIVATE_CHANNEL_ID}> and choose a trial session or package.",
@@ -245,7 +245,7 @@ def build_en_choice_embed(choice: str) -> discord.Embed:
         )
     elif choice == "words":
         embed.title = "Words and conversation ideas"
-        embed.description = "Use this when you know you want to practice, but your brain goes blank."
+        embed.description = "Use this when you want to practise but can't think of what to say."
         embed.add_field(
             name="Best next step",
             value=f"Try `/topics`, `/d word: curious`, or visit <#{EN_VOCAB_CHANNEL_ID}>.",
@@ -258,7 +258,7 @@ def build_en_choice_embed(choice: str) -> discord.Embed:
         )
     elif choice == "ask":
         embed.title = "Ask Jerry"
-        embed.description = "Use this when you are lost, unsure what to practice, or need a quick explanation."
+        embed.description = "Use this when you don't know what to practise or need a quick explanation."
         embed.add_field(
             name="Best next step",
             value=f"Ask your question in <#{ASK_JERRY_CHANNEL_ID}>. Short questions are welcome.",
@@ -290,7 +290,7 @@ def build_nl_choice_embed(choice: str) -> discord.Embed:
 
     if choice == "partner":
         embed.title = "Zoek een spreekpartner"
-        embed.description = "Gebruik dit als je gewoon even met een persoon wilt oefenen."
+        embed.description = "Gebruik dit als je met één persoon wilt oefenen."
         embed.add_field(
             name="Beste volgende stap",
             value=f"Ga naar <#{NL_LOOKING_CHANNEL_ID}> en zeg wanneer je tijd hebt.",
@@ -302,8 +302,8 @@ def build_nl_choice_embed(choice: str) -> discord.Embed:
             inline=False,
         )
     elif choice == "lessons":
-        embed.title = "Priveles"
-        embed.description = "Kies dit als je persoonlijke feedback, structuur of hulp met een doel wilt."
+        embed.title = "Privéles"
+        embed.description = "Kies dit als je persoonlijke feedback, een duidelijk plan of hulp bij één doel wilt."
         embed.add_field(
             name="Beste volgende stap",
             value=f"Open <#{NL_PRIVATE_CHANNEL_ID}> en kies een proefles of pakket.",
@@ -329,7 +329,7 @@ def build_nl_choice_embed(choice: str) -> discord.Embed:
         )
     elif choice == "ask":
         embed.title = "Vraag Jerry"
-        embed.description = "Gebruik dit als je verdwaald bent, niet weet wat je moet oefenen, of iets kort wilt vragen."
+        embed.description = "Gebruik dit als je niet weet wat je moet oefenen of iets kort wilt vragen."
         embed.add_field(
             name="Beste volgende stap",
             value=f"Stel je vraag in <#{NL_ASK_JERRY_CHANNEL_ID}>. Korte vragen zijn welkom.",

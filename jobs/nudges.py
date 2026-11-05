@@ -30,26 +30,26 @@ NL_ANNOUNCEMENTS_CHANNEL_ID = 1433384734196633600
 
 # ---- English nudge messages ----
 EN_NUDGE_MESSAGES = [
-    "The voice channels are open. No agenda, no pressure. Just drop in if you feel like it.",
-    "If you've been meaning to speak this week, today is a good day. The channels are open.",
+    "The voice channels are open. Join when you feel like it. Nobody will ask you to prepare anything.",
+    "Did you plan to speak this week? Today is a good day for it. The channels are open.",
     "Speaking practice doesn't have to be a big thing. One sentence is enough to start.",
-    "The hardest part is usually just joining. After that it gets easier. Channels are open.",
-    "No preparation needed. No performance required. Just a conversation, whenever you're ready.",
-    "If you've been lurking, that's fine. But the voice channels are open if you want to try.",
-    "You don't have to be fluent to join. You just have to show up.",
-    "Short reminder: the speaking channels are open. Come as you are.",
+    "Joining is usually the hardest part. After that it gets easier. The channels are open.",
+    "You don't need to prepare. Join a channel and talk when you're ready.",
+    "Only reading so far? That's fine. The voice channels are open if you want to try.",
+    "You don't need to be fluent to join. A few words are enough.",
+    "Short reminder: the speaking channels are open today.",
 ]
 
 # ---- Dutch nudge messages ----
 NL_NUDGE_MESSAGES = [
-    "De spraakkanalen zijn open. Geen agenda, geen druk. Kom gewoon langs als je zin hebt.",
-    "Als je deze week wilde oefenen, is vandaag een goede dag. De kanalen zijn open.",
-    "Spreekoefening hoeft geen groot ding te zijn. Een zin is genoeg om te beginnen.",
-    "Het moeilijkste is meestal gewoon instappen. Daarna wordt het makkelijker. Kanalen zijn open.",
-    "Geen voorbereiding nodig. Geen prestatie vereist. Gewoon een gesprek, wanneer je er klaar voor bent.",
-    "Als je al een tijdje meekijkt, dat is prima. Maar de spraakkanalen zijn open als je het wilt proberen.",
-    "Je hoeft niet vloeiend te zijn om mee te doen. Je hoeft alleen maar te komen.",
-    "Korte herinnering: de spraakkanalen zijn open. Kom zoals je bent.",
+    "De spraakkanalen zijn open. Kom langs als je zin hebt. Niemand vraagt je om iets voor te bereiden.",
+    "Wilde je deze week oefenen? Vandaag is een goede dag. De kanalen zijn open.",
+    "Oefenen hoeft niet groot te zijn. Eén zin is genoeg om te beginnen.",
+    "Meedoen is meestal het moeilijkste. Daarna wordt het makkelijker. De kanalen zijn open.",
+    "Je hoeft niets voor te bereiden. Kom in een kanaal en praat mee wanneer je wilt.",
+    "Lees je tot nu toe alleen mee? Dat is prima. De spraakkanalen zijn open als je het wilt proberen.",
+    "Je hoeft niet vloeiend te zijn om mee te doen. Een paar woorden zijn genoeg.",
+    "Korte herinnering: de spraakkanalen zijn vandaag open.",
 ]
 
 DAY_MAP = {

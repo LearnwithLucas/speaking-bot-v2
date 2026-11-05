@@ -112,16 +112,16 @@ async def setup(bot: Any) -> None:
         summary_7d = await bot.repo.community_health_summary(interaction.guild_id, since_7d)
 
         embed = discord.Embed(
-            title="Community Health",
+            title="Community health",
             description=(
-                "Admin-only summary. Counts are community-level, not a member ranking.\n"
+                "Admin-only summary. The counts are for the whole community. Nobody is ranked.\n"
                 f"Currently in voice: **{summary_7d['active_now']}**"
             ),
         )
-        embed.add_field(name="Last 24 Hours", value=_format_period(summary_24h), inline=False)
-        embed.add_field(name="Last 7 Days", value=_format_period(summary_7d), inline=False)
-        embed.add_field(name="Command Usage - 7 Days", value=_format_commands(summary_7d), inline=False)
-        embed.set_footer(text="Use trends, not individual pressure. Quiet learners count too.")
+        embed.add_field(name="Last 24 hours", value=_format_period(summary_24h), inline=False)
+        embed.add_field(name="Last 7 days", value=_format_period(summary_7d), inline=False)
+        embed.add_field(name="Command usage, last 7 days", value=_format_commands(summary_7d), inline=False)
+        embed.set_footer(text="Look at trends. Quiet learners count too.")
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
