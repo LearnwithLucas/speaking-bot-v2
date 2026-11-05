@@ -25,7 +25,7 @@ NL_FREE_EXAMS_URL = "https://learnwithlucas.com/nl/courses/"
 NL_SUPPORTED_SPEAKING_URL = "https://learnwithlucas.com/nl/ondersteund-spreken/"
 NL_PRIVATE_LESSONS_URL = "https://learnwithlucas.com/nl/priveles-nederlands/"
 TIKTOK_URL = "https://www.tiktok.com/@learnwithlucas"
-YOUTUBE_EN_URL = "https://www.youtube.com/@LearnEnglishWithLucas"
+YOUTUBE_EN_URL = "https://www.youtube.com/@learnenglishlucas"
 
 
 # =====================
@@ -646,7 +646,7 @@ NL_FAQ: dict[str, dict] = {
                 "Waar vind ik gratis leermateriaal?",
                 f"Gratis spreekgroep: {NL_COMMUNITY_URL}\n"
                 f"Gratis oefenexamens en cursussen: {NL_COURSES_URL}\n"
-                "YouTube: https://www.youtube.com/@learndutchwithlucas\n"
+                "YouTube: https://www.youtube.com/@learndutchlucas\n"
                 "TikTok: https://www.tiktok.com/@dutchwithlucas\n\n"
                 "Alles op die pagina's is gratis. Voor de meeste onderdelen heb je geen account nodig."
             ),

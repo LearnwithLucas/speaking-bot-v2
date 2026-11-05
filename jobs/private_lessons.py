@@ -19,29 +19,26 @@ NL_PRIVATE_URL = "https://learnwithlucas.com/nl/priveles-nederlands/"
 EN_SUPPORTED_URL = "https://learnwithlucas.com/en/supported-speaking/"
 NL_SUPPORTED_URL = "https://learnwithlucas.com/nl/ondersteund-spreken/"
 
-# ---- Payment links: Supported Speaking EN ----
-SS_STRIPE_MONTHLY = "https://buy.stripe.com/fZueVe9L7b0j5wf4jYg7e0d"
-SS_STRIPE_6MO     = "https://buy.stripe.com/6oU4gA4qN7O7gaTg2Gg7e0e"
-SS_STRIPE_YEARLY  = "https://buy.stripe.com/8x25kE0ax8Sb6Aj3fUg7e0f"
+# ---- Checkout pages ----
+# Stripe payment links are never posted publicly (learnwithlucas-links.md).
+# Members pick a plan on the live offer page, which starts checkout and counts the lead.
+EN_SUPPORTED_CHECKOUT_URL = "https://learnwithlucas.com/en/courses/supported-speaking/"
+NL_SUPPORTED_CHECKOUT_URL = "https://learnwithlucas.com/nl/courses/ondersteund-spreken/"
+NL_PRIVATE_CHECKOUT_URL = "https://learnwithlucas.com/nl/courses/priveles-nederlands/"
+
+# ---- Payment links: Supported Speaking EN (SEA only) ----
 SS_AIR_MONTHLY    = "https://pay.airwallex.com/nlhgyqcoi3ac"
 SS_AIR_6MO        = "https://pay.airwallex.com/nlhgyqdho4yt"
 SS_AIR_YEARLY     = "https://pay.airwallex.com/nlhgyqe8hl5q"
 
-# ---- Payment links: Ondersteund Spreken NL ----
-OS_STRIPE_MONTHLY = "https://buy.stripe.com/eVqcN6e1n1pJ5wf8Aeg7e0a"
-OS_STRIPE_6MO     = "https://buy.stripe.com/fZu6oI2iFfgzgaTcQug7e0b"
-OS_STRIPE_YEARLY  = "https://buy.stripe.com/6oU3cw7CZ0lF9Mv3fUg7e0c"
+# ---- Payment links: Ondersteund Spreken NL (SEA only) ----
 OS_AIR_MONTHLY    = "https://pay.airwallex.com/nlhgm8kz6gwd"
 OS_AIR_YEARLY     = "https://pay.airwallex.com/nlhgm950ux71"
 
-# ---- Payment links: Private lessons NL ----
-NL_TRIAL_LINK        = "https://buy.stripe.com/00w8wQbTfb0j1fZ17Mg7e08"
-NL_BUILDER_LINK      = "https://buy.stripe.com/6oU7sMe1ngkDf6P17Mg7e09"
-NL_INTENSIVE_LINK    = "https://buy.stripe.com/7sY5kEe1necv7En7wag7e05"
-NL_INTENSIVE_P1_LINK = "https://buy.stripe.com/cNi6oIbTf9Wf8Ir6s6g7e06"
-NL_INTENSIVE_P2_LINK = "https://buy.stripe.com/3cI7sM1eBb0j5wfbMqg7e07"
-NL_EXAM_BUILDER_LINK   = "https://buy.stripe.com/7sY00k7CZc4n4sb4jYg7e0g"
-NL_EXAM_INTENSIVE_LINK = "https://buy.stripe.com/28E6oI6yVd8rf6P7wag7e0h"
+# ---- Booking links: Private lessons NL (all go to the offer page) ----
+NL_TRIAL_LINK = NL_PRIVATE_CHECKOUT_URL
+NL_BUILDER_LINK = NL_PRIVATE_CHECKOUT_URL
+NL_INTENSIVE_LINK = NL_PRIVATE_CHECKOUT_URL
 
 # ---- KV keys (bumped to force fresh posts) ----
 KV_EN_PRIVATE_MSG  = "private_lessons_en_message_id_v3"
@@ -125,9 +122,7 @@ NL_PRIVATE_FAQS = {
         f"Proefsessie, 30 min: **€28** (eenmalig) · [boek hier]({NL_TRIAL_LINK})\n"
         f"Speaking Builder, 4 x 60 min: **€219** · [boek hier]({NL_BUILDER_LINK})\n"
         f"Confidence Intensive, 10 x 60 min: **€469** · [boek hier]({NL_INTENSIVE_LINK})\n\n"
-        "Confidence Intensive in twee delen:\n"
-        f"Deel 1: **€235** · [boek hier]({NL_INTENSIVE_P1_LINK})\n"
-        f"Deel 2: **€234** · [boek hier]({NL_INTENSIVE_P2_LINK})\n\n"
+        "De Confidence Intensive kun je ook in twee delen betalen: €235 en €234.\n\n"
         "Examentraining voor Inburgering, KNM, ONA, NT2 en CNaVT zit in de gewone pakketten.\n\n"
         f"Niet zeker? Begin met de proefsessie. [Alle pakketten]({NL_PRIVATE_URL})"
     ),
@@ -179,8 +174,8 @@ NL_PRIVATE_FAQS = {
     "betaling": (
         "**Hoe betaal ik?**\n\n"
         "Je betaalt met Stripe (creditcard of debetkaart). Airwallex werkt niet voor privélessen.\n\n"
-        "Directe betaallinks staan per pakket in het menu hierboven.\n\n"
-        f"Alle pakketten: [learnwithlucas.com/nl/priveles-nederlands]({NL_PRIVATE_URL})\n\n"
+        "Kies je pakket op de cursuspagina. Daar betaal je meteen.\n\n"
+        f"[Naar de pakketten →]({NL_PRIVATE_CHECKOUT_URL})\n\n"
         "Vragen over betalen? Mail english@learnwithlucas.com"
     ),
 }
@@ -223,10 +218,8 @@ EN_SUPPORTED_FAQS = {
     ),
     "joining": (
         "**How do I join?**\n\n"
-        "EU / Netherlands:\n"
-        f"Monthly €7.99: [Stripe]({SS_STRIPE_MONTHLY})\n"
-        f"6 months €39.95: [Stripe]({SS_STRIPE_6MO})\n"
-        f"Yearly €79.90: [Stripe]({SS_STRIPE_YEARLY})\n\n"
+        "EU / Netherlands: choose a plan on the course page and pay there.\n"
+        f"[Monthly €7.99, 6 months €39.95 or yearly €79.90 →]({EN_SUPPORTED_CHECKOUT_URL})\n\n"
         "Philippines / Indonesia / Malaysia / Thailand:\n"
         f"Monthly €7.99: [GCash / DANA / Touch 'n Go]({SS_AIR_MONTHLY})\n"
         f"6 months €39.95: [GCash / DANA / Touch 'n Go]({SS_AIR_6MO})\n"
@@ -296,12 +289,9 @@ NL_SUPPORTED_FAQS = {
     ),
     "aanmelden": (
         "**Hoe meld ik me aan?**\n\n"
-        "Nederland / Belgie / EU:\n"
-        f"Maandelijks €11,99: [Stripe]({OS_STRIPE_MONTHLY})\n"
-        f"Premium €19,99 per maand: [Stripe]({OS_STRIPE_6MO})\n"
-        f"Standaard jaar €119,90: [Stripe]({OS_STRIPE_YEARLY})\n"
-        "Premium jaar €199,90: via de cursuspagina\n\n"
-        "Filipijnen / Indonesie / Maleisie / Thailand:\n"
+        "Nederland / België / EU: kies je abonnement op de cursuspagina en betaal daar.\n"
+        f"[Standaard €11,99, Premium €19,99 per maand, of een jaarplan vanaf €119,90 →]({NL_SUPPORTED_CHECKOUT_URL})\n\n"
+        "Filipijnen / Indonesië / Maleisië / Thailand:\n"
         f"Maandelijks €11,99: [GCash / DANA / Touch 'n Go]({OS_AIR_MONTHLY})\n"
         f"Jaarlijks €119,90: [GCash / DANA / Touch 'n Go]({OS_AIR_YEARLY})\n\n"
         "14 dagen geld-terug-garantie. Op elk moment opzegbaar."
@@ -411,14 +401,14 @@ def build_en_supported_embed() -> discord.Embed:
         description=(
             "Live speaking practice every week, in a small group at your level.\n\n"
             "You practise with the member guides during the week and join the live session on Saturday.\n\n"
-            "**€7.99 a month**, €39.95 for 6 months (1 month free) or €79.90 a year (2 months free)\n\n"
+            "**€7.99 a month**, €39.95 for 6 months (1 month free) or €79.90 a year (2 months free and 1 free private lesson)\n\n"
             "**What you get:**\n"
             "🎙️ Live session every Saturday 14:30 CEST on Discord (max 20 people)\n"
             "📖 Supporter edition guides every Mon, Fri and Sat\n"
             "📚 5 B1-level stories with audio every month\n"
             "🎯 Find-the-mistake exercises in every guide\n"
             "💬 Community access on Discord, WhatsApp and Telegram\n\n"
-            f"EU: [Monthly €7.99]({SS_STRIPE_MONTHLY}) · [6 months €39.95]({SS_STRIPE_6MO}) · [Yearly €79.90]({SS_STRIPE_YEARLY})\n"
+            f"EU: [Choose a plan →]({EN_SUPPORTED_CHECKOUT_URL})\n"
             f"SEA: [Monthly €7.99]({SS_AIR_MONTHLY}) · [6 months €39.95]({SS_AIR_6MO}) · [Yearly €79.90]({SS_AIR_YEARLY})\n\n"
             "14 day money back · cancel anytime\n\n"
             "Questions? Use the dropdown below."
@@ -441,7 +431,7 @@ def build_nl_supported_embed() -> discord.Embed:
             "📅 Spreekonderwerp elke zondag (3 niveaus)\n"
             "📚 5 verhalen met audio per maand\n"
             "✉️ Emailfeedback\n\n"
-            f"EU: [Standaard €11,99]({OS_STRIPE_MONTHLY}) · [Premium €19,99]({OS_STRIPE_6MO}) · [Standaard jaar €119,90]({OS_STRIPE_YEARLY})\n"
+            f"EU: [Kies je abonnement →]({NL_SUPPORTED_CHECKOUT_URL})\n"
             f"SEA: [Maandelijks €11,99]({OS_AIR_MONTHLY}) · [Jaarlijks €119,90]({OS_AIR_YEARLY})\n\n"
             "14 dagen geld terug · op elk moment opzegbaar\n\n"
             "Vragen? Gebruik het menu hieronder."
