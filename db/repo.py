@@ -73,7 +73,16 @@ class Repo:
     # Voice sessions
     # -------------------------
     async def start_session(self, guild_id: int, user_id: int, channel_id: int, started_at: int) -> None:
-        await self.end_open_session(guild_id, user_id, ended_at=started_at)
+        # A session still open here means we missed the leave event. We don't
+        # know when it really ended, so it counts as zero instead of the gap.
+        await self.conn.execute(
+            """
+            UPDATE voice_sessions
+            SET ended_at = started_at
+            WHERE guild_id = ? AND user_id = ? AND ended_at IS NULL
+            """,
+            (guild_id, user_id),
+        )
         await self.conn.execute(
             """
             INSERT INTO voice_sessions (guild_id, user_id, channel_id, started_at, ended_at)
@@ -96,6 +105,19 @@ class Repo:
         )
         await self.conn.commit()
         return cur.rowcount
+
+    async def close_all_open_sessions(self, guild_id: int, at: int) -> int:
+        """Close every open session in a guild at `at` (never before its own start)."""
+        cur = await self.conn.execute(
+            """
+            UPDATE voice_sessions
+            SET ended_at = MAX(started_at, ?)
+            WHERE guild_id = ? AND ended_at IS NULL
+            """,
+            (at, guild_id),
+        )
+        await self.conn.commit()
+        return int(cur.rowcount or 0)
 
     async def compute_and_cache_total_seconds(self, guild_id: int, user_id: int) -> int:
         cur = await self.conn.execute(
