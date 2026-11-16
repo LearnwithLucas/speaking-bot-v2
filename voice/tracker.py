@@ -14,6 +14,7 @@ log = logging.getLogger("voice.tracker")
 
 """
 Achievements intentionally do not reward duration, frequency, or volume.
+(Time milestones live separately in jobs/milestones.py.)
 They exist to mark courage moments, not progress.
 
 Guardrails:
@@ -296,6 +297,8 @@ class VoiceTracker:
         self._weekly_dm_inflight: set[int] = set()
         self._heartbeat_guild_ids: set[int] = set()
         self._heartbeat_task: asyncio.Task | None = None
+        self._shutting_down = False
+        self.milestones = None  # jobs.milestones.Milestones, set by app on ready
 
         self.enable_inactivity_nudge = enable_inactivity_nudge
         self.inactivity_variant = inactivity_variant
@@ -683,6 +686,8 @@ class VoiceTracker:
         self.active.pop((guild_id, user_id), None)
         await self.repo.end_open_session(guild_id, user_id, ended_at)
         log.debug("End session guild=%s user=%s", guild_id, user_id)
+        if self.milestones is not None and not self._shutting_down:
+            asyncio.create_task(self.milestones.check(guild_id, user_id))
 
     def _ensure_heartbeat(self) -> None:
         if self._heartbeat_task is None or self._heartbeat_task.done():
@@ -701,6 +706,7 @@ class VoiceTracker:
                 log.exception("Voice heartbeat failed")
 
     async def shutdown(self) -> None:
+        self._shutting_down = True
         if self._heartbeat_task is not None:
             self._heartbeat_task.cancel()
         now = int(time.time())
