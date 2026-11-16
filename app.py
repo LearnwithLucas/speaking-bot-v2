@@ -15,7 +15,7 @@ from db.repo import Repo
 from voice.community_tracker import VoiceTracker
 from jobs.nudges import NudgeJobs
 from jobs.partner_finder import PartnerFinder, PartnerHubView, PartnerHubViewNL
-from jobs.welcome import send_welcome_dm
+from jobs.welcome import send_welcome_dm, WelcomeTableView
 from commands.topics import setup as setup_topics
 from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
@@ -246,6 +246,8 @@ class SpeakingBot(commands.Bot):
         self.add_view(NlSupportedView())
         self.add_view(StartTestimonialView())
         self.add_view(StartTestimonialViewNL())
+        self.add_view(WelcomeTableView(is_nl=False))
+        self.add_view(WelcomeTableView(is_nl=True))
 
         # Sync commands to English guild
         guild = discord.Object(id=self.guild_id)
@@ -271,6 +273,26 @@ class SpeakingBot(commands.Bot):
         # Give tracker a reference to the bot (needed for voice encouragement)
         self.tracker._bot = self
         await self.tracker.bootstrap_from_guild(guild)
+
+        dutch_guild = self.get_guild(self.dutch_guild_id) if self.dutch_guild_id else None
+        if dutch_guild is not None:
+            await self._move_dutch_voice_history(dutch_guild)
+            await self.tracker.bootstrap_from_guild(dutch_guild)
+
+        for g in (guild, dutch_guild):
+            if g is None:
+                continue
+            try:
+                await self.repo.member_joins_backfill(
+                    g.id,
+                    [
+                        (m.id, int(m.joined_at.timestamp()))
+                        for m in g.members
+                        if not m.bot and m.joined_at is not None
+                    ],
+                )
+            except Exception:
+                log.exception("Member join backfill failed guild=%s", g.id)
 
         if not self._jobs_started:
             NudgeJobs(
@@ -411,9 +433,31 @@ class SpeakingBot(commands.Bot):
 
         log.info("Ready.")
 
+    async def _move_dutch_voice_history(self, dutch_guild: discord.Guild) -> None:
+        """One-time fix: Dutch voice sessions used to be stored under the English guild id."""
+        kv_key = "dutch_voice_history_moved_v1"
+        if await self.repo.kv_get(dutch_guild.id, kv_key):
+            return
+        try:
+            moved = await self.repo.move_sessions_to_guild(
+                self.guild_id,
+                dutch_guild.id,
+                [c.id for c in dutch_guild.channels],
+            )
+            await self.repo.kv_set(dutch_guild.id, kv_key, str(int(discord.utils.utcnow().timestamp())))
+            log.info("Moved %s Dutch voice sessions to guild %s", moved, dutch_guild.id)
+        except Exception:
+            log.exception("Moving Dutch voice history failed")
+
     async def on_member_join(self, member: discord.Member) -> None:
         if member.bot:
             return
+
+        try:
+            joined = member.joined_at or discord.utils.utcnow()
+            await self.repo.member_join_record(member.guild.id, member.id, int(joined.timestamp()))
+        except Exception:
+            log.exception("Failed to record member join user=%s guild=%s", member.id, member.guild.id)
 
         # Welcome DM - both servers
         await send_welcome_dm(

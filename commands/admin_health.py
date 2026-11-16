@@ -61,6 +61,27 @@ def _format_commands(summary: dict[str, Any]) -> str:
     )
 
 
+async def _format_activation(bot: Any) -> str:
+    """Share of new members with unmuted voice time in their first 7 days, per server."""
+    now = int(time.time())
+    servers = [("English", getattr(bot, "guild_id", None)), ("Dutch", getattr(bot, "dutch_guild_id", None))]
+    lines = []
+    for name, guild_id in servers:
+        if not guild_id:
+            continue
+        try:
+            in_voice, cohort = await bot.repo.new_member_voice_rate(guild_id, now)
+        except Exception:
+            log.exception("adminhealth: activation stat failed guild=%s", guild_id)
+            continue
+        if cohort == 0:
+            lines.append(f"{name}: no members in the window yet")
+        else:
+            lines.append(f"{name}: **{in_voice / cohort:.0%}** ({in_voice} of {cohort})")
+    lines.append("Members who joined 8 to 37 days ago. Unmuted voice only.")
+    return "\n".join(lines)
+
+
 async def _send_admin_log(bot: discord.Client, message: str) -> None:
     channel = bot.get_channel(ADMIN_LOGS_CHANNEL_ID)
     if channel is None:
@@ -120,6 +141,11 @@ async def setup(bot: Any) -> None:
         )
         embed.add_field(name="Last 24 hours", value=_format_period(summary_24h), inline=False)
         embed.add_field(name="Last 7 days", value=_format_period(summary_7d), inline=False)
+        embed.add_field(
+            name="New members in voice within 7 days",
+            value=await _format_activation(bot),
+            inline=False,
+        )
         embed.add_field(name="Command usage, last 7 days", value=_format_commands(summary_7d), inline=False)
         embed.set_footer(text="Look at trends. Quiet learners count too.")
 

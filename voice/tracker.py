@@ -284,7 +284,7 @@ class VoiceTracker:
         self.dutch_guild_id = dutch_guild_id
         self._bot = bot
 
-        self.active: Dict[int, Tuple[int, int]] = {}
+        self.active: Dict[Tuple[int, int], Tuple[int, int]] = {}  # (guild_id, user_id) -> (channel_id, started_at)
         self._pending_first_attempt: Dict[int, asyncio.Task] = {}
         self._pending_encouragement: Dict[int, asyncio.Task] = {}
         self._last_engagement_at: Dict[int, float] = {}  # channel_id -> epoch
@@ -347,7 +347,7 @@ class VoiceTracker:
                     return
 
                 newly_awarded = await self.repo.achievement_award_once(
-                    guild_id=self.guild_id,
+                    guild_id=member.guild.id,
                     user_id=uid,
                     achievement_id=ACH_FIRST_VOICE_ATTEMPT,
                     earned_at=int(time.time()),
@@ -371,12 +371,12 @@ class VoiceTracker:
         try:
             week_key = amsterdam_iso_week_key()
 
-            state = await self.repo.user_state_get(self.guild_id, uid)
+            state = await self.repo.user_state_get(member.guild.id, uid)
             last_week = state["last_weekly_dm_week"] if state else None
             if last_week == week_key:
                 return
 
-            await self.repo.user_state_mark_weekly_dm(self.guild_id, uid, week_key, now_epoch)
+            await self.repo.user_state_mark_weekly_dm(member.guild.id, uid, week_key, now_epoch)
 
             try:
                 await member.send(WEEKLY_DM_MESSAGE)
@@ -395,7 +395,7 @@ class VoiceTracker:
         if not self.enable_inactivity_nudge:
             return
 
-        state = await self.repo.user_state_get(self.guild_id, member.id)
+        state = await self.repo.user_state_get(member.guild.id, member.id)
         if not state or not state.get("last_voice_join_at"):
             return
 
@@ -412,7 +412,7 @@ class VoiceTracker:
 
         message = INACTIVITY_MSG_B if self.inactivity_variant == "B" else INACTIVITY_MSG_A
 
-        await self.repo.user_state_mark_inactivity_nudge(self.guild_id, member.id, now)
+        await self.repo.user_state_mark_inactivity_nudge(member.guild.id, member.id, now)
 
         try:
             await member.send(message)
@@ -434,11 +434,11 @@ class VoiceTracker:
         uid = member.id
 
         # Suppress join-time achievements until "first voice" is earned.
-        has_first = await self.repo.achievement_has(self.guild_id, uid, ACH_FIRST_VOICE_ATTEMPT)
+        has_first = await self.repo.achievement_has(member.guild.id, uid, ACH_FIRST_VOICE_ATTEMPT)
         if not has_first:
             return
 
-        state = await self.repo.user_state_get(self.guild_id, uid)
+        state = await self.repo.user_state_get(member.guild.id, uid)
         prev_last_join = int(state["last_voice_join_at"]) if state and state.get("last_voice_join_at") else None
 
         awarded = False
@@ -446,8 +446,8 @@ class VoiceTracker:
         # 1) Came back after a break (award on join; no time threshold)
         if not awarded and prev_last_join is not None:
             if now - prev_last_join >= BREAK_MIN_SECONDS:
-                if not await self.repo.achievement_has(self.guild_id, uid, ACH_CAME_BACK_AFTER_BREAK):
-                    if await self.repo.achievement_award_once(self.guild_id, uid, ACH_CAME_BACK_AFTER_BREAK, now):
+                if not await self.repo.achievement_has(member.guild.id, uid, ACH_CAME_BACK_AFTER_BREAK):
+                    if await self.repo.achievement_award_once(member.guild.id, uid, ACH_CAME_BACK_AFTER_BREAK, now):
                         log.info("Achievement awarded: %s user=%s", ACH_CAME_BACK_AFTER_BREAK, uid)
                         awarded = True
 
@@ -456,8 +456,8 @@ class VoiceTracker:
             prev_day = amsterdam_day_key_from_epoch(prev_last_join)
             today = amsterdam_day_key()
             if prev_day != today and (now - prev_last_join) >= JOINED_AGAIN_MIN_GAP_SECONDS:
-                if not await self.repo.achievement_has(self.guild_id, uid, ACH_JOINED_AGAIN):
-                    if await self.repo.achievement_award_once(self.guild_id, uid, ACH_JOINED_AGAIN, now):
+                if not await self.repo.achievement_has(member.guild.id, uid, ACH_JOINED_AGAIN):
+                    if await self.repo.achievement_award_once(member.guild.id, uid, ACH_JOINED_AGAIN, now):
                         log.info("Achievement awarded: %s user=%s", ACH_JOINED_AGAIN, uid)
                         awarded = True
 
@@ -469,10 +469,10 @@ class VoiceTracker:
                 for other in humans:
                     if other.id == uid:
                         continue
-                    is_new_pair = await self.repo.voice_met_add_if_new_pair(self.guild_id, uid, other.id, now)
+                    is_new_pair = await self.repo.voice_met_add_if_new_pair(member.guild.id, uid, other.id, now)
                     if is_new_pair:
-                        if not await self.repo.achievement_has(self.guild_id, uid, ACH_SPOKE_WITH_SOMEONE_NEW):
-                            if await self.repo.achievement_award_once(self.guild_id, uid, ACH_SPOKE_WITH_SOMEONE_NEW, now):
+                        if not await self.repo.achievement_has(member.guild.id, uid, ACH_SPOKE_WITH_SOMEONE_NEW):
+                            if await self.repo.achievement_award_once(member.guild.id, uid, ACH_SPOKE_WITH_SOMEONE_NEW, now):
                                 log.info("Achievement awarded: %s user=%s other=%s", ACH_SPOKE_WITH_SOMEONE_NEW, uid, other.id)
                         awarded = True
                         break
@@ -485,9 +485,9 @@ class VoiceTracker:
 
         for vc in guild.voice_channels:
             for member in vc.members:
-                await self.repo.end_open_session(self.guild_id, member.id, ended_at=now)
+                await self.repo.end_open_session(member.guild.id, member.id, ended_at=now)
 
-        # Start sessions for users currently in target category and not self-deafened
+        # Start sessions for users currently in target category and unmuted
         # NOTE: no weekly DM, no inactivity DM, no join-achievements during bootstrap.
         for vc in guild.voice_channels:
             if not self._is_target_voice_channel(guild, vc):
@@ -496,11 +496,11 @@ class VoiceTracker:
                 if member.bot:
                     continue
 
-                await self.repo.user_state_touch_voice_join(self.guild_id, member.id, now)
+                await self.repo.user_state_touch_voice_join(member.guild.id, member.id, now)
 
                 if not should_count_state(member.voice):
                     continue
-                await self._start(member.id, vc.id, now)
+                await self._start(guild.id, member.id, vc.id, now)
 
                 self._schedule_first_attempt_check(member, vc.id, now)
 
@@ -533,7 +533,7 @@ class VoiceTracker:
             await self._maybe_award_join_achievement(member, after_channel, now)
 
             # Record join (this becomes the new last_voice_join_at)
-            await self.repo.user_state_touch_voice_join(self.guild_id, uid, now)
+            await self.repo.user_state_touch_voice_join(member.guild.id, uid, now)
 
             # Schedule first voice attempt check
             self._schedule_first_attempt_check(member, after_channel.id, now)
@@ -546,27 +546,31 @@ class VoiceTracker:
             self._cancel_first_attempt_task(uid)
         elif before_in_target and after_in_target and before_channel and after_channel and before_channel.id != after_channel.id:
             self._cancel_first_attempt_task(uid)
-            await self.repo.user_state_touch_voice_join(self.guild_id, uid, now)
+            await self.repo.user_state_touch_voice_join(member.guild.id, uid, now)
             self._schedule_first_attempt_check(member, after_channel.id, now)
 
-        # Existing "counted minutes" logic (unchanged)
+        # Counted time: only while unmuted (see should_count_state).
+        # A mute toggle inside the same channel ends or resumes the session,
+        # but must not re-trigger the arrival prompts.
+        gid = member.guild.id
+        same_channel = bool(before_channel and after_channel and before_channel.id == after_channel.id)
+        entered_channel = after_in_target and after_channel is not None and not (before_in_target and same_channel)
+        left_channel = before_in_target and not (after_in_target and same_channel)
+
         before_counts = before_in_target and should_count_state(before)
         after_counts = after_in_target and should_count_state(after)
 
-        if before_counts and not after_counts:
-            await self._end(uid, now)
-            return
+        if before_counts and (not after_counts or not same_channel):
+            await self._end(gid, uid, now)
 
-        if not before_counts and after_counts and after_channel is not None:
-            await self._start(uid, after_channel.id, now)
-            self._schedule_encouragement(member, after_channel.id)
-            return
+        if after_counts and after_channel is not None and (not before_counts or not same_channel):
+            await self._start(gid, uid, after_channel.id, now)
 
-        if before_counts and after_counts and before_channel and after_channel and before_channel.id != after_channel.id:
-            await self._end(uid, now)
-            await self._start(uid, after_channel.id, now)
+        if left_channel:
+            self._cancel_encouragement_task(uid)
+
+        if entered_channel:
             self._schedule_encouragement(member, after_channel.id)
-            return
 
     def _is_nl_guild(self) -> bool:
         return self.dutch_guild_id is not None and self.guild_id == self.dutch_guild_id
@@ -647,16 +651,17 @@ class VoiceTracker:
 
         self._pending_encouragement[uid] = asyncio.create_task(_job())
 
-    async def _start(self, user_id: int, channel_id: int, started_at: int) -> None:
-        self.active[user_id] = (channel_id, started_at)
-        await self.repo.start_session(self.guild_id, user_id, channel_id, started_at)
-        log.debug("Start session user=%s channel=%s", user_id, channel_id)
+    # Sessions are stored under the member's own server, so Dutch voice time
+    # lands under the Dutch guild id instead of the English one.
+    async def _start(self, guild_id: int, user_id: int, channel_id: int, started_at: int) -> None:
+        self.active[(guild_id, user_id)] = (channel_id, started_at)
+        await self.repo.start_session(guild_id, user_id, channel_id, started_at)
+        log.debug("Start session guild=%s user=%s channel=%s", guild_id, user_id, channel_id)
 
-    async def _end(self, user_id: int, ended_at: int) -> None:
-        self.active.pop(user_id, None)
-        self._cancel_encouragement_task(user_id)
-        await self.repo.end_open_session(self.guild_id, user_id, ended_at)
-        log.debug("End session user=%s", user_id)
+    async def _end(self, guild_id: int, user_id: int, ended_at: int) -> None:
+        self.active.pop((guild_id, user_id), None)
+        await self.repo.end_open_session(guild_id, user_id, ended_at)
+        log.debug("End session guild=%s user=%s", guild_id, user_id)
 
     async def shutdown(self) -> None:
         for uid in list(self._pending_first_attempt.keys()):

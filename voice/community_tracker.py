@@ -164,7 +164,7 @@ class VoiceTracker(BaseVoiceTracker):
         try:
             week_key = amsterdam_iso_week_key()
 
-            state = await self.repo.user_state_get(self.guild_id, uid)
+            state = await self.repo.user_state_get(member.guild.id, uid)
             last_week = state["last_weekly_dm_week"] if state else None
             if last_week == week_key:
                 self._weekly_dm_inflight.discard(uid)
@@ -204,16 +204,16 @@ class VoiceTracker(BaseVoiceTracker):
                 log.info("Weekly recap DM skipped; user left before delay user=%s week=%s", uid, week_key)
                 return
 
-            state = await self.repo.user_state_get(self.guild_id, uid)
+            state = await self.repo.user_state_get(member.guild.id, uid)
             last_week = state["last_weekly_dm_week"] if state else None
             if last_week == week_key:
                 return
 
             since_epoch = _amsterdam_week_start_epoch()
-            seconds = await self.repo.user_voice_seconds_since(self.guild_id, uid, since_epoch)
+            seconds = await self.repo.user_voice_seconds_since(member.guild.id, uid, since_epoch)
             message = _build_weekly_recap_message(seconds=seconds, is_nl=is_nl)
 
-            await self.repo.user_state_mark_weekly_dm(self.guild_id, uid, week_key, int(time.time()))
+            await self.repo.user_state_mark_weekly_dm(member.guild.id, uid, week_key, int(time.time()))
 
             try:
                 await member.send(message)

@@ -109,10 +109,26 @@ async def _delete_later(message: discord.Message, seconds: int) -> None:
 
 
 class PartnerPlanStartView(discord.ui.View):
-    def __init__(self, *, bot: discord.Client, is_nl: bool) -> None:
+    def __init__(
+        self,
+        *,
+        bot: discord.Client,
+        is_nl: bool,
+        guild_id: int | None = None,
+        include_next_week: bool = True,
+    ) -> None:
         super().__init__(timeout=5 * 60)
         self.bot = bot
         self.is_nl = is_nl
+        # Set when the flow starts outside the server (welcome DM), where interaction.guild is None.
+        self.guild_id = guild_id
+        if not include_next_week:
+            self.remove_item(self.next_week)
+        if is_nl:
+            self.later_today.label = "Later vandaag"
+            self.tomorrow.label = "Morgen"
+            self.weekend.label = "Dit weekend"
+            self.next_week.label = "Volgende week"
 
     async def _choose_day(self, interaction: discord.Interaction, key: str) -> None:
         day = DAY_OPTIONS[key]
@@ -122,7 +138,7 @@ class PartnerPlanStartView(discord.ui.View):
             content = f"What time on **{day.en_label}** works roughly?"
         await interaction.response.edit_message(
             content=content,
-            view=PartnerPlanTimeView(bot=self.bot, is_nl=self.is_nl, day=day),
+            view=PartnerPlanTimeView(bot=self.bot, is_nl=self.is_nl, day=day, guild_id=self.guild_id),
         )
 
     @discord.ui.button(label="Later today", style=discord.ButtonStyle.secondary, custom_id="partner:plan:day:en_today:v1", row=0)
@@ -143,14 +159,20 @@ class PartnerPlanStartView(discord.ui.View):
 
 
 class PartnerPlanTimeView(discord.ui.View):
-    def __init__(self, *, bot: discord.Client, is_nl: bool, day: DayOption) -> None:
+    def __init__(self, *, bot: discord.Client, is_nl: bool, day: DayOption, guild_id: int | None = None) -> None:
         super().__init__(timeout=5 * 60)
         self.bot = bot
         self.is_nl = is_nl
         self.day = day
+        self.guild_id = guild_id
+        if is_nl:
+            self.morning.label = "Ochtend"
+            self.afternoon.label = "Middag"
+            self.evening.label = "Avond"
 
     async def _choose_time(self, interaction: discord.Interaction, key: str) -> None:
-        if interaction.guild is None:
+        guild_id = interaction.guild.id if interaction.guild is not None else self.guild_id
+        if guild_id is None:
             await interaction.response.edit_message(
                 content="This only works inside the server.",
                 view=None,
@@ -191,7 +213,7 @@ class PartnerPlanTimeView(discord.ui.View):
             requester_id=interaction.user.id,
             requester_name=_display_name(interaction.user),
             planned_label=label,
-            guild_id=interaction.guild.id,
+            guild_id=guild_id,
             is_nl=self.is_nl,
         )
 
