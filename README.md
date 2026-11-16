@@ -99,6 +99,7 @@ SpeakingBot should always communicate:
 - Welcome DM on join with one action: book a Table for 2 this week (button opens the partner planner)
 - Voice time tracking (Speak Now category; excludes AFK). Counts unmuted time only, stored per server (EN and NL separately)
 - Private milestone DMs at 1, 3 and 10 hours of unmuted voice time (counted from the deploy day). The 3-hour DM asks the testimonial questions
+- Partner finder matches "free now" only with people at the same level (A2, B1, B2). Members pick their level once; **My level** changes it
 - Win-back DM after 14 days without voice time (daily at 17:07 Amsterdam, once per absence)
 - Admin stat in `/adminhealth`: share of new members in voice within 7 days of joining
 - Mon/Fri announcements nudge at **15:00 Europe/Amsterdam**

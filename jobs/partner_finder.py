@@ -45,6 +45,49 @@ WEEKLY_SPEAKERS_FOOTER_EN = "active this week:en:v2"
 WEEKLY_SPEAKERS_FOOTER_NL = "actief deze week:nl:v2"
 
 
+# Partner matching only pairs people at the same level.
+LEVELS: tuple[str, ...] = ("A2", "B1", "B2")
+LEVEL_HINTS_EN = {
+    "A2": "simple sentences",
+    "B1": "everyday conversations",
+    "B2": "most topics with ease",
+}
+LEVEL_HINTS_NL = {
+    "A2": "eenvoudige zinnen",
+    "B1": "gewone gesprekken",
+    "B2": "de meeste onderwerpen",
+}
+
+
+def _level_prompt(*, is_nl: bool, current: str | None = None) -> str:
+    hints = LEVEL_HINTS_NL if is_nl else LEVEL_HINTS_EN
+    lines = "\n".join(f"**{lvl}**: {hints[lvl]}" for lvl in LEVELS)
+    if is_nl:
+        head = f"Je niveau is nu **{current}**. Wil je het veranderen?" if current else "Wat is je niveau? Je oefent dan met mensen op jouw niveau."
+        return f"{head}\n\n{lines}\n\nTwijfel je? Kies het lagere niveau."
+    head = f"Your level is **{current}**. Want to change it?" if current else "What's your level? You'll practise with people at your level."
+    return f"{head}\n\n{lines}\n\nNot sure? Pick the lower one."
+
+
+class LevelPickView(discord.ui.View):
+    """Ephemeral level picker. If `then_duration` is set, marks the member free right after."""
+
+    def __init__(self, *, finder: "PartnerFinder", is_nl: bool, then_duration: int | None = None) -> None:
+        super().__init__(timeout=5 * 60)
+        self.finder = finder
+        self.is_nl = is_nl
+        self.then_duration = then_duration
+        for lvl in LEVELS:
+            button = discord.ui.Button(label=lvl, style=discord.ButtonStyle.primary)
+            button.callback = self._make_callback(lvl)
+            self.add_item(button)
+
+    def _make_callback(self, level: str):
+        async def callback(interaction: discord.Interaction) -> None:
+            await self.finder.save_level(interaction, level=level, is_nl=self.is_nl, then_duration=self.then_duration)
+        return callback
+
+
 def _duration_label(seconds: int, *, is_nl: bool = False) -> str:
     for option_seconds, en_label, nl_label in DURATION_OPTIONS:
         if option_seconds == seconds:
@@ -122,7 +165,14 @@ def _hub_content(*, is_nl: bool, weekly_ping: bool = False) -> str | None:
 # HUB EMBEDS
 # =====================
 
-def build_en_embed(available_count: int = 0) -> discord.Embed:
+def _level_breakdown(by_level: dict[str, int] | None, *, is_nl: bool) -> str:
+    if not by_level:
+        return ""
+    parts = ", ".join(f"{lvl}: {by_level[lvl]}" for lvl in LEVELS if by_level.get(lvl))
+    return f"\n{'Per niveau' if is_nl else 'By level'}: {parts}" if parts else ""
+
+
+def build_en_embed(available_count: int = 0, by_level: dict[str, int] | None = None) -> discord.Embed:
     if available_count == 0:
         status = "Nobody is available right now. Press a time button to be the first."
     elif available_count == 1:
@@ -137,15 +187,16 @@ def build_en_embed(available_count: int = 0) -> discord.Embed:
             "If someone else is free at the same time, you both get a DM with the Open Conversation channel.\n"
             "You can also plan a rough time for later.\n"
             "Use **Ping me for voice chats** to get the notification role people can tag when they want to talk.\n"
+            "You only get matched with people at your level. Use **My level** to set or change it.\n"
             "You can refresh or change your time whenever you want.\n\n"
-            f"**Right now:** {status}"
+            f"**Right now:** {status}{_level_breakdown(by_level, is_nl=False)}"
         ),
     )
     embed.set_footer(text="hub:en:partner:v3")
     return embed
 
 
-def build_nl_embed(available_count: int = 0) -> discord.Embed:
+def build_nl_embed(available_count: int = 0, by_level: dict[str, int] | None = None) -> discord.Embed:
     if available_count == 0:
         status = "Er is nu niemand beschikbaar. Druk op een tijdknop om de eerste te zijn."
     elif available_count == 1:
@@ -159,8 +210,9 @@ def build_nl_embed(available_count: int = 0) -> discord.Embed:
             "Kies hoe lang je beschikbaar bent om te oefenen.\n"
             "Als iemand anders ook vrij is, krijgen jullie allebei een DM met het Open Conversation kanaal.\n"
             "Je kunt ook een rustig moment voor later plannen.\n"
+            "Je oefent alleen met mensen op jouw niveau. Gebruik **Mijn niveau** om het in te stellen of te veranderen.\n"
             "Je kunt je tijd altijd vernieuwen of aanpassen.\n\n"
-            f"**Op dit moment:** {status}"
+            f"**Op dit moment:** {status}{_level_breakdown(by_level, is_nl=True)}"
         ),
     )
     embed.set_footer(text="hub:nl:partner:v3")
@@ -304,6 +356,13 @@ class PartnerHubView(discord.ui.View):
     async def want_to_speak(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._toggle_speaking_role(interaction)
 
+    @discord.ui.button(label="My level", style=discord.ButtonStyle.secondary, custom_id="partner:level:en:v1", row=2)
+    async def my_level(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if self._finder is None:
+            await interaction.response.send_message("Not ready yet. Try again in a moment.", ephemeral=True)
+            return
+        await self._finder.show_level_picker(interaction, is_nl=False)
+
 
 class PartnerHubViewNL(discord.ui.View):
     """Dutch persistent view in #op-zoek-naar-een-partner."""
@@ -366,6 +425,13 @@ class PartnerHubViewNL(discord.ui.View):
     async def plan_later_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._plan_later(interaction, is_nl=True)
 
+    @discord.ui.button(label="Mijn niveau", style=discord.ButtonStyle.secondary, custom_id="partner:level:nl:v1", row=2)
+    async def my_level_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if self._finder is None:
+            await interaction.response.send_message("Nog niet klaar. Probeer het zo opnieuw.", ephemeral=True)
+            return
+        await self._finder.show_level_picker(interaction, is_nl=True)
+
 
 # =====================
 # CORE SERVICE
@@ -387,8 +453,9 @@ class PartnerFinder:
 
         # Separate availability dicts per server
         # user_id -> expires_at (epoch)
-        self._available_en: dict[int, float] = {}
-        self._available_nl: dict[int, float] = {}
+        # user_id -> (expires_at, level)
+        self._available_en: dict[int, tuple[float, str]] = {}
+        self._available_nl: dict[int, tuple[float, str]] = {}
         self._weekly_speakers_task: asyncio.Task | None = None
         self._weekly_speakers_locks: dict[bool, asyncio.Lock] = {
             False: asyncio.Lock(),
@@ -416,18 +483,77 @@ class PartnerFinder:
                 log.exception("PartnerFinder: weekly speakers refresh failed")
             await asyncio.sleep(WEEKLY_SPEAKERS_REFRESH_SECONDS)
 
-    def _pool(self, is_nl: bool) -> dict[int, float]:
+    def _pool(self, is_nl: bool) -> dict[int, tuple[float, str]]:
         return self._available_nl if is_nl else self._available_en
 
     def _clean_expired(self, is_nl: bool) -> None:
         pool = self._pool(is_nl)
         now = time.time()
-        for uid in [uid for uid, exp in pool.items() if now >= exp]:
+        for uid in [uid for uid, (exp, _lvl) in pool.items() if now >= exp]:
             del pool[uid]
 
     def _available_users(self, is_nl: bool) -> list[int]:
         self._clean_expired(is_nl)
         return list(self._pool(is_nl).keys())
+
+    def _guild_id_for(self, guild: discord.Guild | None, is_nl: bool) -> int | None:
+        if guild is not None:
+            return guild.id
+        return self.dutch_guild_id if is_nl else self.guild_id
+
+    def _level_counts(self, is_nl: bool) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for _exp, lvl in self._pool(is_nl).values():
+            counts[lvl] = counts.get(lvl, 0) + 1
+        return counts
+
+    async def show_level_picker(self, interaction: discord.Interaction, *, is_nl: bool) -> None:
+        gid = self._guild_id_for(interaction.guild, is_nl)
+        current = await self.repo.member_level_get(gid, interaction.user.id) if gid else None
+        await interaction.response.send_message(
+            _level_prompt(is_nl=is_nl, current=current),
+            view=LevelPickView(finder=self, is_nl=is_nl),
+            ephemeral=True,
+        )
+
+    async def save_level(
+        self,
+        interaction: discord.Interaction,
+        *,
+        level: str,
+        is_nl: bool,
+        then_duration: int | None,
+    ) -> None:
+        gid = self._guild_id_for(interaction.guild, is_nl)
+        if gid is None or level not in LEVELS:
+            await interaction.response.send_message(
+                "Dat lukt nu even niet." if is_nl else "That didn't work right now.", ephemeral=True
+            )
+            return
+        await self.repo.member_level_set(gid, interaction.user.id, level, int(time.time()))
+        log.info("PartnerFinder: level set user=%s guild=%s level=%s", interaction.user.id, gid, level)
+
+        # If they were already free, move them to the new level right away.
+        pool = self._pool(is_nl)
+        if interaction.user.id in pool and then_duration is None:
+            exp, _old = pool[interaction.user.id]
+            pool[interaction.user.id] = (exp, level)
+            await self._update_hub_embed(is_nl=is_nl)
+
+        if then_duration is not None:
+            await self.mark_available(
+                user=interaction.user,
+                guild=interaction.guild,
+                interaction=interaction,
+                duration_seconds=then_duration,
+                is_nl=is_nl,
+            )
+            return
+
+        await interaction.response.send_message(
+            f"Je niveau is nu **{level}**." if is_nl else f"Your level is now **{level}**.",
+            ephemeral=True,
+        )
 
     async def mark_available(
         self,
@@ -438,6 +564,17 @@ class PartnerFinder:
         duration_seconds: int = DEFAULT_DURATION_SECONDS,
         is_nl: bool = False,
     ) -> None:
+        gid = self._guild_id_for(guild, is_nl)
+        level = await self.repo.member_level_get(gid, user.id) if gid else None
+        if level is None:
+            # Ask once, then continue with the same duration.
+            await interaction.response.send_message(
+                _level_prompt(is_nl=is_nl),
+                view=LevelPickView(finder=self, is_nl=is_nl, then_duration=duration_seconds),
+                ephemeral=True,
+            )
+            return
+
         pool = self._pool(is_nl)
         self._clean_expired(is_nl)
         uid = user.id
@@ -446,54 +583,60 @@ class PartnerFinder:
 
         already_available = uid in pool
         expires_at = now + duration_seconds
-        pool[uid] = expires_at
+        pool[uid] = (expires_at, level)
 
-        others = [u for u in self._available_users(is_nl) if u != uid]
+        others = [u for u, (_exp, lvl) in pool.items() if u != uid and lvl == level]
 
         if is_nl:
             if already_available:
                 msg = (
-                    f"Je bent nog steeds beschikbaar. Je tijd is bijgewerkt naar **{duration_label}**.\n"
-                    + ("Er is ook iemand anders vrij. Bekijk je DMs." if others else "Er is nog niemand anders vrij. Je krijgt een DM zodra iemand zich aanmeldt.")
+                    f"Je staat nog steeds als vrij op **{level}**. Je tijd is nu **{duration_label}**.\n"
+                    + ("Er is ook iemand op jouw niveau vrij. Bekijk je DMs." if others else "Er is nog niemand op jouw niveau vrij. Je krijgt een DM zodra dat zo is.")
                 )
             elif others:
                 count = len(others)
                 msg = (
-                    f"Je bent **{duration_label}** vrij om te oefenen. {count} {'persoon is' if count == 1 else 'mensen zijn'} ook vrij.\n"
+                    f"Je bent **{duration_label}** vrij om te oefenen op **{level}**. "
+                    f"{count} {'persoon' if count == 1 else 'mensen'} op jouw niveau {'is' if count == 1 else 'zijn'} ook vrij.\n"
                     "Bekijk je DMs."
                 )
             else:
                 msg = (
-                    f"Je bent de komende **{duration_label}** beschikbaar.\n"
-                    "Je krijgt een DM zodra iemand anders ook vrij is."
+                    f"Je bent de komende **{duration_label}** vrij op **{level}**.\n"
+                    "Je krijgt een DM zodra iemand op jouw niveau ook vrij is. "
+                    "Verkeerd niveau? Druk op **Mijn niveau**."
                 )
         else:
             if already_available:
                 msg = (
-                    f"You're still marked as free. Your time is now **{duration_label}**.\n"
-                    + ("Someone else is also free right now. Check your DMs." if others else "Nobody else is free yet. You will get a DM when someone joins.")
+                    f"You're still marked as free at **{level}**. Your time is now **{duration_label}**.\n"
+                    + ("Someone at your level is also free. Check your DMs." if others else "Nobody at your level is free yet. You'll get a DM when someone is.")
                 )
             elif others:
                 count = len(others)
                 msg = (
-                    f"You're free to practice for **{duration_label}**. {count} {'person is' if count == 1 else 'people are'} also free right now.\n"
+                    f"You're free to practise for **{duration_label}** at **{level}**. "
+                    f"{count} {'person' if count == 1 else 'people'} at your level {'is' if count == 1 else 'are'} also free.\n"
                     "Check your DMs."
                 )
             else:
                 msg = (
-                    f"You're marked as free for the next **{duration_label}**.\n"
-                    "You will get a DM as soon as someone else is free too."
+                    f"You're free for the next **{duration_label}** at **{level}**.\n"
+                    "You'll get a DM as soon as someone at your level is free too. "
+                    "Wrong level? Press **My level**."
                 )
 
         await interaction.response.send_message(msg, ephemeral=True)
         await self._update_hub_embed(is_nl=is_nl)
 
-        if others and guild:
+        match_guild = guild or (self.bot.get_guild(gid) if gid else None)
+        if others and match_guild:
             await self._notify_matches(
                 new_user=user,
                 match_ids=others,
-                guild=guild,
+                guild=match_guild,
                 is_nl=is_nl,
+                level=level,
             )
 
         asyncio.create_task(self._expire_after(uid, duration_seconds, expires_at=expires_at, is_nl=is_nl))
@@ -560,9 +703,10 @@ class PartnerFinder:
     async def _expire_after(self, user_id: int, seconds: float, *, expires_at: float, is_nl: bool) -> None:
         await asyncio.sleep(seconds)
         pool = self._pool(is_nl)
-        current_expires_at = pool.get(user_id)
-        if current_expires_at is None:
+        entry = pool.get(user_id)
+        if entry is None:
             return
+        current_expires_at = entry[0]
         if current_expires_at > expires_at + 0.5:
             return
         pool.pop(user_id, None)
@@ -576,6 +720,7 @@ class PartnerFinder:
         match_ids: list[int],
         guild: discord.Guild,
         is_nl: bool,
+        level: str,
     ) -> None:
         open_conversation = _open_conversation_link(guild.id)
         starters = _conversation_starters(is_nl=is_nl)
@@ -595,14 +740,14 @@ class PartnerFinder:
             if is_nl:
                 await new_user.send(
                     f"🤝 **Spreekpartner gevonden!**\n\n"
-                    f"**{names_str}** {verb_nl} ook vrij op dit moment.\n\n"
+                    f"**{names_str}** {verb_nl} ook vrij op dit moment. Zelfde niveau: **{level}**.\n\n"
                     f"Ga naar Open Conversation: {open_conversation}\n"
                     f"Begin rustig. Je kunt gewoon hoi zeggen.{starters}"
                 )
             else:
                 await new_user.send(
                     f"🤝 **Partner match!**\n\n"
-                    f"**{names_str}** {verb} also free right now.\n\n"
+                    f"**{names_str}** {verb} also free right now. Same level: **{level}**.\n\n"
                     f"Go to Open Conversation: {open_conversation}\n"
                     f"Start gently. You can just say hi.{starters}"
                 )
@@ -617,14 +762,14 @@ class PartnerFinder:
                 if is_nl:
                     await match_member.send(
                         f"🤝 **Spreekpartner gevonden!**\n\n"
-                        f"**{new_user.display_name}** is nu vrij om te oefenen.\n\n"
+                        f"**{new_user.display_name}** is nu vrij om te oefenen. Zelfde niveau: **{level}**.\n\n"
                         f"Ga naar Open Conversation: {open_conversation}\n"
                         f"Begin rustig. Je kunt gewoon hoi zeggen.{starters}"
                     )
                 else:
                     await match_member.send(
                         f"🤝 **Partner match!**\n\n"
-                        f"**{new_user.display_name}** is free to practice right now.\n\n"
+                        f"**{new_user.display_name}** is free to practise right now. Same level: **{level}**.\n\n"
                         f"Go to Open Conversation: {open_conversation}\n"
                         f"Start gently. You can just say hi.{starters}"
                     )
@@ -928,7 +1073,8 @@ class PartnerFinder:
         if not existing_id_raw:
             return
 
-        embed = build_nl_embed(count) if is_nl else build_en_embed(count)
+        by_level = self._level_counts(is_nl)
+        embed = build_nl_embed(count, by_level) if is_nl else build_en_embed(count, by_level)
         view = PartnerHubViewNL(finder=self) if is_nl else PartnerHubView(finder=self)
         content = _hub_content(is_nl=is_nl)
 
@@ -963,7 +1109,8 @@ class PartnerFinder:
 
         self._clean_expired(is_nl)
         count = len(self._pool(is_nl))
-        embed = build_nl_embed(count) if is_nl else build_en_embed(count)
+        by_level = self._level_counts(is_nl)
+        embed = build_nl_embed(count, by_level) if is_nl else build_en_embed(count, by_level)
         view = PartnerHubViewNL(finder=self) if is_nl else PartnerHubView(finder=self)
         content = _hub_content(is_nl=is_nl, weekly_ping=weekly_ping)
         allowed_mentions = (

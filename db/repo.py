@@ -252,6 +252,25 @@ class Repo:
         )
         return [(int(uid), int(at)) for uid, at in await cur.fetchall()]
 
+    async def member_level_get(self, guild_id: int, user_id: int) -> str | None:
+        cur = await self.conn.execute(
+            "SELECT level FROM member_levels WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        row = await cur.fetchone()
+        return str(row[0]) if row else None
+
+    async def member_level_set(self, guild_id: int, user_id: int, level: str, at: int) -> None:
+        await self.conn.execute(
+            """
+            INSERT INTO member_levels (guild_id, user_id, level, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(guild_id, user_id) DO UPDATE SET level=excluded.level, updated_at=excluded.updated_at
+            """,
+            (guild_id, user_id, level, at),
+        )
+        await self.conn.commit()
+
     # -------------------------
     # Member joins (activation stat)
     # -------------------------
