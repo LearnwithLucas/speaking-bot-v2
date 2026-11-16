@@ -222,6 +222,36 @@ class Repo:
         await self.conn.commit()
         return int(cur.rowcount or 0)
 
+    async def winback_candidates(self, guild_id: int, now_epoch: int, min_days: int, max_days: int) -> list[tuple[int, int]]:
+        """
+        Members whose last voice time ended between max_days and min_days ago,
+        and who got no win-back DM since that last voice time.
+        Returns [(user_id, last_voice_at)]. Members in voice right now are excluded.
+        """
+        cur = await self.conn.execute(
+            """
+            SELECT v.user_id, v.last_at
+            FROM (
+                SELECT user_id, MAX(COALESCE(ended_at, ?)) AS last_at
+                FROM voice_sessions
+                WHERE guild_id = ?
+                GROUP BY user_id
+            ) v
+            LEFT JOIN user_state u ON u.guild_id = ? AND u.user_id = v.user_id
+            WHERE v.last_at <= ? AND v.last_at > ?
+              AND (u.last_inactivity_nudge_at IS NULL OR u.last_inactivity_nudge_at < v.last_at)
+            ORDER BY v.last_at ASC
+            """,
+            (
+                now_epoch,
+                guild_id,
+                guild_id,
+                now_epoch - min_days * 86400,
+                now_epoch - max_days * 86400,
+            ),
+        )
+        return [(int(uid), int(at)) for uid, at in await cur.fetchall()]
+
     # -------------------------
     # Member joins (activation stat)
     # -------------------------

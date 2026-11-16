@@ -259,16 +259,7 @@ WEEKLY_DM_MESSAGE = (
 HEARTBEAT_KV_KEY = "voice_heartbeat_at"
 HEARTBEAT_SECONDS = 60
 
-INACTIVITY_MIN_DAYS = 14
-INACTIVITY_COOLDOWN_DAYS = 30
-NO_NUDGE_AFTER_SPEAK_SECONDS = 72 * 3600
-
-INACTIVITY_MSG_A = (
-    "Want to join a table again? You don't need to explain anything. Join whenever you feel like it."
-)
-INACTIVITY_MSG_B = (
-    "You don't need to come every week. If you want to speak again, join and leave whenever you like."
-)
+# Win-back after 14 days without voice lives in jobs/winback.py.
 
 
 class VoiceTracker:
@@ -401,37 +392,6 @@ class VoiceTracker:
         finally:
             self._weekly_dm_inflight.discard(uid)
 
-    async def _maybe_send_inactivity_dm(self, member: discord.Member, now: int) -> None:
-        if not self.enable_inactivity_nudge:
-            return
-
-        state = await self.repo.user_state_get(member.guild.id, member.id)
-        if not state or not state.get("last_voice_join_at"):
-            return
-
-        last_join = int(state["last_voice_join_at"])
-        last_nudge = state.get("last_inactivity_nudge_at")
-        last_nudge = int(last_nudge) if last_nudge else None
-
-        if now - last_join < INACTIVITY_MIN_DAYS * 86400:
-            return
-        if now - last_join < NO_NUDGE_AFTER_SPEAK_SECONDS:
-            return
-        if last_nudge and now - last_nudge < INACTIVITY_COOLDOWN_DAYS * 86400:
-            return
-
-        message = INACTIVITY_MSG_B if self.inactivity_variant == "B" else INACTIVITY_MSG_A
-
-        await self.repo.user_state_mark_inactivity_nudge(member.guild.id, member.id, now)
-
-        try:
-            await member.send(message)
-            log.info("Inactivity DM sent user=%s", member.id)
-        except discord.Forbidden:
-            log.info("Inactivity DM blocked by privacy user=%s", member.id)
-        except Exception:
-            log.exception("Inactivity DM failed user=%s", member.id)
-
     # -------------------------
     # Achievements (join-time; max 1 per join)
     # Priority:
@@ -548,11 +508,8 @@ class VoiceTracker:
         before_in_target = self._is_target_voice_channel(member.guild, before_channel)
         after_in_target = self._is_target_voice_channel(member.guild, after_channel)
 
-        # Entering target voice: evaluate inactivity + achievements using PREVIOUS state, then update state.
+        # Entering target voice: evaluate achievements using PREVIOUS state, then update state.
         if not before_in_target and after_in_target and after_channel is not None:
-            # Step 6 (gated)
-            await self._maybe_send_inactivity_dm(member, now)
-
             # Achievements (join-time, max 1 per join)
             await self._maybe_award_join_achievement(member, after_channel, now)
 
