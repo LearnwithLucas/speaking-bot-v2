@@ -14,6 +14,7 @@ log = logging.getLogger("voice.tracker")
 
 """
 Achievements intentionally do not reward duration, frequency, or volume.
+(Time milestones live separately in jobs/milestones.py.)
 They exist to mark courage moments, not progress.
 
 Guardrails:
@@ -253,16 +254,12 @@ WEEKLY_DM_MESSAGE = (
     "If you feel like speaking, start small. One sentence is enough."
 )
 
-INACTIVITY_MIN_DAYS = 14
-INACTIVITY_COOLDOWN_DAYS = 30
-NO_NUDGE_AFTER_SPEAK_SECONDS = 72 * 3600
+# Written every minute while the bot runs. On startup, open sessions are
+# closed at this time, so downtime never counts as voice time.
+HEARTBEAT_KV_KEY = "voice_heartbeat_at"
+HEARTBEAT_SECONDS = 60
 
-INACTIVITY_MSG_A = (
-    "Want to join a table again? You don't need to explain anything. Join whenever you feel like it."
-)
-INACTIVITY_MSG_B = (
-    "You don't need to come every week. If you want to speak again, join and leave whenever you like."
-)
+# Win-back after 14 days without voice lives in jobs/winback.py.
 
 
 class VoiceTracker:
@@ -289,6 +286,10 @@ class VoiceTracker:
         self._pending_encouragement: Dict[int, asyncio.Task] = {}
         self._last_engagement_at: Dict[int, float] = {}  # channel_id -> epoch
         self._weekly_dm_inflight: set[int] = set()
+        self._heartbeat_guild_ids: set[int] = set()
+        self._heartbeat_task: asyncio.Task | None = None
+        self._shutting_down = False
+        self.milestones = None  # jobs.milestones.Milestones, set by app on ready
 
         self.enable_inactivity_nudge = enable_inactivity_nudge
         self.inactivity_variant = inactivity_variant
@@ -391,37 +392,6 @@ class VoiceTracker:
         finally:
             self._weekly_dm_inflight.discard(uid)
 
-    async def _maybe_send_inactivity_dm(self, member: discord.Member, now: int) -> None:
-        if not self.enable_inactivity_nudge:
-            return
-
-        state = await self.repo.user_state_get(member.guild.id, member.id)
-        if not state or not state.get("last_voice_join_at"):
-            return
-
-        last_join = int(state["last_voice_join_at"])
-        last_nudge = state.get("last_inactivity_nudge_at")
-        last_nudge = int(last_nudge) if last_nudge else None
-
-        if now - last_join < INACTIVITY_MIN_DAYS * 86400:
-            return
-        if now - last_join < NO_NUDGE_AFTER_SPEAK_SECONDS:
-            return
-        if last_nudge and now - last_nudge < INACTIVITY_COOLDOWN_DAYS * 86400:
-            return
-
-        message = INACTIVITY_MSG_B if self.inactivity_variant == "B" else INACTIVITY_MSG_A
-
-        await self.repo.user_state_mark_inactivity_nudge(member.guild.id, member.id, now)
-
-        try:
-            await member.send(message)
-            log.info("Inactivity DM sent user=%s", member.id)
-        except discord.Forbidden:
-            log.info("Inactivity DM blocked by privacy user=%s", member.id)
-        except Exception:
-            log.exception("Inactivity DM failed user=%s", member.id)
-
     # -------------------------
     # Achievements (join-time; max 1 per join)
     # Priority:
@@ -483,9 +453,23 @@ class VoiceTracker:
     async def bootstrap_from_guild(self, guild: discord.Guild) -> None:
         now = int(time.time())
 
-        for vc in guild.voice_channels:
-            for member in vc.members:
-                await self.repo.end_open_session(member.guild.id, member.id, ended_at=now)
+        # Close every session left open by a restart or a dropped connection.
+        # They end at the last heartbeat (when the bot was last alive), so the
+        # downtime is never counted as voice time. No heartbeat yet: count zero.
+        heartbeat_raw = await self.repo.kv_get(guild.id, HEARTBEAT_KV_KEY)
+        try:
+            close_at = min(int(heartbeat_raw), now) if heartbeat_raw else 0
+        except ValueError:
+            close_at = 0
+        closed = await self.repo.close_all_open_sessions(guild.id, close_at)
+        for key in [k for k in self.active if k[0] == guild.id]:
+            self.active.pop(key, None)
+        if closed:
+            log.info("Bootstrap closed %s open sessions guild=%s at=%s", closed, guild.id, close_at)
+
+        await self.repo.kv_set(guild.id, HEARTBEAT_KV_KEY, str(now))
+        self._heartbeat_guild_ids.add(guild.id)
+        self._ensure_heartbeat()
 
         # Start sessions for users currently in target category and unmuted
         # NOTE: no weekly DM, no inactivity DM, no join-achievements during bootstrap.
@@ -524,11 +508,8 @@ class VoiceTracker:
         before_in_target = self._is_target_voice_channel(member.guild, before_channel)
         after_in_target = self._is_target_voice_channel(member.guild, after_channel)
 
-        # Entering target voice: evaluate inactivity + achievements using PREVIOUS state, then update state.
+        # Entering target voice: evaluate achievements using PREVIOUS state, then update state.
         if not before_in_target and after_in_target and after_channel is not None:
-            # Step 6 (gated)
-            await self._maybe_send_inactivity_dm(member, now)
-
             # Achievements (join-time, max 1 per join)
             await self._maybe_award_join_achievement(member, after_channel, now)
 
@@ -662,8 +643,35 @@ class VoiceTracker:
         self.active.pop((guild_id, user_id), None)
         await self.repo.end_open_session(guild_id, user_id, ended_at)
         log.debug("End session guild=%s user=%s", guild_id, user_id)
+        if self.milestones is not None and not self._shutting_down:
+            asyncio.create_task(self.milestones.check(guild_id, user_id))
+
+    def _ensure_heartbeat(self) -> None:
+        if self._heartbeat_task is None or self._heartbeat_task.done():
+            self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+
+    async def _heartbeat_loop(self) -> None:
+        while True:
+            try:
+                await asyncio.sleep(HEARTBEAT_SECONDS)
+                now = str(int(time.time()))
+                for gid in list(self._heartbeat_guild_ids):
+                    await self.repo.kv_set(gid, HEARTBEAT_KV_KEY, now)
+            except asyncio.CancelledError:
+                return
+            except Exception:
+                log.exception("Voice heartbeat failed")
 
     async def shutdown(self) -> None:
+        self._shutting_down = True
+        if self._heartbeat_task is not None:
+            self._heartbeat_task.cancel()
+        now = int(time.time())
+        for gid, uid in list(self.active.keys()):
+            try:
+                await self._end(gid, uid, now)
+            except Exception:
+                log.exception("Shutdown: failed to close session guild=%s user=%s", gid, uid)
         for uid in list(self._pending_first_attempt.keys()):
             self._cancel_first_attempt_task(uid)
         for uid in list(self._pending_encouragement.keys()):

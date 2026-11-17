@@ -73,7 +73,16 @@ class Repo:
     # Voice sessions
     # -------------------------
     async def start_session(self, guild_id: int, user_id: int, channel_id: int, started_at: int) -> None:
-        await self.end_open_session(guild_id, user_id, ended_at=started_at)
+        # A session still open here means we missed the leave event. We don't
+        # know when it really ended, so it counts as zero instead of the gap.
+        await self.conn.execute(
+            """
+            UPDATE voice_sessions
+            SET ended_at = started_at
+            WHERE guild_id = ? AND user_id = ? AND ended_at IS NULL
+            """,
+            (guild_id, user_id),
+        )
         await self.conn.execute(
             """
             INSERT INTO voice_sessions (guild_id, user_id, channel_id, started_at, ended_at)
@@ -96,6 +105,19 @@ class Repo:
         )
         await self.conn.commit()
         return cur.rowcount
+
+    async def close_all_open_sessions(self, guild_id: int, at: int) -> int:
+        """Close every open session in a guild at `at` (never before its own start)."""
+        cur = await self.conn.execute(
+            """
+            UPDATE voice_sessions
+            SET ended_at = MAX(started_at, ?)
+            WHERE guild_id = ? AND ended_at IS NULL
+            """,
+            (at, guild_id),
+        )
+        await self.conn.commit()
+        return int(cur.rowcount or 0)
 
     async def compute_and_cache_total_seconds(self, guild_id: int, user_id: int) -> int:
         cur = await self.conn.execute(
@@ -199,6 +221,55 @@ class Repo:
         await self.conn.execute("DELETE FROM speaking_cache WHERE guild_id IN (?, ?)", (from_guild_id, to_guild_id))
         await self.conn.commit()
         return int(cur.rowcount or 0)
+
+    async def winback_candidates(self, guild_id: int, now_epoch: int, min_days: int, max_days: int) -> list[tuple[int, int]]:
+        """
+        Members whose last voice time ended between max_days and min_days ago,
+        and who got no win-back DM since that last voice time.
+        Returns [(user_id, last_voice_at)]. Members in voice right now are excluded.
+        """
+        cur = await self.conn.execute(
+            """
+            SELECT v.user_id, v.last_at
+            FROM (
+                SELECT user_id, MAX(COALESCE(ended_at, ?)) AS last_at
+                FROM voice_sessions
+                WHERE guild_id = ?
+                GROUP BY user_id
+            ) v
+            LEFT JOIN user_state u ON u.guild_id = ? AND u.user_id = v.user_id
+            WHERE v.last_at <= ? AND v.last_at > ?
+              AND (u.last_inactivity_nudge_at IS NULL OR u.last_inactivity_nudge_at < v.last_at)
+            ORDER BY v.last_at ASC
+            """,
+            (
+                now_epoch,
+                guild_id,
+                guild_id,
+                now_epoch - min_days * 86400,
+                now_epoch - max_days * 86400,
+            ),
+        )
+        return [(int(uid), int(at)) for uid, at in await cur.fetchall()]
+
+    async def member_level_get(self, guild_id: int, user_id: int) -> str | None:
+        cur = await self.conn.execute(
+            "SELECT level FROM member_levels WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        row = await cur.fetchone()
+        return str(row[0]) if row else None
+
+    async def member_level_set(self, guild_id: int, user_id: int, level: str, at: int) -> None:
+        await self.conn.execute(
+            """
+            INSERT INTO member_levels (guild_id, user_id, level, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(guild_id, user_id) DO UPDATE SET level=excluded.level, updated_at=excluded.updated_at
+            """,
+            (guild_id, user_id, level, at),
+        )
+        await self.conn.commit()
 
     # -------------------------
     # Member joins (activation stat)

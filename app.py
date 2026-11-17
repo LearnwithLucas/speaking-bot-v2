@@ -28,7 +28,8 @@ from commands.jokes import setup as setup_jokes
 from jobs.word_of_the_day import WordOfTheDayJob
 from jobs.daily_questions import DailyQuestionJob
 from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
-from jobs.testimonial_outreach import TestimonialOutreachJob
+from jobs.milestones import Milestones
+from jobs.winback import WinbackJob
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons_summer import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
@@ -78,7 +79,7 @@ class SpeakingBot(commands.Bot):
         self._daily_question_job: DailyQuestionJob | None = None
         self._wotd_job: WordOfTheDayJob | None = None
         self._testimonial_publisher = None
-        self._testimonial_outreach: TestimonialOutreachJob | None = None
+        self._winback: WinbackJob | None = None
 
     async def setup_hook(self) -> None:
         # Load debug tools (dev-only) BEFORE sync so commands appear when enabled.
@@ -405,14 +406,25 @@ class SpeakingBot(commands.Bot):
                 except Exception:
                     log.exception("Testimonials: failed to publish NL hub")
 
-        # Testimonial outreach
-        self._testimonial_outreach = TestimonialOutreachJob(
-            bot=self,
-            repo=self.repo,
-            en_guild_id=self.guild_id,
-            nl_guild_id=self.dutch_guild_id or NL_GUILD_ID,
-        )
-        log.info("TestimonialOutreachJob started.")
+        # Voice milestones (1h, 3h, 10h). The 3h DM also asks for a testimonial,
+        # which replaces the old twice-a-day testimonial outreach scan.
+        if self.tracker.milestones is None:
+            milestones = Milestones(bot=self, repo=self.repo, dutch_guild_id=self.dutch_guild_id)
+            for gid in (self.guild_id, self.dutch_guild_id):
+                if gid:
+                    await milestones.ensure_start(gid)
+            self.tracker.milestones = milestones
+            log.info("Milestones started.")
+
+        # Win-back: one DM after 14 days without voice time (daily, 17:07 Amsterdam).
+        if self._winback is None:
+            self._winback = WinbackJob(
+                bot=self,
+                repo=self.repo,
+                guild_id=self.guild_id,
+                dutch_guild_id=self.dutch_guild_id,
+            )
+            log.info("WinbackJob started.")
 
         SessionReminderJob(
             bot=self,
