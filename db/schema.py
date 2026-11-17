@@ -95,6 +95,15 @@ CREATE TABLE IF NOT EXISTS member_joins (
 CREATE INDEX IF NOT EXISTS idx_member_joins_time
   ON member_joins (guild_id, joined_at);
 
+-- Speaking level per member, for partner matching (same level only).
+CREATE TABLE IF NOT EXISTS member_levels (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  level TEXT NOT NULL,              -- "A2", "B1" or "B2"
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id, user_id)
+);
+
 -- Admin-only health summaries: broad command usage, no message content.
 CREATE TABLE IF NOT EXISTS command_usage (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
