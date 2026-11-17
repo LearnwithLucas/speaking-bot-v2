@@ -6,13 +6,6 @@ from typing import Any, Awaitable
 import discord
 
 from commands.ask_jerry_summer import apply_ask_jerry_summer_copy
-from commands.chat_jerry import CHAT_WITH_JERRY_CHANNEL_ID, KV_CHAT_JERRY_HUB_MSG, ChatJerryPublisher
-from commands.dictionary import VocabPublisher
-from commands.suggestions import (
-    KV_SUGGESTION_BOX_MSG,
-    SUGGESTION_BOX_CHANNEL_ID,
-    SuggestionBoxPublisher,
-)
 from jobs import private_lessons as lesson_config
 from jobs.private_lessons_summer import PrivateLessonsPublisher
 
@@ -159,62 +152,23 @@ async def setup(bot: Any) -> None:
             failed=failed,
         )
 
-        vocab = VocabPublisher(bot=bot, repo=bot.repo)
-        await _run_step(
-            label="English vocabulary hub",
-            work=vocab.publish_english(),
-            refreshed=refreshed,
-            failed=failed,
-        )
-        skipped.append("Dutch vocabulary hub (not configured)")
-
         ask_jerry = getattr(bot, "_ask_jerry_publisher", None)
         if ask_jerry is not None:
             await _run_step(
-                label="English Ask Jerry hub",
+                label="English help desk hub",
                 work=ask_jerry.publish(bot.guild_id),
                 refreshed=refreshed,
                 failed=failed,
             )
             if bot.dutch_guild_id:
                 await _run_step(
-                    label="Dutch Ask Jerry hub",
+                    label="Dutch help desk hub",
                     work=ask_jerry.publish_dutch(bot.dutch_guild_id),
                     refreshed=refreshed,
                     failed=failed,
                 )
         else:
-            skipped.append("Ask Jerry hub")
-
-        chat_jerry = getattr(bot, "_chat_jerry_publisher", None)
-        if chat_jerry is None:
-            chat_jerry = ChatJerryPublisher(bot=bot, repo=bot.repo)
-        await _run_step(
-            label="Chat with Jerry hub",
-            work=_publish_and_verify_message(
-                bot=bot,
-                work=chat_jerry.publish(bot.guild_id),
-                channel_id=CHAT_WITH_JERRY_CHANNEL_ID,
-                kv_key=KV_CHAT_JERRY_HUB_MSG,
-            ),
-            refreshed=refreshed,
-            failed=failed,
-        )
-
-        suggestion_box = getattr(bot, "_suggestion_publisher", None)
-        if suggestion_box is None:
-            suggestion_box = SuggestionBoxPublisher(bot=bot, repo=bot.repo)
-        await _run_step(
-            label="Suggestion box",
-            work=_publish_and_verify_message(
-                bot=bot,
-                work=suggestion_box.publish(bot.guild_id),
-                channel_id=SUGGESTION_BOX_CHANNEL_ID,
-                kv_key=KV_SUGGESTION_BOX_MSG,
-            ),
-            refreshed=refreshed,
-            failed=failed,
-        )
+            skipped.append("help desk hub")
 
         testimonial = getattr(bot, "_testimonial_publisher", None)
         if testimonial is not None:

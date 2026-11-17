@@ -10,13 +10,7 @@ import discord
 
 from commands.admin_refresh import ADMIN_LOGS_CHANNEL_ID, ADMIN_TESTING_CHANNEL_ID
 from commands.ask_jerry import ASK_JERRY_CHANNEL_ID, NL_ASK_JERRY_CHANNEL_ID
-from commands.chat_jerry import (
-    CHAT_WITH_JERRY_CHANNEL_ID,
-    EN_DAILY_CHAT_CHANNEL_ID,
-    NL_DAILY_CHAT_CHANNEL_ID,
-)
-from commands.dictionary import EN_VOCAB_CHANNEL_ID
-from commands.suggestions import ADMIN_SUGGESTIONS_CHANNEL_ID, SUGGESTION_BOX_CHANNEL_ID
+from commands.chat_jerry import EN_DAILY_CHAT_CHANNEL_ID, NL_DAILY_CHAT_CHANNEL_ID
 from commands.testimonials import EN_SUCCESS_CHANNEL_ID, NL_SUCCESS_CHANNEL_ID
 from jobs import private_lessons as lesson_config
 from jobs.nudges import NL_ANNOUNCEMENTS_CHANNEL_ID
@@ -34,14 +28,10 @@ TEXT_CHANNELS: tuple[tuple[str, int, bool], ...] = (
     ("Dutch private lessons", lesson_config.NL_PRIVATE_CHANNEL_ID, True),
     ("English supported speaking", lesson_config.EN_SUPPORTED_CHANNEL_ID, True),
     ("Dutch supported speaking", lesson_config.NL_SUPPORTED_CHANNEL_ID, True),
-    ("English vocabulary", EN_VOCAB_CHANNEL_ID, True),
-    ("English Ask Jerry", ASK_JERRY_CHANNEL_ID, True),
-    ("Dutch Ask Jerry", NL_ASK_JERRY_CHANNEL_ID, True),
-    ("Chat with Jerry", CHAT_WITH_JERRY_CHANNEL_ID, True),
+    ("English help desk", ASK_JERRY_CHANNEL_ID, True),
+    ("Dutch help desk", NL_ASK_JERRY_CHANNEL_ID, True),
     ("English daily chat question", EN_DAILY_CHAT_CHANNEL_ID, False),
     ("Dutch daily chat question", NL_DAILY_CHAT_CHANNEL_ID, False),
-    ("Suggestion box", SUGGESTION_BOX_CHANNEL_ID, True),
-    ("Admin suggestions", ADMIN_SUGGESTIONS_CHANNEL_ID, False),
     ("English partner finder", EN_LOOKING_CHANNEL_ID, True),
     ("Dutch partner finder", NL_LOOKING_CHANNEL_ID, True),
     ("English testimonials", EN_SUCCESS_CHANNEL_ID, True),

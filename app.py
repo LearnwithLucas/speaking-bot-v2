@@ -17,10 +17,8 @@ from jobs.nudges import NudgeJobs
 from jobs.partner_finder import PartnerFinder, PartnerHubView, PartnerHubViewNL
 from jobs.welcome import send_welcome_dm, WelcomeTableView
 from commands.topics import setup as setup_topics
-from commands.dictionary import setup as setup_dictionary, VocabPublisher
 from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryViewNL
-from commands.chat_jerry import setup as setup_chat_jerry, ChatJerryHubView
-from commands.suggestions import setup as setup_suggestions
+from commands.chat_jerry import setup as setup_daily_question
 from commands.admin_refresh import ADMIN_TESTING_CHANNEL_ID, setup as setup_admin_refresh
 from commands.admin_health import setup as setup_admin_health
 from commands.community_guide import setup as setup_community_guide
@@ -98,26 +96,11 @@ class SpeakingBot(commands.Bot):
             guild_id=self.guild_id,
         )
 
-        # Load Chat with Jerry cog
-        self._chat_jerry_publisher = await setup_chat_jerry(
+        # Daily chat question (posting + counting replies)
+        self._chat_jerry_publisher = await setup_daily_question(
             self,
             self.repo,
             guild_id=self.guild_id,
-        )
-
-        # Load suggestion box
-        self._suggestion_publisher = await setup_suggestions(
-            self,
-            self.repo,
-            guild_id=self.guild_id,
-        )
-
-        # Load dictionary cog
-        await setup_dictionary(
-            self,
-            self.repo,
-            guild_id=self.guild_id,
-            dutch_guild_id=self.dutch_guild_id,
         )
 
         # Load jokes cog
@@ -190,7 +173,7 @@ class SpeakingBot(commands.Bot):
 
             if self._chat_jerry_publisher is None:
                 await interaction.response.send_message(
-                    "Chat Jerry is not ready yet. Try again in a moment.",
+                    "The daily question is not ready yet. Try again in a moment.",
                     ephemeral=True,
                 )
                 return
@@ -239,7 +222,6 @@ class SpeakingBot(commands.Bot):
         self.add_view(PartnerHubView(finder=None))
         self.add_view(AskJerryView(publisher=None))
         self.add_view(AskJerryViewNL(publisher=None))
-        self.add_view(ChatJerryHubView(publisher=None))
         self.add_view(PartnerHubViewNL(finder=None))
         self.add_view(EnLessonsView())
         self.add_view(NlLessonsView())
@@ -346,17 +328,6 @@ class SpeakingBot(commands.Bot):
         except Exception:
             log.exception("PrivateLessons: failed to publish NL supported")
 
-        # Vocabulary channel embeds
-        vocab = VocabPublisher(bot=self, repo=self.repo)
-        try:
-            await vocab.publish_english()
-        except Exception:
-            log.exception("VocabPublisher: failed to publish English")
-        try:
-            await vocab.publish_dutch()
-        except Exception:
-            log.exception("VocabPublisher: failed to publish Dutch")
-
         # Ask Jerry hub
         if self._ask_jerry_publisher:
             try:
@@ -368,20 +339,6 @@ class SpeakingBot(commands.Bot):
                     await self._ask_jerry_publisher.publish_dutch(self.dutch_guild_id)
                 except Exception:
                     log.exception("AskJerry: failed to publish NL hub")
-
-        # Chat with Jerry hub
-        if self._chat_jerry_publisher:
-            try:
-                await self._chat_jerry_publisher.publish(self.guild_id)
-            except Exception:
-                log.exception("ChatJerry: failed to publish EN chat hub")
-
-        # Suggestion box
-        if self._suggestion_publisher:
-            try:
-                await self._suggestion_publisher.publish(self.guild_id)
-            except Exception:
-                log.exception("SuggestionBox: failed to publish hub")
 
         # Daily chat question
         if self._chat_jerry_publisher and not self._daily_question_job:
