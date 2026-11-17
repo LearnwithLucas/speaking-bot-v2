@@ -45,6 +45,8 @@ WEEKLY_SPEAKERS_FOOTER_EN = "active this week:en:v2"
 WEEKLY_SPEAKERS_FOOTER_NL = "actief deze week:nl:v2"
 
 
+HUB_UPDATE_DELAY_SECONDS = 3
+
 # Partner matching only pairs people at the same level.
 LEVELS: tuple[str, ...] = ("A2", "B1", "B2")
 LEVEL_HINTS_EN = {
@@ -552,7 +554,7 @@ class PartnerFinder:
         if interaction.user.id in pool and then_duration is None:
             exp, _old = pool[interaction.user.id]
             pool[interaction.user.id] = (exp, level)
-            await self._update_hub_embed(is_nl=is_nl)
+            self._schedule_hub_update(is_nl=is_nl)
 
         if then_duration is not None:
             await self.mark_available(
@@ -579,7 +581,7 @@ class PartnerFinder:
             msg = "You're no longer marked as free." if was_free else "You weren't marked as free."
         await interaction.response.send_message(msg, ephemeral=True)
         if was_free:
-            await self._update_hub_embed(is_nl=is_nl)
+            self._schedule_hub_update(is_nl=is_nl)
             log.info("PartnerFinder: availability cancelled user=%s is_nl=%s", interaction.user.id, is_nl)
 
     async def mark_available(
@@ -654,7 +656,7 @@ class PartnerFinder:
                 )
 
         await interaction.response.send_message(msg, ephemeral=True)
-        await self._update_hub_embed(is_nl=is_nl)
+        self._schedule_hub_update(is_nl=is_nl)
 
         match_guild = guild or (self.bot.get_guild(gid) if gid else None)
         if others and match_guild:
@@ -737,7 +739,7 @@ class PartnerFinder:
         if current_expires_at > expires_at + 0.5:
             return
         pool.pop(user_id, None)
-        await self._update_hub_embed(is_nl=is_nl)
+        self._schedule_hub_update(is_nl=is_nl)
         log.info("PartnerFinder: availability expired user=%s is_nl=%s", user_id, is_nl)
 
     async def _notify_matches(
@@ -1082,6 +1084,28 @@ class PartnerFinder:
         )
         if posted:
             await self.repo.kv_set(self.guild_id, KV_EN_HUB_WEEKLY_REPOST_DATE, date_key)
+
+    def _schedule_hub_update(self, *, is_nl: bool) -> None:
+        """
+        Update the hub in the background, at most once every few seconds.
+        Button clicks must answer Discord within 3 seconds, and hub edits can
+        be slowed down by rate limits, so clicks never wait for them.
+        """
+        pending = getattr(self, "_hub_update_tasks", None)
+        if pending is None:
+            pending = self._hub_update_tasks = {}
+        task = pending.get(is_nl)
+        if task is not None and not task.done():
+            return
+
+        async def _run() -> None:
+            await asyncio.sleep(HUB_UPDATE_DELAY_SECONDS)
+            try:
+                await self._update_hub_embed(is_nl=is_nl)
+            except Exception:
+                log.exception("PartnerFinder: hub update failed is_nl=%s", is_nl)
+
+        pending[is_nl] = asyncio.create_task(_run())
 
     async def _update_hub_embed(self, *, is_nl: bool) -> None:
         self._clean_expired(is_nl)
