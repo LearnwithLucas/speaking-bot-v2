@@ -190,6 +190,7 @@ def build_en_embed(available_count: int = 0, by_level: dict[str, int] | None = N
             "You can also plan a rough time for later.\n"
             "Use **Ping me for voice chats** to get the notification role people can tag when they want to talk.\n"
             "You only get matched with people at your level. Use **My level** to set or change it.\n"
+            "Is a table full? Press **Knock on a full table** to ask if you can join.\n"
             "You can refresh or change your time whenever you want, or press **Not free anymore**.\n\n"
             f"**Right now:** {status}{_level_breakdown(by_level, is_nl=False)}"
         ),
@@ -213,6 +214,7 @@ def build_nl_embed(available_count: int = 0, by_level: dict[str, int] | None = N
             "Als iemand anders ook vrij is, krijgen jullie allebei een DM met het Open Conversation kanaal.\n"
             "Je kunt ook een rustig moment voor later plannen.\n"
             "Je oefent alleen met mensen op jouw niveau. Gebruik **Mijn niveau** om het in te stellen of te veranderen.\n"
+            "Is een tafel vol? Druk op **Aankloppen bij volle tafel** om te vragen of je mag aanschuiven.\n"
             "Je kunt je tijd altijd vernieuwen of aanpassen, of druk op **Niet meer vrij**.\n\n"
             f"**Op dit moment:** {status}{_level_breakdown(by_level, is_nl=True)}"
         ),
@@ -365,6 +367,14 @@ class PartnerHubView(discord.ui.View):
     async def want_to_speak(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._toggle_speaking_role(interaction)
 
+    @discord.ui.button(label="Knock on a full table", style=discord.ButtonStyle.secondary, custom_id="partner:knock:en:v1", row=2)
+    async def knock(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        tools = getattr(self._finder, "table_tools", None) if self._finder else None
+        if tools is None:
+            await interaction.response.send_message("Not ready yet. Try again in a moment.", ephemeral=True)
+            return
+        await tools.start_knock(interaction, is_nl=False)
+
     @discord.ui.button(label="My level", style=discord.ButtonStyle.secondary, custom_id="partner:level:en:v1", row=2)
     async def my_level(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         if self._finder is None:
@@ -440,6 +450,14 @@ class PartnerHubViewNL(discord.ui.View):
     @discord.ui.button(label="Plan voor later", style=discord.ButtonStyle.primary, custom_id="partner:plan:nl:v1", row=2)
     async def plan_later_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._plan_later(interaction, is_nl=True)
+
+    @discord.ui.button(label="Aankloppen bij volle tafel", style=discord.ButtonStyle.secondary, custom_id="partner:knock:nl:v1", row=2)
+    async def knock_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        tools = getattr(self._finder, "table_tools", None) if self._finder else None
+        if tools is None:
+            await interaction.response.send_message("Nog niet klaar. Probeer het zo opnieuw.", ephemeral=True)
+            return
+        await tools.start_knock(interaction, is_nl=True)
 
     @discord.ui.button(label="Mijn niveau", style=discord.ButtonStyle.secondary, custom_id="partner:level:nl:v1", row=2)
     async def my_level_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
@@ -548,6 +566,13 @@ class PartnerFinder:
             return
         await self.repo.member_level_set(gid, interaction.user.id, level, int(time.time()))
         log.info("PartnerFinder: level set user=%s guild=%s level=%s", interaction.user.id, gid, level)
+
+        # Refresh the level shown on their voice table, if they're at one.
+        tools = getattr(self, "table_tools", None)
+        voice = getattr(interaction.user, "voice", None)
+        if tools is not None and voice is not None and voice.channel is not None and interaction.guild is not None:
+            if tools._is_table(interaction.guild, voice.channel):
+                tools._schedule_status(voice.channel)
 
         # If they were already free, move them to the new level right away.
         pool = self._pool(is_nl)

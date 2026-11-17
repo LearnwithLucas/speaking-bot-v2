@@ -28,6 +28,7 @@ from jobs.daily_questions import DailyQuestionJob
 from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
 from jobs.milestones import Milestones
 from jobs.winback import WinbackJob
+from voice.table_tools import TableTools
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons_summer import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
 
@@ -302,6 +303,14 @@ class SpeakingBot(commands.Bot):
                 guild_id=self.guild_id,
                 dutch_guild_id=self.dutch_guild_id,
             )
+            # Level status on voice tables + knocking on a full table.
+            self._table_tools = TableTools(
+                bot=self,
+                repo=self.repo,
+                is_table=self.tracker._is_target_voice_channel,
+                dutch_guild_id=self.dutch_guild_id,
+            )
+            self._partner_finder.table_tools = self._table_tools
             self.add_view(PartnerHubView(finder=self._partner_finder))
             self.add_view(PartnerHubViewNL(finder=self._partner_finder))
             await self._partner_finder.publish_hub(is_nl=False)
@@ -469,6 +478,12 @@ class SpeakingBot(commands.Bot):
         after: discord.VoiceState,
     ) -> None:
         await self.tracker.handle_voice_state_update(member, before, after)
+        table_tools = getattr(self, "_table_tools", None)
+        if table_tools is not None:
+            try:
+                await table_tools.on_voice_state_update(member, before, after)
+            except Exception:
+                log.exception("TableTools: voice update failed user=%s", member.id)
 
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
