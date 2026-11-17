@@ -188,7 +188,7 @@ def build_en_embed(available_count: int = 0, by_level: dict[str, int] | None = N
             "You can also plan a rough time for later.\n"
             "Use **Ping me for voice chats** to get the notification role people can tag when they want to talk.\n"
             "You only get matched with people at your level. Use **My level** to set or change it.\n"
-            "You can refresh or change your time whenever you want.\n\n"
+            "You can refresh or change your time whenever you want, or press **Not free anymore**.\n\n"
             f"**Right now:** {status}{_level_breakdown(by_level, is_nl=False)}"
         ),
     )
@@ -211,7 +211,7 @@ def build_nl_embed(available_count: int = 0, by_level: dict[str, int] | None = N
             "Als iemand anders ook vrij is, krijgen jullie allebei een DM met het Open Conversation kanaal.\n"
             "Je kunt ook een rustig moment voor later plannen.\n"
             "Je oefent alleen met mensen op jouw niveau. Gebruik **Mijn niveau** om het in te stellen of te veranderen.\n"
-            "Je kunt je tijd altijd vernieuwen of aanpassen.\n\n"
+            "Je kunt je tijd altijd vernieuwen of aanpassen, of druk op **Niet meer vrij**.\n\n"
             f"**Op dit moment:** {status}{_level_breakdown(by_level, is_nl=True)}"
         ),
     )
@@ -348,6 +348,13 @@ class PartnerHubView(discord.ui.View):
     async def free_3h(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._mark(interaction, duration_seconds=3 * 60 * 60)
 
+    @discord.ui.button(label="Not free anymore", style=discord.ButtonStyle.danger, custom_id="partner:stop:en:v1", row=1)
+    async def stop_free(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if self._finder is None:
+            await interaction.response.send_message("Not ready yet. Try again in a moment.", ephemeral=True)
+            return
+        await self._finder.mark_unavailable(interaction, is_nl=False)
+
     @discord.ui.button(label="Plan for later", style=discord.ButtonStyle.primary, custom_id="partner:plan:en:v1", row=2)
     async def plan_later(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._plan_later(interaction, is_nl=False)
@@ -420,6 +427,13 @@ class PartnerHubViewNL(discord.ui.View):
     @discord.ui.button(label="3 uur", style=discord.ButtonStyle.secondary, custom_id="partner:free:nl:3h:v3", row=1)
     async def free_3h_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self._mark(interaction, duration_seconds=3 * 60 * 60)
+
+    @discord.ui.button(label="Niet meer vrij", style=discord.ButtonStyle.danger, custom_id="partner:stop:nl:v1", row=1)
+    async def stop_free_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if self._finder is None:
+            await interaction.response.send_message("Nog niet klaar. Probeer het zo opnieuw.", ephemeral=True)
+            return
+        await self._finder.mark_unavailable(interaction, is_nl=True)
 
     @discord.ui.button(label="Plan voor later", style=discord.ButtonStyle.primary, custom_id="partner:plan:nl:v1", row=2)
     async def plan_later_nl(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
@@ -554,6 +568,19 @@ class PartnerFinder:
             f"Je niveau is nu **{level}**." if is_nl else f"Your level is now **{level}**.",
             ephemeral=True,
         )
+
+    async def mark_unavailable(self, interaction: discord.Interaction, *, is_nl: bool) -> None:
+        pool = self._pool(is_nl)
+        self._clean_expired(is_nl)
+        was_free = pool.pop(interaction.user.id, None) is not None
+        if is_nl:
+            msg = "Je staat niet meer als vrij." if was_free else "Je stond niet als vrij."
+        else:
+            msg = "You're no longer marked as free." if was_free else "You weren't marked as free."
+        await interaction.response.send_message(msg, ephemeral=True)
+        if was_free:
+            await self._update_hub_embed(is_nl=is_nl)
+            log.info("PartnerFinder: availability cancelled user=%s is_nl=%s", interaction.user.id, is_nl)
 
     async def mark_available(
         self,
