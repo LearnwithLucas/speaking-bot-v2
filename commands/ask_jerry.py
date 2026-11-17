@@ -359,17 +359,18 @@ FAQ: dict[str, dict] = {
         "questions": [
             (
                 "What does this bot do?",
-                "Jerry The Duck runs most of the automatic things in this server.\n\n"
-                "Jerry posts the word of the day, runs the speaking partner finder and the `/d` word lookup, "
-                "shows the topic cards and this FAQ, and posts the reminders and the product info channels.\n\n"
-                "If something posts by itself, it is probably Jerry."
+                "The Café Host runs most of the automatic things in this server.\n\n"
+                "It sends a welcome message, helps you book a Table for 2, runs the partner finder, "
+                "posts the word of the day and the daily question, and shows the topic cards and this FAQ.\n\n"
+                "If something posts by itself, it is probably the Café Host."
             ),
             (
                 "How does the speaking partner finder work?",
-                "Go to the looking-for-a-partner channel and press the button when you feel like practising.\n\n"
-                "You show as free for 30 minutes. If someone else presses the button in that time, "
-                "you both get a DM with a link to the voice channels.\n\n"
-                "You don't need to plan anything. Press it when you are free and see who is around."
+                "Go to the looking-for-a-partner channel and pick how long you are free.\n\n"
+                "The first time, you choose your level (A2, B1 or B2). You only get matched with people at your level. "
+                "If someone at your level is free at the same time, you both get a DM with a link to the voice channels.\n\n"
+                "Use **My level** to change your level and **Not free anymore** to stop. "
+                "Want to plan a time? Press **Plan for later**."
             ),
             (
                 "How do I use /topics?",
@@ -380,12 +381,6 @@ FAQ: dict[str, dict] = {
                 "Use it when the conversation slows down and you want something new to talk about."
             ),
             (
-                "How do I use /d to look up a word?",
-                "Type `/d word: [word]` and you get the definition, part of speech, example sentence and synonyms.\n\n"
-                "The result shows up in the channel, so others can learn the word too. "
-                "You can also use it in the vocabulary channel."
-            ),
-            (
                 "What is the word of the day?",
                 "Every morning at 09:00 CET a new word appears in the word of the day channel.\n\n"
                 "The words are B1/B2 level and useful in daily life. Each post has the meaning, an example sentence "
@@ -393,7 +388,7 @@ FAQ: dict[str, dict] = {
             ),
             (
                 "Why do I get messages in the voice channel?",
-                "When you join a voice channel, Jerry sends a short message at 5 minutes and again at 30 minutes.\n\n"
+                "When you join a voice channel, the Café Host sends a short message at 5 minutes and again at 30 minutes.\n\n"
                 "At 5 minutes it is just an acknowledgement that you showed up. "
                 "At 30 minutes it is a note recognising the effort.\n\n"
                 "There are also occasional conversation starters posted in the channel chat. "
@@ -725,17 +720,18 @@ NL_FAQ: dict[str, dict] = {
         "questions": [
             (
                 "Wat doet deze bot?",
-                "Jerry The Duck doet de meeste automatische dingen in deze server.\n\n"
-                "Jerry plaatst het woord van de dag, regelt de spreekpartnerknop en `/d`, "
-                "laat de onderwerpkaarten en deze FAQ zien en plaatst de info over lessen.\n\n"
-                "Wordt er vanzelf iets gepost? Dan is het waarschijnlijk Jerry."
+                "De Café Host doet de meeste automatische dingen in deze server.\n\n"
+                "Hij stuurt een welkomstbericht, helpt je een Tafel voor 2 te plannen, regelt de spreekpartnerknop, "
+                "plaatst het woord van de dag en de dagvraag, en laat de onderwerpkaarten en deze FAQ zien.\n\n"
+                "Wordt er vanzelf iets gepost? Dan is het waarschijnlijk de Café Host."
             ),
             (
                 "Hoe werkt de spreekpartnervinder?",
-                "Ga naar het kanaal op-zoek-naar-een-partner en druk op de knop als je zin hebt om te oefenen.\n\n"
-                "Je staat dan 30 minuten als vrij. Drukt iemand anders in die tijd ook op de knop? "
-                "Dan krijgen jullie allebei een DM met een link naar de spraakkanalen.\n\n"
-                "Je hoeft niets te plannen. Druk als je vrij bent en kijk wie er is."
+                "Ga naar het kanaal op-zoek-naar-een-partner en kies hoe lang je vrij bent.\n\n"
+                "De eerste keer kies je je niveau (A2, B1 of B2). Je oefent alleen met mensen op jouw niveau. "
+                "Is er tegelijk iemand op jouw niveau vrij? Dan krijgen jullie allebei een DM met een link naar de spraakkanalen.\n\n"
+                "Met **Mijn niveau** verander je je niveau, met **Niet meer vrij** stop je. "
+                "Wil je een tijd plannen? Druk op **Plan for later**."
             ),
             (
                 "Hoe gebruik ik /onderwerpen?",
@@ -746,11 +742,6 @@ NL_FAQ: dict[str, dict] = {
                 "Gebruik het als het gesprek stilvalt en je iets nieuws wilt bespreken."
             ),
             (
-                "Hoe gebruik ik /d om een woord op te zoeken?",
-                "Typ `/d word: [woord]`. Je krijgt dan links naar het woord op woorden.org en Van Dale.\n\n"
-                "Het resultaat komt in het kanaal, dus iedereen kan het zien."
-            ),
-            (
                 "Wat is het woord van de dag?",
                 "Elke ochtend om 09:00 CET verschijnt er een nieuw Nederlands woord in het woord-van-de-dag kanaal.\n\n"
                 "De woorden zijn B1/B2 en handig in het dagelijks leven. In elk bericht staan de uitleg, "
@@ -758,7 +749,7 @@ NL_FAQ: dict[str, dict] = {
             ),
             (
                 "Waarom krijg ik berichten in het spraakkanaal?",
-                "Als je een spraakkanaal binnenkomt, stuurt Jerry op het 5- en 30-minutenpunt een kort berichtje.\n\n"
+                "Als je een spraakkanaal binnenkomt, stuurt de Café Host op het 5- en 30-minutenpunt een kort berichtje.\n\n"
                 "Bij 5 minuten is het gewoon een erkenning dat je er bent. "
                 "Bij 30 minuten een berichtje dat het moeite waard is.\n\n"
                 "Af en toe verschijnt er ook een gespreksopener in de chat. "
@@ -867,7 +858,7 @@ class QuestionSelect(discord.ui.Select):
             title=question,
             description=answer,
         )
-        embed.set_footer(text="Ask Jerry | Online English Café")
+        embed.set_footer(text="Help desk | Online English Café")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
@@ -935,7 +926,7 @@ def _nl_button_row(key: str) -> int:
 
 def build_nl_hub_embed() -> discord.Embed:
     embed = discord.Embed(
-        title="🦆 Vraag het Jerry",
+        title="☕ Helpdesk",
         description=(
             "Heb je een vraag? Kies een categorie hieronder.\n\n"
             "📖 **Ondersteund Spreken:** wat het is, de prijs, wat je krijgt\n"
@@ -958,7 +949,7 @@ def build_nl_hub_embed() -> discord.Embed:
 
 def build_hub_embed() -> discord.Embed:
     embed = discord.Embed(
-        title="🦆 Ask Jerry",
+        title="☕ Help desk",
         description=(
             "Got a question? Pick a category below.\n\n"
             "📖 **Supported Speaking:** what it is, the price, what you get\n"

@@ -8,7 +8,6 @@ import discord
 from discord import app_commands
 
 from commands.ask_jerry import ASK_JERRY_CHANNEL_ID, NL_ASK_JERRY_CHANNEL_ID
-from commands.dictionary import EN_VOCAB_CHANNEL_ID
 from jobs.partner_finder import EN_LOOKING_CHANNEL_ID, NL_LOOKING_CHANNEL_ID
 from jobs.private_lessons import (
     EN_PRIVATE_CHANNEL_ID,
@@ -97,7 +96,7 @@ class GuideChoiceView(discord.ui.View):
                 ("partner", "Spreekpartner"),
                 ("lessons", "Privéles"),
                 ("words", "Woorden"),
-                ("ask", "Vraag Jerry"),
+                ("ask", "Helpdesk"),
             ]
             if is_nl
             else [
@@ -105,7 +104,7 @@ class GuideChoiceView(discord.ui.View):
                 ("partner", "Find a partner"),
                 ("lessons", "Private lessons"),
                 ("words", "Words / topics"),
-                ("ask", "Ask Jerry"),
+                ("ask", "Help desk"),
             ]
         )
 
@@ -136,7 +135,6 @@ class GuideDetailView(discord.ui.View):
         supported_url = _channel_url(guild_id, EN_SUPPORTED_CHANNEL_ID) or EN_SUPPORTED_URL
         private_url = _channel_url(guild_id, EN_PRIVATE_CHANNEL_ID) or EN_PRIVATE_URL
         partner_url = _channel_url(guild_id, EN_LOOKING_CHANNEL_ID)
-        vocab_url = _channel_url(guild_id, EN_VOCAB_CHANNEL_ID)
         ask_url = _channel_url(guild_id, ASK_JERRY_CHANNEL_ID)
 
         if choice in {"shy", "partner"}:
@@ -146,11 +144,9 @@ class GuideDetailView(discord.ui.View):
         if choice == "lessons":
             self.add_item(discord.ui.Button(label="Private lessons", style=discord.ButtonStyle.link, url=private_url, row=0))
         if choice == "words":
-            if vocab_url:
-                self.add_item(discord.ui.Button(label="Vocabulary", style=discord.ButtonStyle.link, url=vocab_url, row=0))
             self.add_item(discord.ui.Button(label="Free materials", style=discord.ButtonStyle.link, url=FREE_EN_GUIDES_URL, row=0))
         if ask_url and choice in {"shy", "words", "ask"}:
-            self.add_item(discord.ui.Button(label="Ask Jerry", style=discord.ButtonStyle.link, url=ask_url, row=0))
+            self.add_item(discord.ui.Button(label="Help desk", style=discord.ButtonStyle.link, url=ask_url, row=0))
         if choice == "ask":
             self.add_item(discord.ui.Button(label="Free materials", style=discord.ButtonStyle.link, url=FREE_EN_GUIDES_URL, row=0))
 
@@ -169,7 +165,7 @@ class GuideDetailView(discord.ui.View):
         if choice == "words":
             self.add_item(discord.ui.Button(label="Gratis materiaal", style=discord.ButtonStyle.link, url=FREE_NL_GUIDES_URL, row=0))
         if ask_url and choice in {"shy", "words", "ask"}:
-            self.add_item(discord.ui.Button(label="Vraag Jerry", style=discord.ButtonStyle.link, url=ask_url, row=0))
+            self.add_item(discord.ui.Button(label="Helpdesk", style=discord.ButtonStyle.link, url=ask_url, row=0))
         if choice == "ask":
             self.add_item(discord.ui.Button(label="Gratis materiaal", style=discord.ButtonStyle.link, url=FREE_NL_GUIDES_URL, row=0))
 
@@ -248,7 +244,7 @@ def build_en_choice_embed(choice: str) -> discord.Embed:
         embed.description = "Use this when you want to practise but can't think of what to say."
         embed.add_field(
             name="Best next step",
-            value=f"Try `/topics`, `/d word: curious`, or visit <#{EN_VOCAB_CHANNEL_ID}>.",
+            value="Try `/topics`. Pick a card and answer the question out loud.",
             inline=False,
         )
         embed.add_field(
@@ -257,7 +253,7 @@ def build_en_choice_embed(choice: str) -> discord.Embed:
             inline=False,
         )
     elif choice == "ask":
-        embed.title = "Ask Jerry"
+        embed.title = "Help desk"
         embed.description = "Use this when you don't know what to practise or need a quick explanation."
         embed.add_field(
             name="Best next step",
@@ -319,7 +315,7 @@ def build_nl_choice_embed(choice: str) -> discord.Embed:
         embed.description = "Gebruik dit als je wilt oefenen, maar even geen onderwerp weet."
         embed.add_field(
             name="Beste volgende stap",
-            value="Probeer `/onderwerpen` of `/d word: voorbeeld`.",
+            value="Probeer `/onderwerpen`. Kies een kaart en beantwoord de vraag hardop.",
             inline=False,
         )
         embed.add_field(
@@ -328,7 +324,7 @@ def build_nl_choice_embed(choice: str) -> discord.Embed:
             inline=False,
         )
     elif choice == "ask":
-        embed.title = "Vraag Jerry"
+        embed.title = "Helpdesk"
         embed.description = "Gebruik dit als je niet weet wat je moet oefenen of iets kort wilt vragen."
         embed.add_field(
             name="Beste volgende stap",
@@ -368,7 +364,7 @@ async def setup(bot: Any) -> None:
             app_commands.Choice(name="Find a speaking partner", value="partner"),
             app_commands.Choice(name="Private lessons", value="lessons"),
             app_commands.Choice(name="Words or topics", value="words"),
-            app_commands.Choice(name="Ask Jerry", value="ask"),
+            app_commands.Choice(name="Help desk", value="ask"),
         ]
     )
     async def cmd_guide(interaction: discord.Interaction, choice: str | None = None) -> None:

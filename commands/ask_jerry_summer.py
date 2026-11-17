@@ -65,9 +65,11 @@ def apply_ask_jerry_summer_copy() -> None:
             ask_jerry.FAQ,
             "bot_features",
             "Why do I get messages in the voice channel?",
-            "After people have been in a voice channel for about an hour, Jerry sometimes posts "
-            "a question to talk about. It is for everyone in the channel, in case the conversation goes quiet.\n\n"
-            "Not sure what to talk about? Use `/topics`, `/guide` or the vocabulary channel.",
+            "When you join a voice channel, the Café Host may ask how long you are staying. "
+            "That helps other people find a partner.\n\n"
+            "After about an hour, it sometimes posts a question to talk about. "
+            "It is for everyone in the channel, in case the conversation goes quiet.\n\n"
+            "Not sure what to talk about? Use `/topics` or `/guide`.",
         ),
         _replace_answer(
             ask_jerry.NL_FAQ,
@@ -91,9 +93,11 @@ def apply_ask_jerry_summer_copy() -> None:
             ask_jerry.NL_FAQ,
             "server_functies",
             "Waarom krijg ik berichten in het spraakkanaal?",
-            "Als mensen ongeveer een uur in een spraakkanaal zitten, stelt Jerry soms een vraag "
-            "om over te praten. Die is voor iedereen in het kanaal, voor als het gesprek stilvalt.\n\n"
-            "Weet je niet waarover je wilt praten? Gebruik `/onderwerpen`, `/guide` of het woordenboekkanaal.",
+            "Als je een spraakkanaal binnenkomt, vraagt de Café Host soms hoe lang je blijft. "
+            "Zo vinden anderen makkelijker een partner.\n\n"
+            "Na ongeveer een uur stelt hij soms een vraag om over te praten. "
+            "Die is voor iedereen in het kanaal, voor als het gesprek stilvalt.\n\n"
+            "Weet je niet waarover je wilt praten? Gebruik `/onderwerpen` of `/guide`.",
         ),
     ]
 

@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import asyncio
 import datetime as dt
 import json
 import logging
-import random
 import re
 import string
 import time
@@ -14,35 +12,21 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 import discord
-from discord import app_commands
 from discord.ext import commands
 
 log = logging.getLogger("commands.chat_jerry")
 
-CHAT_WITH_JERRY_CHANNEL_ID = 1523060567621763163
-ADMIN_LOGS_CHANNEL_ID = 1340397297053339719
 EN_DAILY_CHAT_CHANNEL_ID = 1181652390835916814
 NL_DAILY_CHAT_CHANNEL_ID = 1336419902155919410
-KV_CHAT_JERRY_HUB_MSG = "chat_jerry_hub_message_id_v1"
 KV_CHAT_JERRY_DAILY_EN_DATE = "chat_jerry_daily_check_in_en_date_v1"
 KV_CHAT_JERRY_DAILY_NL_DATE = "chat_jerry_daily_check_in_nl_date_v1"
 KV_CHAT_JERRY_DAILY_EN_TOPIC = "chat_jerry_daily_check_in_en_topic_v1"
 KV_CHAT_JERRY_DAILY_NL_TOPIC = "chat_jerry_daily_check_in_nl_topic_v1"
 REPLY_RULES_PATH = Path(__file__).with_name("chat_jerry_replies.json")
 
-MIN_TYPING_DELAY_SECONDS = 1.0
-MAX_TYPING_DELAY_SECONDS = 3.5
 
 GREETING_WORDS = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening"}
-NERVOUS_WORDS = {"nervous", "scared", "shy", "afraid", "embarrassed", "anxious", "stress", "worried"}
-HELP_WORDS = {"help", "stuck", "confused", "hard", "difficult", "don't know", "dont know"}
-THANKS_WORDS = {"thanks", "thank you", "thx"}
 MIN_KEYWORD_RULE_SCORE = 1
-CONTEXT_TTL_SECONDS = 20 * 60
-CONTEXT_MAX_MESSAGES = 6
-MEMORY_RECALL_AFTER_SECONDS = 60 * 60
-VOICE_BRIDGE_WINDOW_SECONDS = 7 * 24 * 60 * 60
-ACTIVE_VOICE_SECONDS = 45 * 60
 
 TOPIC_PACKS: dict[str, dict[str, list[str]]] = {
     "daily_life": {
@@ -237,18 +221,6 @@ TOPIC_PACKS: dict[str, dict[str, list[str]]] = {
     },
 }
 CONTEXTUAL_TOPIC_IDS = set(TOPIC_PACKS) - {"default"}
-TOPIC_LABELS = {
-    "daily_life": "daily life",
-    "work_study": "work or study",
-    "food": "food",
-    "travel": "travel",
-    "hobbies": "hobbies",
-    "movies_music": "movies or music",
-    "family_friends": "family or friends",
-    "goals_learning": "goals and learning",
-    "weather": "the weather",
-}
-LEVEL_ORDER = {"starter", "easy", "growing", "strong"}
 RELATED_TOPIC_MAP = {
     "english_practice": "goals_learning",
     "correction_request": "goals_learning",
@@ -260,14 +232,6 @@ RELATED_TOPIC_MAP = {
     "topic_request": "goals_learning",
 }
 
-QUESTION_SETS = [
-    "How are you today?",
-    "What did you do today?",
-    "What food do you like?",
-    "Where would you like to travel?",
-    "What do you want to get better at?",
-    "What was the best part of your day?",
-]
 
 EN_DAILY_QUESTIONS: list[str] = [
     "What is one sentence you want to practise today?",
@@ -338,12 +302,6 @@ DEFAULT_REPLY_RULES: dict[str, Any] = {
 _REPLY_RULES_CACHE: dict[str, Any] | None = None
 
 
-def _pick_question(seed: int | None = None) -> str:
-    if seed is None:
-        return random.choice(QUESTION_SETS)
-    return QUESTION_SETS[seed % len(QUESTION_SETS)]
-
-
 def _daily_question_for_date(date_key: str, *, is_nl: bool = False) -> str:
     seed = sum(ord(ch) for ch in date_key)
     questions = NL_DAILY_QUESTIONS if is_nl else EN_DAILY_QUESTIONS
@@ -393,14 +351,6 @@ def _daily_question_meta(date_key: str, *, is_nl: bool) -> dict[str, str]:
     }
 
 
-def _today_amsterdam_date_key() -> str:
-    try:
-        now = dt.datetime.now(ZoneInfo("Europe/Amsterdam"))
-    except Exception:
-        now = dt.datetime.now()
-    return now.date().isoformat()
-
-
 def _clean_text(text: str) -> str:
     cleaned = text.lower().strip()
     cleaned = cleaned.strip(string.whitespace + string.punctuation)
@@ -412,10 +362,6 @@ def _is_greeting(text: str) -> bool:
     if cleaned in GREETING_WORDS:
         return True
     return any(cleaned.startswith(greeting + " ") for greeting in GREETING_WORDS)
-
-
-def _reply_seed(text: str, display_name: str) -> int:
-    return sum(ord(ch) for ch in f"{display_name}:{text}")
 
 
 def _reply_rules() -> dict[str, Any]:
@@ -433,38 +379,6 @@ def _reply_rules() -> dict[str, Any]:
         log.exception("ChatJerry: could not load reply rules from %s", REPLY_RULES_PATH)
         _REPLY_RULES_CACHE = DEFAULT_REPLY_RULES
     return _REPLY_RULES_CACHE
-
-
-def _choose(items: Any, *, text: str, display_name: str) -> str:
-    if isinstance(items, str):
-        return items
-    if not isinstance(items, list) or not items:
-        return ""
-    return str(items[_reply_seed(text, display_name) % len(items)])
-
-
-def _render_template(template: str, *, display_name: str) -> str:
-    try:
-        time_amsterdam = dt.datetime.now(ZoneInfo("Europe/Amsterdam")).strftime("%H:%M")
-    except Exception:
-        time_amsterdam = dt.datetime.now().strftime("%H:%M")
-
-    try:
-        return template.format(
-            name=discord.utils.escape_markdown(display_name),
-            time_amsterdam=time_amsterdam,
-        )
-    except Exception:
-        return template
-
-
-def _keyword_in_text(keyword: str, *, lower: str, cleaned: str) -> bool:
-    keyword = keyword.lower().strip()
-    if not keyword:
-        return False
-    if " " in keyword or "'" in keyword:
-        return keyword in lower
-    return bool(re.search(rf"\b{re.escape(keyword)}\b", cleaned))
 
 
 def _keyword_score(keyword: str, *, lower: str, cleaned: str) -> int:
@@ -516,518 +430,6 @@ def _matched_reply_rule(text: str) -> dict[str, Any] | None:
     return None
 
 
-def _rule_by_id(rule_id: str | None) -> dict[str, Any] | None:
-    if not rule_id:
-        return None
-    for rule in _reply_rules().get("intents", []):
-        if isinstance(rule, dict) and rule.get("id") == rule_id:
-            return rule
-    return None
-
-
-def _estimate_level(text: str) -> str:
-    cleaned = _clean_text(text)
-    words = cleaned.split()
-    if not words:
-        return "easy"
-
-    word_count = len(words)
-    long_words = sum(1 for word in words if len(word) >= 8)
-    connectors = {
-        "because",
-        "although",
-        "however",
-        "while",
-        "before",
-        "after",
-        "usually",
-        "sometimes",
-        "probably",
-        "actually",
-    }
-    connector_count = sum(1 for word in words if word in connectors)
-
-    if word_count <= 4:
-        return "starter"
-    if word_count <= 10 and connector_count == 0 and long_words <= 1:
-        return "easy"
-    if word_count >= 18 or connector_count >= 2 or long_words >= 3:
-        return "strong"
-    return "growing"
-
-
-def _preferred_level(memory: dict[str, Any] | None) -> str | None:
-    if not memory:
-        return None
-    level = memory.get("preferred_level")
-    if isinstance(level, str) and level in LEVEL_ORDER:
-        return level
-    return None
-
-
-def _adapt_level_for_memory(level: str, memory: dict[str, Any] | None) -> str:
-    preferred = _preferred_level(memory)
-    if preferred == "easy" and level in {"starter", "easy", "growing"}:
-        return "easy"
-    if preferred == "starter" and level in {"starter", "easy"}:
-        return "starter"
-    return level
-
-
-def _memory_topic_id(memory: dict[str, Any] | None) -> str | None:
-    if not memory:
-        return None
-    topic_id = memory.get("last_topic_id")
-    if isinstance(topic_id, str) and topic_id in CONTEXTUAL_TOPIC_IDS:
-        return topic_id
-    return None
-
-
-def _memory_context(memory: dict[str, Any] | None, *, now: float) -> list[dict[str, Any]]:
-    topic_id = _memory_topic_id(memory)
-    if not topic_id:
-        return []
-    last_message_at = memory.get("last_message_at") if memory else None
-    try:
-        ts = float(last_message_at or now)
-    except Exception:
-        ts = now
-    return [
-        {
-            "ts": ts,
-            "topic_id": topic_id,
-            "level": _preferred_level(memory) or "easy",
-            "from_memory": True,
-        }
-    ]
-
-
-def _memory_recall_line(
-    memory: dict[str, Any] | None,
-    *,
-    topic_id: str,
-    now: float,
-    had_recent_context: bool,
-) -> str:
-    if had_recent_context or topic_id not in CONTEXTUAL_TOPIC_IDS:
-        return ""
-    memory_topic_id = _memory_topic_id(memory)
-    if memory_topic_id != topic_id:
-        return ""
-    try:
-        last_message_at = int(memory.get("last_message_at") or 0) if memory else 0
-        message_count = int(memory.get("message_count") or 0) if memory else 0
-    except Exception:
-        return ""
-    if message_count < 2 or last_message_at <= 0:
-        return ""
-    if now - last_message_at < MEMORY_RECALL_AFTER_SECONDS:
-        return ""
-    label = TOPIC_LABELS.get(topic_id, topic_id.replace("_", " "))
-    return f"Last time, we talked about {label}."
-
-
-def _voice_bridge_line(
-    *,
-    voice_seconds: int,
-    topic_id: str,
-    had_recent_context: bool,
-) -> str:
-    if had_recent_context:
-        return ""
-    practice_topics = {"english_practice", "goals_learning", "nervous_shy", "help", "topic_request"}
-    if topic_id not in practice_topics:
-        return ""
-    if voice_seconds >= ACTIVE_VOICE_SECONDS:
-        return "You were in voice recently. Try a slightly longer answer."
-    if voice_seconds <= 0 and topic_id in {"english_practice", "nervous_shy"}:
-        return "If speaking feels hard, start with one short sentence here first."
-    return ""
-
-
-def _topic_pack(topic_id: str | None) -> dict[str, list[str]]:
-    if topic_id and topic_id in TOPIC_PACKS:
-        return TOPIC_PACKS[topic_id]
-    return TOPIC_PACKS["default"]
-
-
-def _choose_from_pack(
-    topic_id: str | None,
-    key: str,
-    *,
-    text: str,
-    display_name: str,
-    level: str,
-) -> str:
-    pack = _topic_pack(topic_id)
-    if key == "questions" and level in {"starter", "easy"}:
-        items = pack.get("easy_questions") or pack.get("questions", [])
-    else:
-        items = pack.get(key, [])
-    return _render_template(
-        _choose(items, text=text, display_name=display_name),
-        display_name=display_name,
-    )
-
-
-def _different_topic_id(current_topic_id: str, *, user_id: int, seed_text: str) -> str:
-    topics = sorted(topic_id for topic_id in CONTEXTUAL_TOPIC_IDS if topic_id != current_topic_id)
-    if not topics:
-        return "default"
-    seed = sum(ord(ch) for ch in f"{user_id}:{seed_text}:different-topic")
-    return topics[seed % len(topics)]
-
-
-def _recent_topic_id(recent: list[dict[str, Any]] | None) -> str | None:
-    if not recent:
-        return None
-    for item in reversed(recent):
-        topic_id = item.get("topic_id")
-        if isinstance(topic_id, str) and topic_id:
-            return topic_id
-    return None
-
-
-def _context_hint(recent: list[dict[str, Any]] | None, topic_id: str | None) -> str:
-    if not recent or not topic_id:
-        return ""
-    last_topic = _recent_topic_id(recent)
-    if last_topic != topic_id:
-        return ""
-    if len(recent) < 2:
-        return ""
-    return "Still on this topic."
-
-
-def _level_hint(level: str) -> str:
-    if level == "starter":
-        return "Try one full sentence."
-    if level == "easy":
-        return "You can keep it simple."
-    if level == "strong":
-        return "Nice detail."
-    return ""
-
-
-def _format_reply(
-    *,
-    base_reply: str,
-    topic_id: str | None,
-    level: str,
-    recent: list[dict[str, Any]] | None,
-) -> str:
-    parts = [base_reply]
-    hint = _context_hint(recent, topic_id)
-    if hint:
-        parts.append(hint)
-    if topic_id in {"greeting", "thanks", "goodbye", "topic_request"}:
-        level_hint = ""
-    else:
-        level_hint = _level_hint(level)
-    if level_hint:
-        parts.append(level_hint)
-    return " ".join(part for part in parts if part).strip()
-
-
-def _fallback_suggestions(text: str, display_name: str) -> list[str]:
-    suggestions = _reply_rules().get("fallback_suggestions", [])
-    if not isinstance(suggestions, list) or not suggestions:
-        suggestions = DEFAULT_REPLY_RULES["fallback_suggestions"]
-
-    ordered = [str(item) for item in suggestions if str(item).strip()]
-    if not ordered:
-        return ["your day"]
-    start = _reply_seed(text, display_name) % len(ordered)
-    return (ordered[start:] + ordered[:start])[:2]
-
-
-def _plain_reply_from_rule(rule: dict[str, Any], text: str, display_name: str) -> str:
-    reply = _render_template(
-        _choose(rule.get("replies", ""), text=text, display_name=display_name),
-        display_name=display_name,
-    )
-    follow_up = _render_template(
-        _choose(rule.get("follow_ups", ""), text=text, display_name=display_name),
-        display_name=display_name,
-    )
-    parts = [part for part in (reply, follow_up) if part]
-
-    lower = text.lower()
-    if rule.get("id") == "travel" and ("evil tour" in lower or "evil tower" in lower):
-        parts.append('Small correction: say "the Eiffel Tower".')
-
-    if parts:
-        return " ".join(parts)
-    return f"I'm here, {discord.utils.escape_markdown(display_name)}. What do you want to talk about?"
-
-
-def _fallback_plain_reply(text: str, display_name: str) -> str:
-    rules = _reply_rules()
-    fallback_replies = rules.get("fallback_replies", [])
-    fallback_follow_ups = rules.get("fallback_follow_ups", [])
-    if isinstance(fallback_replies, list) and fallback_replies:
-        reply = _render_template(
-            _choose(fallback_replies, text=text, display_name=display_name),
-            display_name=display_name,
-        )
-        follow_up = _render_template(
-            _choose(fallback_follow_ups, text=text, display_name=display_name),
-            display_name=display_name,
-        )
-        return " ".join(part for part in (reply, follow_up) if part)
-
-    suggestions = _fallback_suggestions(text, display_name)
-    topic = suggestions[0] if suggestions else "your day"
-    return f"I'm not sure what to say to that yet. Try asking about {topic}."
-
-
-def _reply_payload_for_text(
-    text: str,
-    display_name: str,
-    *,
-    recent: list[dict[str, Any]] | None = None,
-    memory: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    lower = text.lower().strip()
-    rule = _matched_reply_rule(text)
-    source = "rule" if rule is not None else "fallback"
-    recent_topic_id = _recent_topic_id(recent)
-    if rule is None and recent_topic_id in CONTEXTUAL_TOPIC_IDS:
-        rule = _rule_by_id(recent_topic_id)
-        if rule is not None:
-            source = "memory"
-
-    level = _adapt_level_for_memory(_estimate_level(text), memory)
-    if rule is not None:
-        topic_id = str(rule.get("id", ""))
-    elif recent_topic_id in CONTEXTUAL_TOPIC_IDS:
-        topic_id = recent_topic_id
-    else:
-        topic_id = None
-
-    if rule is not None:
-        reply = _plain_reply_from_rule(rule, text, display_name)
-        return {
-            "content": _format_reply(
-                base_reply=reply,
-                topic_id=topic_id,
-                level=level,
-                recent=recent,
-            ),
-            "topic_id": topic_id,
-            "level": level,
-            "source": source,
-        }
-    if any(word in lower for word in NERVOUS_WORDS):
-        return {
-            "content": "That feeling is normal. Start tiny: one sentence is enough.",
-            "topic_id": "nervous_shy",
-            "level": level,
-            "source": "keyword",
-        }
-    if any(word in lower for word in HELP_WORDS):
-        return {
-            "content": "Tell me one small idea, and I will help you make it clearer.",
-            "topic_id": "help",
-            "level": level,
-            "source": "keyword",
-        }
-    if any(word in lower for word in THANKS_WORDS):
-        return {
-            "content": "You are welcome. Want to keep going?",
-            "topic_id": "thanks",
-            "level": level,
-            "source": "keyword",
-        }
-    return {
-        "content": _format_reply(
-            base_reply=_fallback_plain_reply(text, display_name),
-            topic_id=topic_id,
-            level=level,
-            recent=recent,
-        ),
-        "topic_id": topic_id or "default",
-        "level": level,
-        "source": source,
-    }
-
-
-def _plain_reply_for_text(text: str, display_name: str) -> str:
-    return str(_reply_payload_for_text(text, display_name).get("content", ""))
-
-
-def _typing_delay_seconds(text: str) -> float:
-    return min(MAX_TYPING_DELAY_SECONDS, MIN_TYPING_DELAY_SECONDS + len(text) / 80)
-
-
-class ChatJerryHubView(discord.ui.View):
-    def __init__(self, *, publisher: "ChatJerryPublisher | None" = None) -> None:
-        super().__init__(timeout=None)
-        self._publisher = publisher
-
-    @discord.ui.button(label="Ask me a question", style=discord.ButtonStyle.primary, custom_id="chatjerry:question:v1")
-    async def ask_question(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        prompt = _pick_question(interaction.user.id + int(time.time() // 3600))
-        await interaction.response.send_message(prompt)
-
-    @discord.ui.button(label="Useful words", style=discord.ButtonStyle.secondary, custom_id="chatjerry:words:v1")
-    async def useful_words(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_message(
-            'Useful phrases: "Give me a second." "How do I say this?" "Can I try again?"',
-            ephemeral=True,
-        )
-
-    @discord.ui.button(label="I feel nervous", style=discord.ButtonStyle.secondary, custom_id="chatjerry:nervous:v1")
-    async def nervous(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_message(
-            'Start smaller: "Today I feel..." or "I want to practise..." One sentence is enough.',
-            ephemeral=True,
-        )
-
-
-class ChatJerryReplyView(discord.ui.View):
-    def __init__(
-        self,
-        *,
-        repo: Any,
-        guild_id: int | None,
-        topic_id: str | None,
-        level: str,
-        seed_text: str,
-        display_name: str,
-    ) -> None:
-        super().__init__(timeout=10 * 60)
-        self.repo = repo
-        self.guild_id = guild_id
-        self.topic_id = topic_id or "default"
-        self.level = level
-        self.seed_text = seed_text
-        self.display_name = display_name
-
-    async def _record_feedback(
-        self,
-        interaction: discord.Interaction,
-        *,
-        action: str,
-        topic_id: str | None = None,
-        level: str | None = None,
-    ) -> None:
-        if self.guild_id is None:
-            return
-        try:
-            await self.repo.chat_jerry_memory_record_feedback(
-                self.guild_id,
-                interaction.user.id,
-                action=action,
-                topic_id=topic_id if topic_id in CONTEXTUAL_TOPIC_IDS else None,
-                level=level,
-            )
-        except Exception:
-            log.exception(
-                "ChatJerry: failed to record feedback action=%s user=%s",
-                action,
-                interaction.user.id,
-            )
-
-    async def _send_pack_item(
-        self,
-        interaction: discord.Interaction,
-        *,
-        key: str,
-        prefix: str = "",
-        ephemeral: bool = False,
-        level: str | None = None,
-        topic_id: str | None = None,
-    ) -> None:
-        selected_topic_id = topic_id or self.topic_id
-        value = _choose_from_pack(
-            selected_topic_id,
-            key,
-            text=f"{interaction.user.id}:{self.seed_text}:{selected_topic_id}:{key}",
-            display_name=getattr(interaction.user, "display_name", self.display_name),
-            level=level or self.level,
-        )
-        content = f"{prefix}{value}" if prefix else value
-        await interaction.response.send_message(content, ephemeral=ephemeral)
-
-    @discord.ui.button(label="Another question", style=discord.ButtonStyle.primary, row=0)
-    async def another_question(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ) -> None:
-        await self._send_pack_item(interaction, key="questions")
-
-    @discord.ui.button(label="More like this", style=discord.ButtonStyle.secondary, row=0)
-    async def more_like_this(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ) -> None:
-        await self._record_feedback(interaction, action="more_like_this", topic_id=self.topic_id)
-        await self._send_pack_item(
-            interaction,
-            key="questions",
-            prefix="Same topic: ",
-        )
-
-    @discord.ui.button(label="Different topic", style=discord.ButtonStyle.secondary, row=0)
-    async def different_topic(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ) -> None:
-        topic_id = _different_topic_id(
-            self.topic_id,
-            user_id=interaction.user.id,
-            seed_text=self.seed_text,
-        )
-        await self._record_feedback(interaction, action="different_topic")
-        await self._send_pack_item(
-            interaction,
-            key="questions",
-            prefix="Different topic: ",
-            topic_id=topic_id,
-        )
-
-    @discord.ui.button(label="Make it easier", style=discord.ButtonStyle.secondary, row=1)
-    async def make_easier(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ) -> None:
-        await self._record_feedback(interaction, action="too_hard", topic_id=self.topic_id, level="easy")
-        await self._send_pack_item(
-            interaction,
-            key="questions",
-            prefix="Easy question: ",
-            level="easy",
-        )
-
-    @discord.ui.button(label="Useful words", style=discord.ButtonStyle.secondary, row=1)
-    async def useful_words(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ) -> None:
-        words = _topic_pack(self.topic_id).get("words", TOPIC_PACKS["default"]["words"])
-        content = "Useful words: " + ", ".join(words[:5])
-        await interaction.response.send_message(content, ephemeral=True)
-
-    @discord.ui.button(label="Example answer", style=discord.ButtonStyle.secondary, row=1)
-    async def example_answer(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ) -> None:
-        await self._send_pack_item(
-            interaction,
-            key="examples",
-            prefix="Example: ",
-            ephemeral=True,
-        )
-
-
 class ChatJerryPublisher:
     def __init__(self, *, bot: discord.Client, repo: Any) -> None:
         self._bot = bot
@@ -1046,36 +448,6 @@ class ChatJerryPublisher:
             return None
         return channel
 
-    async def publish(self, guild_id: int) -> None:
-        channel = await self._get_text_channel(CHAT_WITH_JERRY_CHANNEL_ID)
-        if channel is None:
-            return
-
-        content = (
-            "Chat with Jerry\n\n"
-            'Send a normal message like "hey", "how are you?", or "give me a question". '
-            "Jerry replies once to each message, like a simple chat."
-        )
-        existing_id_raw = await self._repo.kv_get(guild_id, KV_CHAT_JERRY_HUB_MSG)
-        if existing_id_raw:
-            try:
-                msg = await channel.fetch_message(int(existing_id_raw))
-                await msg.edit(content=content, embed=None, view=None)
-                log.info("ChatJerry: updated hub message %s", existing_id_raw)
-                return
-            except Exception:
-                log.warning("ChatJerry: could not edit hub message, recreating")
-
-        try:
-            sent = await channel.send(content)
-            await self._repo.kv_set(guild_id, KV_CHAT_JERRY_HUB_MSG, str(sent.id))
-            log.info("ChatJerry: posted hub message %s", sent.id)
-            try:
-                await sent.pin()
-            except discord.Forbidden:
-                log.warning("ChatJerry: missing pin permission channel=%s", CHAT_WITH_JERRY_CHANNEL_ID)
-        except Exception:
-            log.exception("ChatJerry: failed to post hub")
 
     async def publish_daily_question(
         self,
@@ -1143,101 +515,6 @@ class ChatJerryCog(commands.Cog):
         self.publisher = publisher
         self._recent_by_user: dict[int, deque[dict[str, Any]]] = {}
 
-    def _recent_context(self, user_id: int) -> list[dict[str, Any]]:
-        now = time.time()
-        recent = self._recent_by_user.get(user_id)
-        if recent is None:
-            return []
-
-        while recent and now - float(recent[0].get("ts", 0)) > CONTEXT_TTL_SECONDS:
-            recent.popleft()
-        if not recent:
-            self._recent_by_user.pop(user_id, None)
-            return []
-        return list(recent)
-
-    def _remember_context(
-        self,
-        *,
-        user_id: int,
-        text: str,
-        topic_id: str | None,
-        level: str,
-    ) -> None:
-        recent = self._recent_by_user.setdefault(
-            user_id,
-            deque(maxlen=CONTEXT_MAX_MESSAGES),
-        )
-        recent.append(
-            {
-                "ts": time.time(),
-                "text": text,
-                "topic_id": topic_id or "default",
-                "level": level,
-            }
-        )
-
-    async def _send_quality_log(
-        self,
-        *,
-        message: discord.Message,
-        topic_id: str,
-        level: str,
-    ) -> None:
-        if message.guild is None:
-            return
-
-        channel = self.bot.get_channel(ADMIN_LOGS_CHANNEL_ID)
-        if channel is None:
-            try:
-                channel = await self.bot.fetch_channel(ADMIN_LOGS_CHANNEL_ID)
-            except Exception:
-                log.warning("ChatJerry: could not fetch admin log channel %s", ADMIN_LOGS_CHANNEL_ID)
-                return
-        if not isinstance(channel, discord.TextChannel):
-            return
-
-        cleaned = " ".join((message.content or "").split())
-        if len(cleaned) > 240:
-            cleaned = cleaned[:237] + "..."
-        cleaned = discord.utils.escape_markdown(cleaned)
-        content = (
-            "Chat Jerry fallback\n"
-            f"Guild: `{message.guild.id}` Channel: <#{message.channel.id}> User: `{message.author.id}`\n"
-            f"Topic: `{topic_id}` Level: `{level}`\n"
-            f"Message: {cleaned}"
-        )
-        try:
-            await channel.send(content, allowed_mentions=discord.AllowedMentions.none())
-        except Exception:
-            log.exception("ChatJerry: failed to send quality log")
-
-    async def _daily_meta_for_channel(self, message: discord.Message) -> dict[str, str]:
-        is_nl = message.channel.id == NL_DAILY_CHAT_CHANNEL_ID
-        date_key = _today_amsterdam_date_key()
-        fallback = _daily_question_meta(date_key, is_nl=is_nl)
-        if message.guild is None:
-            return fallback
-
-        kv_key = KV_CHAT_JERRY_DAILY_NL_TOPIC if is_nl else KV_CHAT_JERRY_DAILY_EN_TOPIC
-        try:
-            raw = await self.repo.kv_get(message.guild.id, kv_key)
-        except Exception:
-            log.exception("ChatJerry: failed to load daily question topic")
-            return fallback
-        if not raw:
-            return fallback
-
-        try:
-            meta = json.loads(raw)
-        except Exception:
-            return fallback
-        if not isinstance(meta, dict) or meta.get("date") != date_key:
-            return fallback
-
-        topic_id = _contextual_topic_id(str(meta.get("topic_id", ""))) or fallback["topic_id"]
-        question = str(meta.get("question") or fallback["question"])
-        return {"date": date_key, "question": question, "topic_id": topic_id}
 
     async def _handle_daily_chat_message(self, message: discord.Message) -> None:
         if message.guild is None:
@@ -1248,9 +525,6 @@ class ChatJerryCog(commands.Cog):
             return
 
         now = int(time.time())
-        daily_meta = await self._daily_meta_for_channel(message)
-        topic_id = _topic_id_for_text(text) or daily_meta["topic_id"]
-        level = _estimate_level(text)
 
         try:
             await self.repo.command_usage_record(
@@ -1262,24 +536,6 @@ class ChatJerryCog(commands.Cog):
         except Exception:
             log.exception("ChatJerry: failed to record daily question reply usage")
 
-        try:
-            await self.repo.chat_jerry_memory_record_message(
-                message.guild.id,
-                message.author.id,
-                topic_id=topic_id,
-                level=level,
-                at=now,
-            )
-            log.info(
-                "ChatJerry: learned from daily reply guild=%s user=%s topic=%s level=%s",
-                message.guild.id,
-                message.author.id,
-                topic_id,
-                level,
-            )
-        except Exception:
-            log.exception("ChatJerry: failed to save daily reply memory user=%s", message.author.id)
-
     async def handle_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
@@ -1288,144 +544,9 @@ class ChatJerryCog(commands.Cog):
             await self._handle_daily_chat_message(message)
             return
 
-        if message.channel.id != CHAT_WITH_JERRY_CHANNEL_ID:
-            return
-
-        text = (message.content or "").strip()
-        if not text or text.startswith("/"):
-            return
-
-        now = time.time()
-
-        try:
-            if message.guild:
-                await self.repo.command_usage_record(message.guild.id, message.author.id, "chatjerry_message", int(now))
-        except Exception:
-            log.exception("ChatJerry: failed to record message usage")
-
-        memory: dict[str, Any] | None = None
-        voice_seconds = 0
-        if message.guild:
-            try:
-                memory = await self.repo.chat_jerry_memory_get(message.guild.id, message.author.id)
-            except Exception:
-                log.exception("ChatJerry: failed to load memory user=%s", message.author.id)
-            try:
-                voice_seconds = await self.repo.user_voice_seconds_since(
-                    message.guild.id,
-                    message.author.id,
-                    int(now) - VOICE_BRIDGE_WINDOW_SECONDS,
-                )
-            except Exception:
-                log.exception("ChatJerry: failed to load voice bridge user=%s", message.author.id)
-
-        live_recent = self._recent_context(message.author.id)
-        recent = live_recent or _memory_context(memory, now=now)
-        payload = _reply_payload_for_text(
-            text,
-            message.author.display_name,
-            recent=recent,
-            memory=memory,
-        )
-        reply = str(payload.get("content", "")).strip()
-        topic_id = str(payload.get("topic_id", "default") or "default")
-        level = str(payload.get("level", "easy") or "easy")
-        source = str(payload.get("source", "fallback") or "fallback")
-        recall_line = _memory_recall_line(
-            memory,
-            topic_id=topic_id,
-            now=now,
-            had_recent_context=bool(live_recent),
-        )
-        if recall_line:
-            reply = f"{recall_line} {reply}".strip()
-        voice_line = _voice_bridge_line(
-            voice_seconds=voice_seconds,
-            topic_id=topic_id,
-            had_recent_context=bool(live_recent),
-        )
-        if voice_line:
-            reply = f"{voice_line} {reply}".strip()
-        self._remember_context(
-            user_id=message.author.id,
-            text=text,
-            topic_id=topic_id,
-            level=level,
-        )
-        if message.guild:
-            try:
-                await self.repo.chat_jerry_memory_record_message(
-                    message.guild.id,
-                    message.author.id,
-                    topic_id=topic_id if topic_id in CONTEXTUAL_TOPIC_IDS else None,
-                    level=level,
-                    at=int(now),
-                )
-            except Exception:
-                log.exception("ChatJerry: failed to save memory user=%s", message.author.id)
-
-        if source == "fallback":
-            await self._send_quality_log(message=message, topic_id=topic_id, level=level)
-
-        try:
-            async with message.channel.typing():
-                await asyncio.sleep(_typing_delay_seconds(text))
-            await message.reply(
-                reply,
-                mention_author=False,
-                view=ChatJerryReplyView(
-                    repo=self.repo,
-                    guild_id=message.guild.id if message.guild else None,
-                    topic_id=topic_id,
-                    level=level,
-                    seed_text=text,
-                    display_name=message.author.display_name,
-                ),
-            )
-        except Exception:
-            log.exception("ChatJerry: failed to reply to message")
-
-    @app_commands.command(name="chat", description="Start a small guided conversation with Jerry.")
-    async def chat(self, interaction: discord.Interaction) -> None:
-        if interaction.channel_id != CHAT_WITH_JERRY_CHANNEL_ID:
-            await interaction.response.send_message(
-                f"Use this in <#{CHAT_WITH_JERRY_CHANNEL_ID}> so the conversation stays in one place.",
-                ephemeral=True,
-            )
-            return
-        prompt = _pick_question(interaction.user.id + int(time.time()))
-        await interaction.response.send_message(prompt)
-
-    @app_commands.command(name="jerryforgetme", description="Delete Jerry's saved topic memory for you.")
-    async def jerryforgetme(self, interaction: discord.Interaction) -> None:
-        if interaction.guild_id is None:
-            await interaction.response.send_message(
-                "I can only delete server memory from inside the server.",
-                ephemeral=True,
-            )
-            return
-
-        try:
-            deleted = await self.repo.chat_jerry_memory_delete(interaction.guild_id, interaction.user.id)
-            self._recent_by_user.pop(interaction.user.id, None)
-        except Exception:
-            log.exception("ChatJerry: failed to delete memory user=%s", interaction.user.id)
-            await interaction.response.send_message(
-                "I could not delete your Jerry memory right now. Please try again later.",
-                ephemeral=True,
-            )
-            return
-
-        if deleted:
-            content = "Done. Jerry forgot your saved topic memory in this server."
-        else:
-            content = "Jerry did not have saved topic memory for you in this server."
-        await interaction.response.send_message(content, ephemeral=True)
-
 
 async def setup(bot: commands.Bot, repo: Any, *, guild_id: int) -> ChatJerryPublisher:
     publisher = ChatJerryPublisher(bot=bot, repo=repo)
     await bot.add_cog(ChatJerryCog(bot, repo, publisher))
-    bot.add_view(ChatJerryHubView(publisher=None))
     log.info("ChatJerryCog loaded.")
     return publisher
