@@ -10,13 +10,15 @@ Every feature in this system is designed to **reduce hesitation**, **lower press
 
 ### 1) Speaking comes before metrics
 We do not optimize for:
-- total speaking time
 - rankings
 - streaks
 - comparisons between members
 
 We care about one thing only:
 > **More people feeling comfortable speaking at least once per week.**
+
+Private milestones are the exception to "no time metrics": one DM at 1, 3
+and 10 hours of unmuted voice time. Never public, never compared.
 
 Human judgment matters more than numbers.
 
@@ -97,6 +99,7 @@ SpeakingBot should always communicate:
 ## Features (current build)
 - Welcome DM on join with one action: book a Table for 2 this week (button opens the partner planner)
 - Voice time tracking (Speak Now category; excludes AFK). Counts unmuted time only, stored per server (EN and NL separately)
+- Private milestone DMs at 1, 3 and 10 hours of unmuted voice time (counted from the deploy day). The 3-hour DM asks the testimonial questions
 - Admin stat in `/adminhealth`: share of new members in voice within 7 days of joining
 - Mon/Fri announcements nudge at **15:00 Europe/Amsterdam**
 - Weekly private DM (once per ISO week) on first qualifying voice join
