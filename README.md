@@ -62,16 +62,15 @@ If a feature causes discomfort or negative feedback, it is turned off immediatel
 
 The activation welcome DM is on by default. It is one message, sent once, on join.
 
-### 5) Inactivity nudges are optional, not assumed
-The inactivity DM feature exists but is disabled by default.
+### 5) One win-back DM, never a chase
+After 14 days without voice time, a member gets one private DM with one
+small step (a Table for 2). It is sent once per absence. There is no
+second message, no reminder and no "you missed" wording.
 
-Activation criteria are strict:
-- weekly encouragement must already work
-- a real re-entry problem must be observed
-- no negative feedback may exist
+Only members whose last voice time was 14 to 21 days ago are messaged,
+so people who left long ago never get a sudden DM.
 
-If these conditions are not met:
-> **The feature stays off forever.**
+If it causes discomfort or negative feedback, it is turned off.
 
 ### 6) Calm systems scale better than clever ones
 This project prioritizes:
@@ -100,6 +99,7 @@ SpeakingBot should always communicate:
 - Welcome DM on join with one action: book a Table for 2 this week (button opens the partner planner)
 - Voice time tracking (Speak Now category; excludes AFK). Counts unmuted time only, stored per server (EN and NL separately)
 - Private milestone DMs at 1, 3 and 10 hours of unmuted voice time (counted from the deploy day). The 3-hour DM asks the testimonial questions
+- Win-back DM after 14 days without voice time (daily at 17:07 Amsterdam, once per absence)
 - Admin stat in `/adminhealth`: share of new members in voice within 7 days of joining
 - Mon/Fri announcements nudge at **15:00 Europe/Amsterdam**
 - Weekly private DM (once per ISO week) on first qualifying voice join
