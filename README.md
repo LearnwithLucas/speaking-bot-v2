@@ -42,9 +42,13 @@ Messages must:
 
 Language that implies:
 - consistency requirements
-- expectations
 - comparison with others
 …is explicitly avoided.
+
+One exception: the welcome DM asks a new member for one concrete step,
+a Table for 2 this week. Month 1 decides whether someone stays, so the
+first message names one action and a time frame. It still carries no
+guilt, no follow-up chasing and no "you missed it" message.
 
 ### 4) Features default to OFF
 Any feature that could increase pressure:
@@ -53,6 +57,8 @@ Any feature that could increase pressure:
 - requires explicit human decision to enable
 
 If a feature causes discomfort or negative feedback, it is turned off immediately.
+
+The activation welcome DM is on by default. It is one message, sent once, on join.
 
 ### 5) Inactivity nudges are optional, not assumed
 The inactivity DM feature exists but is disabled by default.
@@ -89,7 +95,9 @@ SpeakingBot should always communicate:
 ---
 
 ## Features (current build)
-- Voice presence tracking (Speak Now category; excludes AFK)
+- Welcome DM on join with one action: book a Table for 2 this week (button opens the partner planner)
+- Voice time tracking (Speak Now category; excludes AFK). Counts unmuted time only, stored per server (EN and NL separately)
+- Admin stat in `/adminhealth`: share of new members in voice within 7 days of joining
 - Mon/Fri announcements nudge at **15:00 Europe/Amsterdam**
 - Weekly private DM (once per ISO week) on first qualifying voice join
 - Private achievements (silent; max 1 per join; no public output)

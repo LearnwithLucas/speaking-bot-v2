@@ -183,6 +183,73 @@ class Repo:
         (total,) = await cur.fetchone()
         return max(0, int(total or 0))
 
+    async def move_sessions_to_guild(self, from_guild_id: int, to_guild_id: int, channel_ids: list[int]) -> int:
+        """Move voice sessions recorded under the wrong server (by channel) to the right one."""
+        if not channel_ids:
+            return 0
+        placeholders = ",".join("?" for _ in channel_ids)
+        cur = await self.conn.execute(
+            f"""
+            UPDATE voice_sessions
+            SET guild_id = ?
+            WHERE guild_id = ? AND channel_id IN ({placeholders})
+            """,
+            (to_guild_id, from_guild_id, *channel_ids),
+        )
+        await self.conn.execute("DELETE FROM speaking_cache WHERE guild_id IN (?, ?)", (from_guild_id, to_guild_id))
+        await self.conn.commit()
+        return int(cur.rowcount or 0)
+
+    # -------------------------
+    # Member joins (activation stat)
+    # -------------------------
+    async def member_join_record(self, guild_id: int, user_id: int, joined_at: int) -> None:
+        await self.conn.execute(
+            """
+            INSERT INTO member_joins (guild_id, user_id, joined_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT(guild_id, user_id) DO UPDATE SET joined_at=excluded.joined_at
+            """,
+            (guild_id, user_id, joined_at),
+        )
+        await self.conn.commit()
+
+    async def member_joins_backfill(self, guild_id: int, rows: list[tuple[int, int]]) -> None:
+        """Insert (user_id, joined_at) for current members we have no record of yet."""
+        await self.conn.executemany(
+            "INSERT OR IGNORE INTO member_joins (guild_id, user_id, joined_at) VALUES (?, ?, ?)",
+            [(guild_id, uid, at) for uid, at in rows],
+        )
+        await self.conn.commit()
+
+    async def new_member_voice_rate(self, guild_id: int, now_epoch: int, cohort_days: int = 30) -> tuple[int, int]:
+        """
+        Of members who joined between (now - 7d - cohort_days) and (now - 7d),
+        how many had counted (unmuted) voice time within 7 days of joining.
+        Returns (in_voice, cohort_size). Only full 7-day windows are counted.
+        """
+        week = 7 * 86400
+        cohort_end = now_epoch - week
+        cohort_start = cohort_end - cohort_days * 86400
+        cur = await self.conn.execute(
+            """
+            SELECT
+                COUNT(*),
+                SUM(CASE WHEN EXISTS (
+                    SELECT 1 FROM voice_sessions s
+                    WHERE s.guild_id = j.guild_id
+                      AND s.user_id = j.user_id
+                      AND s.started_at >= j.joined_at
+                      AND s.started_at < j.joined_at + ?
+                ) THEN 1 ELSE 0 END)
+            FROM member_joins j
+            WHERE j.guild_id = ? AND j.joined_at >= ? AND j.joined_at < ?
+            """,
+            (week, guild_id, cohort_start, cohort_end),
+        )
+        cohort, in_voice = await cur.fetchone()
+        return int(in_voice or 0), int(cohort or 0)
+
     async def command_usage_record(self, guild_id: int, user_id: int, command_name: str, used_at: int | None = None) -> None:
         if used_at is None:
             used_at = int(time.time())

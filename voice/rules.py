@@ -9,9 +9,14 @@ def is_in_speak_now_category(channel, speak_now_category_id: int) -> bool:
 
 
 def should_count_state(state: VoiceState) -> bool:
-    # Current rule for counting minutes: don't count if self-deafened.
-    # (Keep unchanged to avoid behavior drift.)
-    return not bool(state.self_deaf)
+    # Count only unmuted time: the member's mic is on and they can hear.
+    # Muted or deafened (by themselves or by a moderator) does not count.
+    return not (
+        bool(state.self_mute)
+        or bool(state.self_deaf)
+        or bool(state.mute)
+        or bool(state.deaf)
+    )
 
 
 def qualifies_first_voice_attempt(state: VoiceState) -> bool:

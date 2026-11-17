@@ -83,6 +83,18 @@ CREATE TABLE IF NOT EXISTS partner_slots (
 CREATE INDEX IF NOT EXISTS idx_partner_slots_slot
   ON partner_slots (guild_id, slot_key);
 
+-- Member joins per server, for the "in voice within 7 days" activation stat.
+-- Kept after a member leaves, so the stat also counts people who churned.
+CREATE TABLE IF NOT EXISTS member_joins (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  joined_at INTEGER NOT NULL,       -- epoch seconds, most recent join
+  PRIMARY KEY (guild_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_member_joins_time
+  ON member_joins (guild_id, joined_at);
+
 -- Admin-only health summaries: broad command usage, no message content.
 CREATE TABLE IF NOT EXISTS command_usage (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
