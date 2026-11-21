@@ -271,6 +271,55 @@ class Repo:
         await self.conn.commit()
 
     # -------------------------
+    # Milestone shout-outs
+    # -------------------------
+    async def milestone_announcement_claim(
+        self, guild_id: int, user_id: int, milestone: str, at: int, *, posted: bool = True
+    ) -> bool:
+        """Mark a milestone as announced. False if it already was (so never post twice)."""
+        cur = await self.conn.execute(
+            "INSERT OR IGNORE INTO milestone_announcements (guild_id, user_id, milestone, announced_at, posted) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (guild_id, user_id, milestone, at, 1 if posted else 0),
+        )
+        await self.conn.commit()
+        return (cur.rowcount or 0) > 0
+
+    async def milestone_shoutouts_enabled(self, guild_id: int, user_id: int) -> bool:
+        cur = await self.conn.execute(
+            "SELECT milestone_shoutouts_enabled FROM member_settings WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        row = await cur.fetchone()
+        return True if row is None else bool(row[0])
+
+    async def milestone_shoutouts_set(self, guild_id: int, user_id: int, enabled: bool, at: int) -> None:
+        await self.conn.execute(
+            """
+            INSERT INTO member_settings (guild_id, user_id, milestone_shoutouts_enabled, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(guild_id, user_id) DO UPDATE SET
+                milestone_shoutouts_enabled=excluded.milestone_shoutouts_enabled,
+                updated_at=excluded.updated_at
+            """,
+            (guild_id, user_id, 1 if enabled else 0, at),
+        )
+        await self.conn.commit()
+
+    async def milestone_shoutout_counts(self, guild_id: int, since_epoch: int) -> dict[str, int]:
+        cur = await self.conn.execute(
+            "SELECT COUNT(*) FROM milestone_announcements WHERE guild_id=? AND posted=1 AND announced_at >= ?",
+            (guild_id, since_epoch),
+        )
+        posted = (await cur.fetchone())[0]
+        cur = await self.conn.execute(
+            "SELECT COUNT(*) FROM member_settings WHERE guild_id=? AND milestone_shoutouts_enabled=0",
+            (guild_id,),
+        )
+        opted_out = (await cur.fetchone())[0]
+        return {"posted": int(posted or 0), "opted_out": int(opted_out or 0)}
+
+    # -------------------------
     # Conversation Host invites
     # -------------------------
     async def host_invite_create(self, guild_id: int, user_id: int, at: int) -> bool:

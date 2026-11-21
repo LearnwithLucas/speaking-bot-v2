@@ -155,6 +155,15 @@ async def setup(bot: Any) -> None:
             )
         except Exception:
             log.exception("adminhealth: host counts failed")
+        try:
+            shout = await bot.repo.milestone_shoutout_counts(bot.guild_id, _period_start_epoch(7))
+            embed.add_field(
+                name="Milestone shout-outs (English)",
+                value=f"Posted this week: **{shout['posted']}**\nMembers opted out: **{shout['opted_out']}**",
+                inline=False,
+            )
+        except Exception:
+            log.exception("adminhealth: shout-out counts failed")
         embed.add_field(name="Command usage, last 7 days", value=_format_commands(summary_7d), inline=False)
         embed.set_footer(text="Look at trends. Quiet learners count too.")
 
@@ -187,5 +196,30 @@ async def setup(bot: Any) -> None:
             ephemeral=True,
         )
         await _send_admin_log(bot, f"Milestone role backfill by {interaction.user.mention}: {checked} checked, {changed} changed.")
+
+    @bot.tree.command(
+        name="milestoneroles_cleanup",
+        description="Admin: members with 2+ milestone roles keep only the highest.",
+    )
+    async def cmd_milestoneroles_cleanup(interaction: discord.Interaction) -> None:
+        if int(getattr(interaction, "channel_id", 0) or 0) != ADMIN_TESTING_CHANNEL_ID:
+            await interaction.response.send_message(
+                "Use this in <#1205828956360548383> so admin actions stay in one place.",
+                ephemeral=True,
+            )
+            return
+        milestones = getattr(getattr(bot, "tracker", None), "milestones", None)
+        if milestones is None:
+            await interaction.response.send_message("Milestones aren't running yet. Try again in a moment.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        checked, fixed, removed = await milestones.cleanup_roles()
+        await interaction.followup.send(
+            f"Checked **{checked}** members. Fixed **{fixed}**. Removed **{removed}** extra milestone roles. No DMs or posts sent.",
+            ephemeral=True,
+        )
+        await _send_admin_log(
+            bot, f"Milestone role cleanup by {interaction.user.mention}: {checked} checked, {fixed} fixed, {removed} removed."
+        )
 
     await setup_admin_check(bot)

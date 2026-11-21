@@ -365,6 +365,12 @@ FAQ: dict[str, dict] = {
                 "If something posts by itself, it is probably the Café Host."
             ),
             (
+                "How do I stop my milestones being posted publicly?",
+                "When you reach 1, 3, 10, 20, 50 or 100 hours of speaking, the Café Host posts a short congrats in #your-successes-and-stories.\n\n"
+                "Don't want that? Every milestone DM has a button: **Don't post my milestones publicly**. "
+                "You still get your role and your DM. Changed your mind? Press **Post my milestones again**."
+            ),
+            (
                 "How does the speaking partner finder work?",
                 "Go to the looking-for-a-partner channel and pick how long you are free.\n\n"
                 "The first time, you choose your level (A2, B1 or B2). You only get matched with people at your level. "

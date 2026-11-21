@@ -104,3 +104,7 @@ MILESTONE_ROLES: tuple[tuple[int, str, int], ...] = (
 )
 
 CONVERSATION_HOST_ROLE_ID: int = _role_id("CONVERSATION_HOST_ROLE_ID")
+
+# Channel for public milestone shout-outs (#your-successes-and-stories).
+# Empty = no shout-outs.
+MILESTONE_ANNOUNCE_CHANNEL_ID: int = _role_id("MILESTONE_ANNOUNCE_CHANNEL_ID")
