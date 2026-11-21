@@ -104,6 +104,19 @@ CREATE TABLE IF NOT EXISTS member_levels (
   PRIMARY KEY (guild_id, user_id)
 );
 
+-- Conversation Host invites (sent once per member, at 20h of voice time).
+CREATE TABLE IF NOT EXISTS host_invites (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  invited_at INTEGER NOT NULL,
+  answer TEXT,                      -- NULL (no answer yet), "yes" or "not_now"
+  answered_at INTEGER,
+  decision TEXT,                    -- NULL, "approved" or "declined" (Lucas)
+  decided_at INTEGER,
+  decided_by INTEGER,
+  PRIMARY KEY (guild_id, user_id)
+);
+
 -- Admin-only health summaries: broad command usage, no message content.
 CREATE TABLE IF NOT EXISTS command_usage (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

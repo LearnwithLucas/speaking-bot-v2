@@ -271,6 +271,80 @@ class Repo:
         await self.conn.commit()
 
     # -------------------------
+    # Conversation Host invites
+    # -------------------------
+    async def host_invite_create(self, guild_id: int, user_id: int, at: int) -> bool:
+        """Insert the invite. False if this member was already invited."""
+        cur = await self.conn.execute(
+            "INSERT OR IGNORE INTO host_invites (guild_id, user_id, invited_at) VALUES (?, ?, ?)",
+            (guild_id, user_id, at),
+        )
+        await self.conn.commit()
+        return (cur.rowcount or 0) > 0
+
+    async def host_invite_get(self, guild_id: int, user_id: int) -> dict[str, Any] | None:
+        cur = await self.conn.execute(
+            "SELECT invited_at, answer, answered_at, decision, decided_at, decided_by "
+            "FROM host_invites WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        row = await cur.fetchone()
+        if not row:
+            return None
+        keys = ("invited_at", "answer", "answered_at", "decision", "decided_at", "decided_by")
+        return dict(zip(keys, row))
+
+    async def host_invite_answer(self, guild_id: int, user_id: int, answer: str, at: int) -> bool:
+        """Store the member's answer once. False if there's no open invite."""
+        cur = await self.conn.execute(
+            "UPDATE host_invites SET answer=?, answered_at=? WHERE guild_id=? AND user_id=? AND answer IS NULL",
+            (answer, at, guild_id, user_id),
+        )
+        await self.conn.commit()
+        return (cur.rowcount or 0) > 0
+
+    async def host_invite_decide(self, guild_id: int, user_id: int, decision: str, by: int, at: int) -> bool:
+        """Store Lucas's decision once. False if already decided or not a yes."""
+        cur = await self.conn.execute(
+            "UPDATE host_invites SET decision=?, decided_at=?, decided_by=? "
+            "WHERE guild_id=? AND user_id=? AND answer='yes' AND decision IS NULL",
+            (decision, at, by, guild_id, user_id),
+        )
+        await self.conn.commit()
+        return (cur.rowcount or 0) > 0
+
+    async def host_invite_counts(self, guild_id: int) -> dict[str, int]:
+        cur = await self.conn.execute(
+            """
+            SELECT
+                COUNT(*),
+                SUM(CASE WHEN answer='yes' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN decision='approved' THEN 1 ELSE 0 END)
+            FROM host_invites WHERE guild_id=?
+            """,
+            (guild_id,),
+        )
+        sent, yes, approved = await cur.fetchone()
+        return {"sent": int(sent or 0), "yes": int(yes or 0), "approved": int(approved or 0)}
+
+    async def user_weeks_active(self, guild_id: int, user_id: int) -> int:
+        """Number of distinct weeks with any voice time."""
+        cur = await self.conn.execute(
+            "SELECT COUNT(DISTINCT strftime('%Y-%W', started_at, 'unixepoch')) "
+            "FROM voice_sessions WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        row = await cur.fetchone()
+        return int(row[0] or 0)
+
+    async def users_with_voice_since(self, guild_id: int, since_epoch: int) -> list[int]:
+        cur = await self.conn.execute(
+            "SELECT DISTINCT user_id FROM voice_sessions WHERE guild_id=? AND COALESCE(ended_at, started_at) >= ?",
+            (guild_id, since_epoch),
+        )
+        return [int(r[0]) for r in await cur.fetchall()]
+
+    # -------------------------
     # Member joins (activation stat)
     # -------------------------
     async def member_join_record(self, guild_id: int, user_id: int, joined_at: int) -> None:

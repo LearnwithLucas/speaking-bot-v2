@@ -27,6 +27,7 @@ from jobs.word_of_the_day import WordOfTheDayJob
 from jobs.daily_questions import DailyQuestionJob
 from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
 from jobs.milestones import Milestones
+from jobs.hosts import HostInvites, HostInviteView, HostReviewButton
 from jobs.winback import WinbackJob
 from voice.table_tools import TableTools
 from jobs.session_reminder import SessionReminderJob
@@ -232,6 +233,8 @@ class SpeakingBot(commands.Bot):
         self.add_view(StartTestimonialViewNL())
         self.add_view(WelcomeTableView(is_nl=False))
         self.add_view(WelcomeTableView(is_nl=True))
+        self.add_view(HostInviteView())
+        self.add_dynamic_items(HostReviewButton)
 
         # Sync commands to English guild
         guild = discord.Object(id=self.guild_id)
@@ -375,7 +378,15 @@ class SpeakingBot(commands.Bot):
         # Voice milestones (1h, 3h, 10h). The 3h DM also asks for a testimonial,
         # which replaces the old twice-a-day testimonial outreach scan.
         if self.tracker.milestones is None:
-            milestones = Milestones(bot=self, repo=self.repo, dutch_guild_id=self.dutch_guild_id)
+            # Conversation Host invites at 20h (EN only for now).
+            self.host_invites = HostInvites(bot=self, repo=self.repo, guild_id=self.guild_id)
+            milestones = Milestones(
+                bot=self,
+                repo=self.repo,
+                dutch_guild_id=self.dutch_guild_id,
+                role_guild_id=self.guild_id,
+                hosts=self.host_invites,
+            )
             for gid in (self.guild_id, self.dutch_guild_id):
                 if gid:
                     await milestones.ensure_start(gid)
