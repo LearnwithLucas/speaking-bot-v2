@@ -78,3 +78,29 @@ def get_settings() -> Settings:
         db_path=os.getenv("DB_PATH", "botlab_speaking.sqlite").strip(),
         log_level=os.getenv("LOG_LEVEL", "INFO").strip().upper(),
     )
+
+# -------------------------
+# Role IDs (EN server). Fill in the IDs, or set the env var of the same
+# name on Render. 0 = not set: that role is skipped.
+# -------------------------
+def _role_id(name: str, default: int = 0) -> int:
+    raw = os.getenv(name, "").strip()
+    try:
+        return int(raw) if raw else default
+    except ValueError:
+        return default
+
+
+# Voice time (seconds, counted from the milestone start) -> role ID.
+# A member holds only the highest one they reached.
+MILESTONE_ROLES: tuple[tuple[int, str, int], ...] = (
+    (15 * 60, "First Words", _role_id("MILESTONE_ROLE_15M")),
+    (1 * 3600, "1 hour", _role_id("MILESTONE_ROLE_1H")),
+    (3 * 3600, "3 hours", _role_id("MILESTONE_ROLE_3H")),
+    (10 * 3600, "10 hours", _role_id("MILESTONE_ROLE_10H")),
+    (20 * 3600, "20 hours", _role_id("MILESTONE_ROLE_20H")),
+    (50 * 3600, "50 hours", _role_id("MILESTONE_ROLE_50H")),
+    (100 * 3600, "Speaker", _role_id("MILESTONE_ROLE_100H")),
+)
+
+CONVERSATION_HOST_ROLE_ID: int = _role_id("CONVERSATION_HOST_ROLE_ID")

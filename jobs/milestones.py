@@ -12,9 +12,11 @@ from __future__ import annotations
 
 import logging
 import time
+from typing import Any
 
 import discord
 
+from config import MILESTONE_ROLES
 from db.repo import Repo
 
 log = logging.getLogger("jobs.milestones")
@@ -81,11 +83,34 @@ def build_milestone_text(hours: int, *, is_nl: bool, ask_testimonial: bool) -> s
     return text
 
 
+def target_role_id(seconds: int) -> int | None:
+    """Role ID of the highest milestone reached that has a role configured."""
+    target = None
+    for threshold, _name, role_id in MILESTONE_ROLES:
+        if role_id and seconds >= threshold:
+            target = role_id
+    return target
+
+
 class Milestones:
-    def __init__(self, *, bot: discord.Client, repo: Repo, dutch_guild_id: int | None) -> None:
+    def __init__(
+        self,
+        *,
+        bot: discord.Client,
+        repo: Repo,
+        dutch_guild_id: int | None,
+        role_guild_id: int | None = None,
+        hosts: Any = None,
+    ) -> None:
         self.bot = bot
         self.repo = repo
         self.dutch_guild_id = dutch_guild_id
+        # Milestone roles and host invites run on this server only (EN for now).
+        self.role_guild_id = role_guild_id
+        self.hosts = hosts
+        missing = [name for _t, name, rid in MILESTONE_ROLES if not rid]
+        if missing:
+            log.warning("Milestones: no role ID set for %s; those roles are skipped", ", ".join(missing))
 
     async def ensure_start(self, guild_id: int) -> int:
         """First run per server sets the count-from time. Returns it."""
@@ -106,6 +131,13 @@ class Milestones:
     async def _check(self, guild_id: int, user_id: int) -> None:
         start = await self.ensure_start(guild_id)
         seconds = await self.repo.user_voice_seconds_since(guild_id, user_id, start)
+
+        if guild_id == self.role_guild_id:
+            member = await self._resolve_member(guild_id, user_id)
+            if member is not None:
+                await self.sync_role(member, seconds)
+                if self.hosts is not None:
+                    await self.hosts.maybe_invite(member, seconds)
 
         reached = [h for h in MILESTONE_HOURS if seconds >= h * 3600]
         if not reached:
@@ -144,6 +176,53 @@ class Milestones:
         if ask_testimonial:
             await self.repo.kv_set(guild_id, testimonial_key, str(now))
             await self._log_testimonial_ask(member, is_nl)
+
+    async def sync_role(self, member: discord.Member, seconds: int) -> bool:
+        """Give the highest milestone role reached and remove the others. True if anything changed."""
+        target_id = target_role_id(seconds)
+        configured = {rid for _t, _n, rid in MILESTONE_ROLES if rid}
+        to_remove = [r for r in member.roles if r.id in configured and r.id != target_id]
+        target = member.guild.get_role(target_id) if target_id else None
+        to_add = [target] if target is not None and target not in member.roles else []
+        if not to_add and not to_remove:
+            return False
+        try:
+            if to_remove:
+                await member.remove_roles(*to_remove, reason="Voice milestone: next role")
+            if to_add:
+                await member.add_roles(*to_add, reason="Voice milestone reached")
+            log.info(
+                "Milestones: roles user=%s add=%s remove=%s",
+                member.id,
+                [r.id for r in to_add],
+                [r.id for r in to_remove],
+            )
+            return True
+        except discord.Forbidden:
+            log.warning("Milestones: no permission to change roles user=%s (Manage Roles, role order)", member.id)
+        except Exception:
+            log.exception("Milestones: role change failed user=%s", member.id)
+        return False
+
+    async def backfill_roles(self) -> tuple[int, int]:
+        """Give roles to everyone who already passed a threshold. Returns (checked, changed). No DMs."""
+        if not self.role_guild_id:
+            return 0, 0
+        guild = self.bot.get_guild(self.role_guild_id)
+        if guild is None:
+            return 0, 0
+        start = await self.ensure_start(self.role_guild_id)
+        checked = changed = 0
+        for user_id in await self.repo.users_with_voice_since(self.role_guild_id, start):
+            member = guild.get_member(user_id)
+            if member is None or member.bot:
+                continue
+            checked += 1
+            seconds = await self.repo.user_voice_seconds_since(self.role_guild_id, user_id, start)
+            if await self.sync_role(member, seconds):
+                changed += 1
+        log.info("Milestones: role backfill checked=%s changed=%s", checked, changed)
+        return checked, changed
 
     async def _resolve_member(self, guild_id: int, user_id: int) -> discord.Member | None:
         guild = self.bot.get_guild(guild_id)

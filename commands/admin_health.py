@@ -146,6 +146,15 @@ async def setup(bot: Any) -> None:
             value=await _format_activation(bot),
             inline=False,
         )
+        try:
+            hosts = await bot.repo.host_invite_counts(bot.guild_id)
+            embed.add_field(
+                name="Conversation Hosts (English, all time)",
+                value=f"Invites sent: **{hosts['sent']}**\nSaid yes: **{hosts['yes']}**\nApproved hosts: **{hosts['approved']}**",
+                inline=False,
+            )
+        except Exception:
+            log.exception("adminhealth: host counts failed")
         embed.add_field(name="Command usage, last 7 days", value=_format_commands(summary_7d), inline=False)
         embed.set_footer(text="Look at trends. Quiet learners count too.")
 
@@ -155,5 +164,28 @@ async def setup(bot: Any) -> None:
             bot,
             f"Admin health summary viewed by {interaction.user.mention} in <#1205828956360548383>.",
         )
+
+    @bot.tree.command(
+        name="milestoneroles_backfill",
+        description="Admin: give milestone roles to members who already passed a threshold.",
+    )
+    async def cmd_milestoneroles_backfill(interaction: discord.Interaction) -> None:
+        if int(getattr(interaction, "channel_id", 0) or 0) != ADMIN_TESTING_CHANNEL_ID:
+            await interaction.response.send_message(
+                "Use this in <#1205828956360548383> so admin actions stay in one place.",
+                ephemeral=True,
+            )
+            return
+        milestones = getattr(getattr(bot, "tracker", None), "milestones", None)
+        if milestones is None:
+            await interaction.response.send_message("Milestones aren't running yet. Try again in a moment.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        checked, changed = await milestones.backfill_roles()
+        await interaction.followup.send(
+            f"Checked **{checked}** members with voice time since the milestone start. Roles changed for **{changed}**. No DMs sent.",
+            ephemeral=True,
+        )
+        await _send_admin_log(bot, f"Milestone role backfill by {interaction.user.mention}: {checked} checked, {changed} changed.")
 
     await setup_admin_check(bot)
