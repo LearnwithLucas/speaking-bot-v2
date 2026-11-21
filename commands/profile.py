@@ -155,6 +155,13 @@ async def build_profile_embed(bot: Any, member: discord.Member) -> discord.Embed
         value="\n".join(f"🏅 {n}" for n in names) if names else _t("none_yet", is_nl),
         inline=False,
     )
+    if is_en:
+        server_tag = getattr(bot, "server_tag", None)
+        if server_tag is not None and server_tag.enabled:
+            from jobs.server_tag import wears_tag
+
+            if wears_tag(member, member.guild.id):
+                embed.description = "🧭 Wears the CAFE tag"
     embed.set_footer(text=_t("footer", is_nl))
     return embed
 

@@ -82,10 +82,12 @@ PROFILE_LINE_EN = "See your full profile: /profile"
 PROFILE_LINE_NL = "Bekijk je hele profiel: /profile"
 
 
-def build_milestone_text(hours: int, *, is_nl: bool, ask_testimonial: bool) -> str:
+def build_milestone_text(hours: int, *, is_nl: bool, ask_testimonial: bool, extra_line: str | None = None) -> str:
     text = (NL_MESSAGES if is_nl else EN_MESSAGES)[hours]
     if ask_testimonial:
         text += "\n\n" + (NL_TESTIMONIAL if is_nl else EN_TESTIMONIAL)
+    if extra_line:
+        text += "\n\n" + extra_line
     return text + "\n\n" + (PROFILE_LINE_NL if is_nl else PROFILE_LINE_EN)
 
 
@@ -236,7 +238,15 @@ class Milestones:
             and not await self.repo.kv_get(guild_id, testimonial_key)
         )
 
-        text = build_milestone_text(hours, is_nl=is_nl, ask_testimonial=ask_testimonial)
+        # Server Tag line: only in the 3h DM, only for members who don't wear it (EN).
+        tag_line = None
+        server_tag = getattr(self.bot, "server_tag", None)
+        if hours == 3 and with_opt_buttons and server_tag is not None:
+            try:
+                tag_line = await server_tag.ask_line_for_milestone(member)
+            except Exception:
+                log.exception("Milestones: server tag line failed user=%s", user_id)
+        text = build_milestone_text(hours, is_nl=is_nl, ask_testimonial=ask_testimonial, extra_line=tag_line)
         try:
             if with_opt_buttons:
                 await member.send(text, view=ShoutoutOptView())

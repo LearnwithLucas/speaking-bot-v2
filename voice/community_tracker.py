@@ -215,6 +215,21 @@ class VoiceTracker(BaseVoiceTracker):
             seconds = await self.repo.user_voice_seconds_since(member.guild.id, uid, since_epoch)
             message = _build_weekly_recap_message(seconds=seconds, is_nl=is_nl)
 
+            # Server Tag line (EN, 1h+ speakers who don't wear it, once every 4 weeks).
+            server_tag = getattr(self._bot, "server_tag", None) if self._bot else None
+            if server_tag is not None and not is_nl:
+                try:
+                    from jobs.milestones import MILESTONE_START_KV
+
+                    raw_start = await self.repo.kv_get(member.guild.id, MILESTONE_START_KV)
+                    speaking = await self.repo.user_voice_seconds_since(member.guild.id, uid, int(raw_start or 0))
+                    line = await server_tag.ask_line_for_recap(member, speaking)
+                    if line:
+                        tail = "\n\nSee your full profile: /profile"
+                        message = message.replace(tail, "") + "\n\n" + line + tail
+                except Exception:
+                    log.exception("Weekly recap: server tag line failed user=%s", uid)
+
             await self.repo.user_state_mark_weekly_dm(member.guild.id, uid, week_key, int(time.time()))
 
             try:
