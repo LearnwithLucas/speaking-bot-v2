@@ -29,6 +29,7 @@ from commands.testimonials import setup as setup_testimonials, StartTestimonialV
 from jobs.milestones import Milestones, ShoutoutOptView
 from jobs.hosts import HostInvites, HostInviteView, HostReviewButton
 from jobs.winback import WinbackJob
+from jobs.cafe_hour import CafeHour
 from voice.table_tools import TableTools
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons_summer import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
@@ -398,6 +399,10 @@ class SpeakingBot(commands.Bot):
             self.tracker.milestones = milestones
             log.info("Milestones started.")
 
+        # Daily Café Hour (EN only). Does nothing unless CAFE_HOUR_ENABLED=true.
+        if getattr(self, "cafe_hour", None) is None:
+            self.cafe_hour = CafeHour(bot=self, repo=self.repo, guild_id=self.guild_id)
+
         # Win-back: one DM after 14 days without voice time (daily, 17:07 Amsterdam).
         if self._winback is None:
             self._winback = WinbackJob(
@@ -459,6 +464,7 @@ class SpeakingBot(commands.Bot):
             guild_id=member.guild.id,
             en_guild_id=self.guild_id,
             nl_guild_id=self.dutch_guild_id or 0,
+            cafe_hour=getattr(self, "cafe_hour", None),
         )
 
         # Auto-assign "English Learner" role - English server only

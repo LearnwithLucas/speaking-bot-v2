@@ -271,6 +271,65 @@ class Repo:
         await self.conn.commit()
 
     # -------------------------
+    # Café Hour
+    # -------------------------
+    async def cafe_hour_session_upsert(self, guild_id: int, start_at: int, day: str, **fields: Any) -> None:
+        await self.conn.execute(
+            "INSERT OR IGNORE INTO cafe_hour_sessions (guild_id, start_at, day) VALUES (?, ?, ?)",
+            (guild_id, start_at, day),
+        )
+        allowed = {"topic", "skipped", "unique_speakers", "voice_minutes", "interested"}
+        for key, value in fields.items():
+            if key in allowed:
+                await self.conn.execute(
+                    f"UPDATE cafe_hour_sessions SET {key}=? WHERE guild_id=? AND start_at=?",
+                    (value, guild_id, start_at),
+                )
+        await self.conn.commit()
+
+    async def cafe_hour_recent_topics(self, guild_id: int, since_epoch: int) -> dict[str, int]:
+        """topic -> last start_at it was used."""
+        cur = await self.conn.execute(
+            "SELECT topic, MAX(start_at) FROM cafe_hour_sessions "
+            "WHERE guild_id=? AND start_at>=? AND topic IS NOT NULL AND skipped=0 GROUP BY topic",
+            (guild_id, since_epoch),
+        )
+        return {str(t): int(at) for t, at in await cur.fetchall()}
+
+    async def cafe_hour_sessions_since(self, guild_id: int, since_epoch: int) -> list[dict[str, Any]]:
+        cur = await self.conn.execute(
+            "SELECT start_at, day, topic, skipped, unique_speakers, voice_minutes, interested "
+            "FROM cafe_hour_sessions WHERE guild_id=? AND start_at>=? ORDER BY start_at DESC",
+            (guild_id, since_epoch),
+        )
+        keys = ("start_at", "day", "topic", "skipped", "unique_speakers", "voice_minutes", "interested")
+        return [dict(zip(keys, row)) for row in await cur.fetchall()]
+
+    async def voice_speakers_in_window(
+        self, guild_id: int, channel_id: int, start_at: int, end_at: int, min_seconds: int
+    ) -> tuple[int, int]:
+        """
+        (members with at least min_seconds of counted voice time in this
+        channel inside the window, total counted seconds in the window).
+        Only unmuted time is ever stored, so this is speaking time.
+        """
+        now = int(time.time())
+        cur = await self.conn.execute(
+            """
+            SELECT user_id,
+                   SUM(MIN(COALESCE(ended_at, ?), ?) - MAX(started_at, ?)) AS secs
+            FROM voice_sessions
+            WHERE guild_id=? AND channel_id=? AND started_at < ? AND COALESCE(ended_at, ?) > ?
+            GROUP BY user_id
+            """,
+            (now, end_at, start_at, guild_id, channel_id, end_at, now, start_at),
+        )
+        rows = await cur.fetchall()
+        speakers = sum(1 for _uid, secs in rows if (secs or 0) >= min_seconds)
+        total = sum(max(0, secs or 0) for _uid, secs in rows)
+        return speakers, int(total)
+
+    # -------------------------
     # Milestone shout-outs
     # -------------------------
     async def milestone_announcement_claim(

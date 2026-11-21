@@ -3,6 +3,8 @@ from __future__ import annotations
 # jobs/welcome.py
 import logging
 
+from typing import Any
+
 import discord
 
 from jobs.partner_planner import EN_LOOKING_CHANNEL_ID, NL_LOOKING_CHANNEL_ID, PartnerPlanStartView
@@ -69,13 +71,29 @@ class WelcomeTableView(discord.ui.View):
         log.info("Welcome Table for 2 opened user=%s nl=%s", interaction.user.id, self.is_nl)
 
 
-async def send_welcome_dm(member: discord.Member, guild_id: int, en_guild_id: int, nl_guild_id: int) -> None:
+def cafe_hour_line(start_epoch: int, *, today: bool) -> str:
+    # <t:...:t> shows the time in each member's own time zone.
+    when = "today" if today else "tomorrow"
+    return f"\n\nOr join Café Hour {when} at <t:{start_epoch}:t>. Other learners meet in voice then, no sign-up."
+
+
+async def send_welcome_dm(
+    member: discord.Member,
+    guild_id: int,
+    en_guild_id: int,
+    nl_guild_id: int,
+    cafe_hour: Any = None,
+) -> None:
     if member.bot:
         return
 
     if member.guild.id == en_guild_id:
         is_nl = False
         text = EN_WELCOME_DM.format(looking=EN_LOOKING_CHANNEL_ID)
+        start = cafe_hour.next_start() if cafe_hour is not None else None
+        if start is not None and not await cafe_hour.is_skipped(int(start.timestamp())):
+            local_today = discord.utils.utcnow().astimezone(start.tzinfo).date()
+            text += cafe_hour_line(int(start.timestamp()), today=start.date() == local_today)
     elif member.guild.id == nl_guild_id:
         is_nl = True
         text = NL_WELCOME_DM.format(looking=NL_LOOKING_CHANNEL_ID)

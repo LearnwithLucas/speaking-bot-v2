@@ -139,6 +139,19 @@ CREATE TABLE IF NOT EXISTS member_settings (
   PRIMARY KEY (guild_id, user_id)
 );
 
+-- Daily Café Hour: one row per session (held or skipped).
+CREATE TABLE IF NOT EXISTS cafe_hour_sessions (
+  guild_id INTEGER NOT NULL,
+  start_at INTEGER NOT NULL,        -- epoch seconds
+  day TEXT NOT NULL,                -- YYYY-MM-DD, Amsterdam
+  topic TEXT,
+  skipped INTEGER NOT NULL DEFAULT 0,
+  unique_speakers INTEGER,          -- unmuted 3+ minutes in the Café Hour channel
+  voice_minutes INTEGER,
+  interested INTEGER,               -- "Interested" count on the event, if known
+  PRIMARY KEY (guild_id, start_at)
+);
+
 -- Admin-only health summaries: broad command usage, no message content.
 CREATE TABLE IF NOT EXISTS command_usage (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

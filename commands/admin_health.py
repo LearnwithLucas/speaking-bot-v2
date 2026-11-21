@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import discord
 
 from commands.admin_check import setup as setup_admin_check
+from jobs.cafe_hour import summarize_sessions
 from commands.admin_refresh import ADMIN_LOGS_CHANNEL_ID, ADMIN_TESTING_CHANNEL_ID
 
 log = logging.getLogger(__name__)
@@ -164,6 +165,12 @@ async def setup(bot: Any) -> None:
             )
         except Exception:
             log.exception("adminhealth: shout-out counts failed")
+        if getattr(getattr(bot, "cafe_hour", None), "enabled", False):
+            try:
+                sessions = await bot.repo.cafe_hour_sessions_since(bot.guild_id, int(time.time()) - 14 * 86400)
+                embed.add_field(name="Café Hour (last 14 days)", value=summarize_sessions(sessions), inline=False)
+            except Exception:
+                log.exception("adminhealth: café hour summary failed")
         embed.add_field(name="Command usage, last 7 days", value=_format_commands(summary_7d), inline=False)
         embed.set_footer(text="Look at trends. Quiet learners count too.")
 
@@ -221,5 +228,68 @@ async def setup(bot: Any) -> None:
         await _send_admin_log(
             bot, f"Milestone role cleanup by {interaction.user.mention}: {checked} checked, {fixed} fixed, {removed} removed."
         )
+
+    async def _admin_only(interaction: discord.Interaction) -> bool:
+        if int(getattr(interaction, "channel_id", 0) or 0) != ADMIN_TESTING_CHANNEL_ID:
+            await interaction.response.send_message(
+                "Use this in <#1205828956360548383> so admin actions stay in one place.",
+                ephemeral=True,
+            )
+            return False
+        if not getattr(getattr(bot, "cafe_hour", None), "enabled", False):
+            await interaction.response.send_message(
+                "Café Hour is off. Set CAFE_HOUR_ENABLED=true and the other CAFE_HOUR_ values on Render.",
+                ephemeral=True,
+            )
+            return False
+        return True
+
+    @bot.tree.command(name="cafehour_status", description="Admin: next Café Hour, today's topic and recent sessions.")
+    async def cmd_cafehour_status(interaction: discord.Interaction) -> None:
+        if not await _admin_only(interaction):
+            return
+        info = await bot.cafe_hour.status()
+        start = info["next"]
+        lines = [
+            f"Next session: <t:{int(start.timestamp())}:F> (<t:{int(start.timestamp())}:R>)"
+            + (" **(skipped)**" if info["skipped"] else ""),
+            f"Topic: **{info['topic'] or 'picked 15 minutes before the start'}**",
+            "",
+            "Last sessions:",
+        ]
+        if info["recent"]:
+            lines += [
+                f"{s['day']}: **{s['unique_speakers']}** speakers, {s['voice_minutes']} min"
+                + (f", {s['interested']} interested" if s["interested"] is not None else "")
+                for s in info["recent"]
+            ]
+        else:
+            lines.append("None yet.")
+        await interaction.response.send_message("\n".join(lines), ephemeral=True)
+
+    @bot.tree.command(name="cafehour_skip", description="Admin: skip the next Café Hour (deletes its event, no ping).")
+    async def cmd_cafehour_skip(interaction: discord.Interaction) -> None:
+        if not await _admin_only(interaction):
+            return
+        start = await bot.cafe_hour.skip_next()
+        await interaction.response.send_message(
+            f"Skipped the session on <t:{int(start.timestamp())}:F>. The next one gets its event after that.",
+            ephemeral=True,
+        )
+        await _send_admin_log(bot, f"Café Hour on <t:{int(start.timestamp())}:F> skipped by {interaction.user.mention}.")
+
+    @bot.tree.command(name="cafehour_now", description="Admin: preview the Café Hour reminder and topic here (no ping).")
+    async def cmd_cafehour_now(interaction: discord.Interaction) -> None:
+        if not await _admin_only(interaction):
+            return
+        reminder, topic, followup = await bot.cafe_hour.preview()
+        await interaction.response.send_message(
+            "**Test run.** This is what members would see. Nothing was posted elsewhere.",
+            ephemeral=False,
+        )
+        none = discord.AllowedMentions.none()
+        await interaction.followup.send(f"**Reminder (#looking-for-a-partner, 15 min before):**\n{reminder}", allowed_mentions=none)
+        await interaction.followup.send(f"**Topic (Open Conversation chat, at the start):**\n{topic}", allowed_mentions=none)
+        await interaction.followup.send(f"**Follow-up (after 30 min):**\n{followup}", allowed_mentions=none)
 
     await setup_admin_check(bot)

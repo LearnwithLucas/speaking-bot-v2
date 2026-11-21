@@ -108,3 +108,13 @@ CONVERSATION_HOST_ROLE_ID: int = _role_id("CONVERSATION_HOST_ROLE_ID")
 # Channel for public milestone shout-outs (#your-successes-and-stories).
 # Empty = no shout-outs.
 MILESTONE_ANNOUNCE_CHANNEL_ID: int = _role_id("MILESTONE_ANNOUNCE_CHANNEL_ID")
+
+
+# -------------------------
+# Daily Café Hour (EN server). Env vars on Render.
+# -------------------------
+CAFE_HOUR_ENABLED: bool = _parse_bool(os.getenv("CAFE_HOUR_ENABLED", "false"), default=False)
+CAFE_HOUR_TIME: str = os.getenv("CAFE_HOUR_TIME", "").strip()          # "19:00", Europe/Amsterdam
+CAFE_HOUR_DURATION_MIN: int = _role_id("CAFE_HOUR_DURATION_MIN", 60)
+CAFE_HOUR_VOICE_CHANNEL_ID: int = _role_id("CAFE_HOUR_VOICE_CHANNEL_ID")
+CAFE_HOUR_ANNOUNCE_CHANNEL_ID: int = _role_id("CAFE_HOUR_ANNOUNCE_CHANNEL_ID")
