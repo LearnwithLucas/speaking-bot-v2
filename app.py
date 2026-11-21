@@ -21,6 +21,7 @@ from commands.ask_jerry import setup as setup_ask_jerry, AskJerryView, AskJerryV
 from commands.chat_jerry import setup as setup_daily_question
 from commands.admin_refresh import ADMIN_TESTING_CHANNEL_ID, setup as setup_admin_refresh
 from commands.admin_health import setup as setup_admin_health
+from commands.profile import setup as setup_profile
 from commands.community_guide import setup as setup_community_guide
 from commands.jokes import setup as setup_jokes
 from jobs.word_of_the_day import WordOfTheDayJob
@@ -127,6 +128,7 @@ class SpeakingBot(commands.Bot):
         # Load admin commands
         await setup_admin_refresh(self)
         await setup_admin_health(self)
+        await setup_profile(self)
 
         # Load community guide command
         await setup_community_guide(self)

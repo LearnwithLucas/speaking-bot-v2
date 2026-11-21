@@ -85,7 +85,8 @@ def _build_weekly_recap_message(*, seconds: int, is_nl: bool) -> str:
         return (
             f"{opener}\n\n"
             "Tip: beantwoord in het voicekanaal de vraag hoelang je blijft. "
-            "Dan vinden anderen je makkelijker in op-zoek-naar-een-partner."
+            "Dan vinden anderen je makkelijker in op-zoek-naar-een-partner.\n\n"
+            "Bekijk je hele profiel: /profile"
         )
 
     if seconds >= 60:
@@ -95,7 +96,8 @@ def _build_weekly_recap_message(*, seconds: int, is_nl: bool) -> str:
     return (
         f"{opener}\n\n"
         "Tip: answer the question in the voice chat about how long you're staying. "
-        "Then people can find you more easily in looking-for-a-partner."
+        "Then people can find you more easily in looking-for-a-partner.\n\n"
+        "See your full profile: /profile"
     )
 
 
