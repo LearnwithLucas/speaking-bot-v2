@@ -117,6 +117,28 @@ CREATE TABLE IF NOT EXISTS host_invites (
   PRIMARY KEY (guild_id, user_id)
 );
 
+-- Public milestone shout-outs: one row per member per milestone, ever.
+CREATE TABLE IF NOT EXISTS milestone_announcements (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  milestone TEXT NOT NULL,          -- "1h", "3h", "10h", "20h", "50h", "100h"
+  announced_at INTEGER NOT NULL,
+  posted INTEGER NOT NULL DEFAULT 1, -- 0 = marked done without a post (seeded at deploy)
+  PRIMARY KEY (guild_id, user_id, milestone)
+);
+
+CREATE INDEX IF NOT EXISTS idx_milestone_announcements_time
+  ON milestone_announcements (guild_id, announced_at);
+
+-- Per-member settings. Shout-outs are on unless a row says 0.
+CREATE TABLE IF NOT EXISTS member_settings (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  milestone_shoutouts_enabled INTEGER NOT NULL DEFAULT 1,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id, user_id)
+);
+
 -- Admin-only health summaries: broad command usage, no message content.
 CREATE TABLE IF NOT EXISTS command_usage (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

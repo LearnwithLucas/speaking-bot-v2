@@ -26,7 +26,7 @@ from commands.jokes import setup as setup_jokes
 from jobs.word_of_the_day import WordOfTheDayJob
 from jobs.daily_questions import DailyQuestionJob
 from commands.testimonials import setup as setup_testimonials, StartTestimonialView, StartTestimonialViewNL
-from jobs.milestones import Milestones
+from jobs.milestones import Milestones, ShoutoutOptView
 from jobs.hosts import HostInvites, HostInviteView, HostReviewButton
 from jobs.winback import WinbackJob
 from voice.table_tools import TableTools
@@ -234,6 +234,7 @@ class SpeakingBot(commands.Bot):
         self.add_view(WelcomeTableView(is_nl=False))
         self.add_view(WelcomeTableView(is_nl=True))
         self.add_view(HostInviteView())
+        self.add_view(ShoutoutOptView())
         self.add_dynamic_items(HostReviewButton)
 
         # Sync commands to English guild
@@ -390,6 +391,10 @@ class SpeakingBot(commands.Bot):
             for gid in (self.guild_id, self.dutch_guild_id):
                 if gid:
                     await milestones.ensure_start(gid)
+            try:
+                await milestones.seed_shoutouts()
+            except Exception:
+                log.exception("Milestones: seeding shout-outs failed")
             self.tracker.milestones = milestones
             log.info("Milestones started.")
 
