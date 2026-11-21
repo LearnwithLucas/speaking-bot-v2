@@ -78,11 +78,15 @@ NL_TESTIMONIAL = (
 )
 
 
+PROFILE_LINE_EN = "See your full profile: /profile"
+PROFILE_LINE_NL = "Bekijk je hele profiel: /profile"
+
+
 def build_milestone_text(hours: int, *, is_nl: bool, ask_testimonial: bool) -> str:
     text = (NL_MESSAGES if is_nl else EN_MESSAGES)[hours]
     if ask_testimonial:
         text += "\n\n" + (NL_TESTIMONIAL if is_nl else EN_TESTIMONIAL)
-    return text
+    return text + "\n\n" + (PROFILE_LINE_NL if is_nl else PROFILE_LINE_EN)
 
 
 # Public shout-outs (EN only). First Words (15 min) gets none.

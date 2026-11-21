@@ -271,6 +271,57 @@ class Repo:
         await self.conn.commit()
 
     # -------------------------
+    # Member profile (/profile)
+    # -------------------------
+    async def profile_people_met(self, guild_id: int, user_id: int) -> int:
+        cur = await self.conn.execute(
+            """
+            SELECT COUNT(DISTINCT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END)
+            FROM voice_met
+            WHERE guild_id = ? AND (user_a_id = ? OR user_b_id = ?)
+            """,
+            (user_id, guild_id, user_id, user_id),
+        )
+        return int((await cur.fetchone())[0] or 0)
+
+    async def profile_achievements(self, guild_id: int, user_id: int) -> list[tuple[str, int]]:
+        cur = await self.conn.execute(
+            "SELECT achievement_id, earned_at FROM achievements WHERE guild_id=? AND user_id=? ORDER BY earned_at",
+            (guild_id, user_id),
+        )
+        return [(str(a), int(t)) for a, t in await cur.fetchall()]
+
+    async def profile_session_starts(self, guild_id: int, user_id: int) -> list[int]:
+        cur = await self.conn.execute(
+            "SELECT started_at FROM voice_sessions WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        return [int(r[0]) for r in await cur.fetchall()]
+
+    async def profile_cafe_hours_joined(self, guild_id: int, user_id: int, channel_id: int, duration_seconds: int, min_seconds: int) -> int:
+        """Held Café Hour sessions where this member had min_seconds+ of voice time in the channel."""
+        now = int(time.time())
+        cur = await self.conn.execute(
+            """
+            SELECT COUNT(*) FROM (
+                SELECT c.start_at,
+                       SUM(MIN(COALESCE(v.ended_at, ?), c.start_at + ?) - MAX(v.started_at, c.start_at)) AS secs
+                FROM cafe_hour_sessions c
+                JOIN voice_sessions v
+                  ON v.guild_id = c.guild_id
+                 AND v.user_id = ?
+                 AND v.channel_id = ?
+                 AND v.started_at < c.start_at + ?
+                 AND COALESCE(v.ended_at, ?) > c.start_at
+                WHERE c.guild_id = ? AND c.skipped = 0
+                GROUP BY c.start_at
+            ) WHERE secs >= ?
+            """,
+            (now, duration_seconds, user_id, channel_id, duration_seconds, now, guild_id, min_seconds),
+        )
+        return int((await cur.fetchone())[0] or 0)
+
+    # -------------------------
     # Café Hour
     # -------------------------
     async def cafe_hour_session_upsert(self, guild_id: int, start_at: int, day: str, **fields: Any) -> None:
