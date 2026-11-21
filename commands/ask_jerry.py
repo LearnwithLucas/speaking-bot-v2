@@ -365,6 +365,11 @@ FAQ: dict[str, dict] = {
                 "If something posts by itself, it is probably the Café Host."
             ),
             (
+                "What is Café Hour?",
+                "Every day at 19:00 Amsterdam time, learners meet in Open Conversation to practise speaking. "
+                "No teacher, no sign-up. Check the Events tab for your local time."
+            ),
+            (
                 "How do I stop my milestones being posted publicly?",
                 "When you reach 1, 3, 10, 20, 50 or 100 hours of speaking, the Café Host posts a short congrats in #your-successes-and-stories.\n\n"
                 "Don't want that? Every milestone DM has a button: **Don't post my milestones publicly**. "
