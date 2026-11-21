@@ -165,6 +165,28 @@ async def setup(bot: Any) -> None:
             )
         except Exception:
             log.exception("adminhealth: shout-out counts failed")
+        if getattr(getattr(bot, "server_tag", None), "enabled", False):
+            try:
+                from jobs.milestones import MILESTONE_START_KV
+
+                raw_start = await bot.repo.kv_get(bot.guild_id, MILESTONE_START_KV)
+                tag = await bot.repo.tag_stats(bot.guild_id, _period_start_epoch(7), int(raw_start or 0))
+                share = (
+                    f"{tag['speakers_1h_wearing'] / tag['speakers_1h']:.0%} ({tag['speakers_1h_wearing']} of {tag['speakers_1h']})"
+                    if tag["speakers_1h"]
+                    else "no 1h+ speakers yet"
+                )
+                embed.add_field(
+                    name="Server Tag (CAFE)",
+                    value=(
+                        f"Wearing it now: **{tag['wearing']}**\n"
+                        f"New wearers this week: **{tag['new_week']}**\n"
+                        f"1h+ speakers wearing it: **{share}**"
+                    ),
+                    inline=False,
+                )
+            except Exception:
+                log.exception("adminhealth: server tag stats failed")
         if getattr(getattr(bot, "cafe_hour", None), "enabled", False):
             try:
                 sessions = await bot.repo.cafe_hour_sessions_since(bot.guild_id, int(time.time()) - 14 * 86400)

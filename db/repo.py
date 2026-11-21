@@ -271,6 +271,89 @@ class Repo:
         await self.conn.commit()
 
     # -------------------------
+    # Server Tag
+    # -------------------------
+    async def tag_get(self, guild_id: int, user_id: int) -> dict[str, Any] | None:
+        cur = await self.conn.execute(
+            "SELECT wears_tag, first_seen_wearing, last_checked, thanked_at, last_asked_at "
+            "FROM member_tags WHERE guild_id=? AND user_id=?",
+            (guild_id, user_id),
+        )
+        row = await cur.fetchone()
+        if not row:
+            return None
+        keys = ("wears_tag", "first_seen_wearing", "last_checked", "thanked_at", "last_asked_at")
+        return dict(zip(keys, row))
+
+    async def tag_record(self, guild_id: int, user_id: int, wears: bool, at: int) -> bool:
+        """Store the current state. True if this is the first time ever we see them wearing it."""
+        before = await self.tag_get(guild_id, user_id)
+        first_time = wears and (before is None or before["first_seen_wearing"] is None)
+        await self.conn.execute(
+            """
+            INSERT INTO member_tags (guild_id, user_id, wears_tag, first_seen_wearing, last_checked)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(guild_id, user_id) DO UPDATE SET
+                wears_tag=excluded.wears_tag,
+                first_seen_wearing=COALESCE(member_tags.first_seen_wearing, excluded.first_seen_wearing),
+                last_checked=excluded.last_checked
+            """,
+            (guild_id, user_id, 1 if wears else 0, at if wears else None, at),
+        )
+        await self.conn.commit()
+        return first_time
+
+    async def tag_mark_thanked(self, guild_id: int, user_id: int, at: int) -> bool:
+        """Claim the once-ever thank-you. False if already thanked."""
+        cur = await self.conn.execute(
+            "UPDATE member_tags SET thanked_at=? WHERE guild_id=? AND user_id=? AND thanked_at IS NULL",
+            (at, guild_id, user_id),
+        )
+        await self.conn.commit()
+        return (cur.rowcount or 0) > 0
+
+    async def tag_mark_asked(self, guild_id: int, user_id: int, at: int) -> None:
+        await self.conn.execute(
+            """
+            INSERT INTO member_tags (guild_id, user_id, wears_tag, last_checked, last_asked_at)
+            VALUES (?, ?, 0, ?, ?)
+            ON CONFLICT(guild_id, user_id) DO UPDATE SET last_asked_at=excluded.last_asked_at
+            """,
+            (guild_id, user_id, at, at),
+        )
+        await self.conn.commit()
+
+    async def tag_stats(self, guild_id: int, week_ago: int, speaking_since: int) -> dict[str, int]:
+        now = int(time.time())
+        cur = await self.conn.execute(
+            "SELECT SUM(wears_tag), SUM(CASE WHEN first_seen_wearing >= ? THEN 1 ELSE 0 END) FROM member_tags WHERE guild_id=?",
+            (week_ago, guild_id),
+        )
+        wearing, new_week = await cur.fetchone()
+        cur = await self.conn.execute(
+            """
+            SELECT COUNT(*), SUM(COALESCE(t.wears_tag, 0))
+            FROM (
+                SELECT user_id,
+                       SUM(COALESCE(ended_at, ?) - MAX(started_at, ?)) AS secs
+                FROM voice_sessions
+                WHERE guild_id = ? AND COALESCE(ended_at, ?) > ?
+                GROUP BY user_id
+            ) v
+            LEFT JOIN member_tags t ON t.guild_id = ? AND t.user_id = v.user_id
+            WHERE v.secs >= 3600
+            """,
+            (now, speaking_since, guild_id, now, speaking_since, guild_id),
+        )
+        speakers, speakers_wearing = await cur.fetchone()
+        return {
+            "wearing": int(wearing or 0),
+            "new_week": int(new_week or 0),
+            "speakers_1h": int(speakers or 0),
+            "speakers_1h_wearing": int(speakers_wearing or 0),
+        }
+
+    # -------------------------
     # Member profile (/profile)
     # -------------------------
     async def profile_people_met(self, guild_id: int, user_id: int) -> int:

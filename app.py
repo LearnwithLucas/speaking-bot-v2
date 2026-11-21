@@ -31,6 +31,7 @@ from jobs.milestones import Milestones, ShoutoutOptView
 from jobs.hosts import HostInvites, HostInviteView, HostReviewButton
 from jobs.winback import WinbackJob
 from jobs.cafe_hour import CafeHour
+from jobs.server_tag import ServerTag
 from voice.table_tools import TableTools
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons_summer import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
@@ -401,6 +402,10 @@ class SpeakingBot(commands.Bot):
             self.tracker.milestones = milestones
             log.info("Milestones started.")
 
+        # Server Tag (CAFE) detection and thanks (EN only).
+        if getattr(self, "server_tag", None) is None:
+            self.server_tag = ServerTag(bot=self, repo=self.repo, guild_id=self.guild_id)
+
         # Daily Café Hour (EN only). Does nothing unless CAFE_HOUR_ENABLED=true.
         if getattr(self, "cafe_hour", None) is None:
             self.cafe_hour = CafeHour(bot=self, repo=self.repo, guild_id=self.guild_id)
@@ -449,6 +454,16 @@ class SpeakingBot(commands.Bot):
             log.info("Moved %s Dutch voice sessions to guild %s", moved, dutch_guild.id)
         except Exception:
             log.exception("Moving Dutch voice history failed")
+
+    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+        server_tag = getattr(self, "server_tag", None)
+        if server_tag is not None and after.guild.id == self.guild_id:
+            await server_tag.on_user_changed(before, after)
+
+    async def on_user_update(self, before: discord.User, after: discord.User) -> None:
+        server_tag = getattr(self, "server_tag", None)
+        if server_tag is not None:
+            await server_tag.on_user_changed(before, after)
 
     async def on_member_join(self, member: discord.Member) -> None:
         if member.bot:

@@ -152,6 +152,18 @@ CREATE TABLE IF NOT EXISTS cafe_hour_sessions (
   PRIMARY KEY (guild_id, start_at)
 );
 
+-- Server Tag (CAFE) per member, EN server.
+CREATE TABLE IF NOT EXISTS member_tags (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  wears_tag INTEGER NOT NULL DEFAULT 0,
+  first_seen_wearing INTEGER,       -- first time ever seen wearing it (never reset)
+  last_checked INTEGER NOT NULL,
+  thanked_at INTEGER,               -- thank-you DM, once ever
+  last_asked_at INTEGER,            -- last "wear our tag" line in a DM
+  PRIMARY KEY (guild_id, user_id)
+);
+
 -- Admin-only health summaries: broad command usage, no message content.
 CREATE TABLE IF NOT EXISTS command_usage (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
