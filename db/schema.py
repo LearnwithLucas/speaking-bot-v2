@@ -164,6 +164,24 @@ CREATE TABLE IF NOT EXISTS member_tags (
   PRIMARY KEY (guild_id, user_id)
 );
 
+-- One-off broadcast DMs: who got which one (never twice), and opt-outs.
+CREATE TABLE IF NOT EXISTS broadcast_dms (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  campaign TEXT NOT NULL,           -- e.g. "update_2026_11"
+  status TEXT NOT NULL,             -- "sent" or "closed" (DMs closed)
+  at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id, user_id, campaign)
+);
+
+CREATE TABLE IF NOT EXISTS dm_optouts (
+  guild_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  kind TEXT NOT NULL,               -- "updates"
+  at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id, user_id, kind)
+);
+
 -- Admin-only health summaries: broad command usage, no message content.
 CREATE TABLE IF NOT EXISTS command_usage (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

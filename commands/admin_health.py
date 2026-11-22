@@ -165,6 +165,19 @@ async def setup(bot: Any) -> None:
             )
         except Exception:
             log.exception("adminhealth: shout-out counts failed")
+        weekly_tip = getattr(bot, "weekly_tip", None)
+        if weekly_tip is not None:
+            from jobs.weekly_tip import TIPS
+
+            last = await weekly_tip.last_posted()
+            nxt = TIPS[await weekly_tip.next_index()][0]
+            embed.add_field(
+                name="Weekly tip",
+                value=(
+                    f"Last posted: **{TIPS[last[2]][0]}** on <t:{last[1]}:D>" if last else "Last posted: none yet"
+                ) + f"\nNext: **{nxt}** (Mondays 12:00)",
+                inline=False,
+            )
         if getattr(getattr(bot, "server_tag", None), "enabled", False):
             try:
                 from jobs.milestones import MILESTONE_START_KV
@@ -313,5 +326,76 @@ async def setup(bot: Any) -> None:
         await interaction.followup.send(f"**Reminder (#looking-for-a-partner, 15 min before):**\n{reminder}", allowed_mentions=none)
         await interaction.followup.send(f"**Topic (Open Conversation chat, at the start):**\n{topic}", allowed_mentions=none)
         await interaction.followup.send(f"**Follow-up (after 30 min):**\n{followup}", allowed_mentions=none)
+
+    async def _admin_channel(interaction: discord.Interaction) -> bool:
+        if int(getattr(interaction, "channel_id", 0) or 0) != ADMIN_TESTING_CHANNEL_ID:
+            await interaction.response.send_message(
+                "Use this in <#1205828956360548383> so admin actions stay in one place.",
+                ephemeral=True,
+            )
+            return False
+        return True
+
+    @bot.tree.command(name="update_dm_preview", description="Admin: show who would get the update DM and the message. Sends nothing.")
+    async def cmd_update_dm_preview(interaction: discord.Interaction) -> None:
+        if not await _admin_channel(interaction):
+            return
+        await interaction.response.defer(ephemeral=True)
+        members = await bot.update_dm.recipients()
+        await interaction.followup.send(
+            f"**{len(members)}** members would get it (voice time in the last 60 days, still in the server, "
+            f"not new this week, not opted out, not sent before). Nothing was sent.\n\n"
+            f"Message (with your name):\n>>> {bot.update_dm.text_for(interaction.user)}",
+            ephemeral=True,
+        )
+
+    @bot.tree.command(name="update_dm_send", description="Admin: send the one-off update DM slowly in the background.")
+    async def cmd_update_dm_send(interaction: discord.Interaction) -> None:
+        if not await _admin_channel(interaction):
+            return
+        if bot.update_dm.running:
+            await interaction.response.send_message("It's already sending. The summary will appear in admin-logs.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        members = await bot.update_dm.recipients()
+        if not members:
+            await interaction.followup.send("Nobody left to send it to. It never goes to the same member twice.", ephemeral=True)
+            return
+
+        async def report(text: str) -> None:
+            await _send_admin_log(bot, text)
+
+        bot.update_dm.start(members, report)
+        minutes = max(1, round(len(members) * 4 / 60))
+        await interaction.followup.send(
+            f"Sending to **{len(members)}** members, one every 3 to 5 seconds (about {minutes} min). "
+            "The summary will appear in admin-logs.",
+            ephemeral=True,
+        )
+        await _send_admin_log(bot, f"Update DM started by {interaction.user.mention} for {len(members)} members.")
+
+    @bot.tree.command(name="weeklytip_now", description="Admin: post the next weekly tip in announcements now.")
+    async def cmd_weeklytip_now(interaction: discord.Interaction) -> None:
+        if not await _admin_channel(interaction):
+            return
+        from jobs.weekly_tip import TIPS
+
+        index = await bot.weekly_tip.post_next()
+        if index is None:
+            await interaction.response.send_message("Couldn't post: announcements channel not found.", ephemeral=True)
+            return
+        await interaction.response.send_message(f"Posted tip {index + 1}: **{TIPS[index][0]}**.", ephemeral=True)
+
+    @bot.tree.command(name="weeklytip_skip", description="Admin: skip the next tip in the rotation without posting it.")
+    async def cmd_weeklytip_skip(interaction: discord.Interaction) -> None:
+        if not await _admin_channel(interaction):
+            return
+        from jobs.weekly_tip import TIPS
+
+        index = await bot.weekly_tip.skip_next()
+        nxt = TIPS[await bot.weekly_tip.next_index()][0]
+        await interaction.response.send_message(
+            f"Skipped tip {index + 1}: **{TIPS[index][0]}**. Next Monday posts **{nxt}**.", ephemeral=True
+        )
 
     await setup_admin_check(bot)
