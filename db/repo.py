@@ -271,6 +271,43 @@ class Repo:
         await self.conn.commit()
 
     # -------------------------
+    # Broadcast DMs and opt-outs
+    # -------------------------
+    async def broadcast_recipients(self, guild_id: int, campaign: str, since_epoch: int) -> list[int]:
+        """Users with voice time since since_epoch who haven't had this campaign and didn't opt out."""
+        cur = await self.conn.execute(
+            """
+            SELECT DISTINCT v.user_id FROM voice_sessions v
+            WHERE v.guild_id = ? AND COALESCE(v.ended_at, v.started_at) >= ?
+              AND v.user_id NOT IN (SELECT user_id FROM broadcast_dms WHERE guild_id = ? AND campaign = ?)
+              AND v.user_id NOT IN (SELECT user_id FROM dm_optouts WHERE guild_id = ? AND kind = 'updates')
+            """,
+            (guild_id, since_epoch, guild_id, campaign, guild_id),
+        )
+        return [int(r[0]) for r in await cur.fetchall()]
+
+    async def broadcast_mark(self, guild_id: int, user_id: int, campaign: str, status: str, at: int) -> bool:
+        cur = await self.conn.execute(
+            "INSERT OR IGNORE INTO broadcast_dms (guild_id, user_id, campaign, status, at) VALUES (?, ?, ?, ?, ?)",
+            (guild_id, user_id, campaign, status, at),
+        )
+        await self.conn.commit()
+        return (cur.rowcount or 0) > 0
+
+    async def dm_optout_set(self, guild_id: int, user_id: int, kind: str, at: int) -> None:
+        await self.conn.execute(
+            "INSERT OR IGNORE INTO dm_optouts (guild_id, user_id, kind, at) VALUES (?, ?, ?, ?)",
+            (guild_id, user_id, kind, at),
+        )
+        await self.conn.commit()
+
+    async def dm_optout_count(self, guild_id: int, kind: str) -> int:
+        cur = await self.conn.execute(
+            "SELECT COUNT(*) FROM dm_optouts WHERE guild_id=? AND kind=?", (guild_id, kind)
+        )
+        return int((await cur.fetchone())[0] or 0)
+
+    # -------------------------
     # Server Tag
     # -------------------------
     async def tag_get(self, guild_id: int, user_id: int) -> dict[str, Any] | None:

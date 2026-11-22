@@ -32,6 +32,8 @@ from jobs.hosts import HostInvites, HostInviteView, HostReviewButton
 from jobs.winback import WinbackJob
 from jobs.cafe_hour import CafeHour
 from jobs.server_tag import ServerTag
+from jobs.update_dm import UpdateDM, UpdateOptOutView
+from jobs.weekly_tip import WeeklyTip
 from voice.table_tools import TableTools
 from jobs.session_reminder import SessionReminderJob
 from jobs.private_lessons_summer import PrivateLessonsPublisher, EnLessonsView, NlLessonsView, EnSupportedView, NlSupportedView
@@ -239,6 +241,7 @@ class SpeakingBot(commands.Bot):
         self.add_view(WelcomeTableView(is_nl=True))
         self.add_view(HostInviteView())
         self.add_view(ShoutoutOptView())
+        self.add_view(UpdateOptOutView())
         self.add_dynamic_items(HostReviewButton)
 
         # Sync commands to English guild
@@ -401,6 +404,17 @@ class SpeakingBot(commands.Bot):
                 log.exception("Milestones: seeding shout-outs failed")
             self.tracker.milestones = milestones
             log.info("Milestones started.")
+
+        # One-off update DM (admin command) and the Monday tip (EN only).
+        if getattr(self, "update_dm", None) is None:
+            self.update_dm = UpdateDM(bot=self, repo=self.repo, guild_id=self.guild_id)
+        if getattr(self, "weekly_tip", None) is None:
+            self.weekly_tip = WeeklyTip(
+                bot=self,
+                repo=self.repo,
+                guild_id=self.guild_id,
+                channel_id=self.announcements_channel_id,
+            )
 
         # Server Tag (CAFE) detection and thanks (EN only).
         if getattr(self, "server_tag", None) is None:
